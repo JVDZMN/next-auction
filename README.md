@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Auction Platform
 
-## Getting Started
+A full-stack car auction platform with real-time bidding capabilities.
 
-First, run the development server:
+## ✅ What's Been Set Up
 
+### Backend & Database
+- **Prisma ORM** with PostgreSQL (Database created: `auction_db`)
+- **Database Models**: User, Car, Bid, Notification, Rating, Account, Session
+- **NextAuth.js** with Google OAuth configured
+- **Email Notifications** via Resend API
+
+### API Routes Created
+- `/api/auth/[...nextauth]` - Authentication (Google OAuth)
+- `/api/cars` - GET (list cars) & POST (create auction)
+- `/api/bids` - POST (place bids with validation)
+
+### Features Implemented
+
+#### ✅ Bidding System
+- Users can place bids on active auctions
+- **Validation**: Owner cannot bid on own car
+- **Validation**: Bid must be higher than current price
+- **Validation**: Auction must be active and not expired
+
+#### ✅ Email Notifications
+- Car owner receives email when bid is placed
+- Previous highest bidder receives "outbid" notification
+- All outbid bidders get notified when new higher bid placed
+
+#### ✅ User Profiles
+- Rating system (1-5 stars)
+- Bid history tracking
+- Car listing management
+
+## ��� Next Steps
+
+### To Start Development:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Still To Build:
+1. **Frontend Pages**:
+   - Homepage with car listings
+   - Car detail page with bidding interface
+   - User profile & dashboard
+   - Create auction form
+   - Authentication pages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. **WebSocket Integration**:
+   - Real-time bid updates
+   - Live auction countdown
+   - Socket.io server setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. **Stripe Payment**:
+   - Payment processing for winners
+   - Escrow system
 
-## Learn More
+4. **Image Upload**:
+   - Car photo uploads (Cloudinary/AWS S3)
+   - Image gallery
 
-To learn more about Next.js, take a look at the following resources:
+5. **Mobile App** (React Native):
+   - Separate project at `/c/Next.JS/next-auction-mobile`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ��� Project Structure
+```
+next-auction/
+├── app/
+│   ├── api/
+│   │   ├── auth/[...nextauth]/  # Google OAuth
+│   │   ├── bids/                # Bidding endpoints
+│   │   └── cars/                # Car auction endpoints
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── lib/
+│   ├── auth.ts       # NextAuth config
+│   ├── email.ts      # Email notifications
+│   └── prisma.ts     # Prisma client
+├── prisma/
+│   └── schema.prisma # Database schema
+├── types/
+│   └── next-auth.d.ts
+├── .env              # Environment variables (configured)
+└── .env.example      # Template
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ��� Configuration
 
-## Deploy on Vercel
+All environment variables are set up in `.env`:
+- ✅ PostgreSQL connection
+- ✅ NextAuth secret
+- ✅ Google OAuth credentials
+- ✅ Resend API key
+- ⚠️  Stripe keys (add your keys)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ��� Core Auction Rules (Implemented in API)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Starting price set by owner
+2. Auction duration (4 days configurable)
+3. Email notifications to:
+   - Car owner (on every bid)
+   - All previous bidders when outbid
+4. Bidders stop receiving notifications if they don't re-bid
+5. Owner cannot bid on own car
+6. Bids must be higher than current price
+
+## ��� Database Schema
+
+- **User**: Profile, rating, authentication
+- **Car**: Title, description, specs, images, pricing
+- **Bid**: Amount, timestamp, relationships
+- **Notification**: Type, read status, car reference
+- **Rating**: Score, comment, timestamps
+
+Build successful! ✅

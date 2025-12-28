@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EuroStandard {
+  euro1
+  euro2
+  euro3
+  euro4
+  euro5
+  euro6
+}
+
+enum Role {
+  User
+  Admin
+}
+
+enum FuelType {
+  Benzin
+  Diesel
+  HybridBenzin
+  HybridDiesel
+  PluginHybrid
+  Electric
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  googleId      String?   @unique
+  role          Role      @default(User)
+  rating        Float     @default(0)
+  ratingCount   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  cars          Car[]
+  bids          Bid[]
+  notifications Notification[]
+  ratings       Rating[]       @relation("RatingsReceived")
+  ratingsGiven  Rating[]       @relation("RatingsGiven")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Car {
+  id             String        @id @default(cuid())
+  ownerId        String
+  brand          String
+  model          String
+  description    String        @db.Text
+  specs          String?       @db.Text
+  condition      String
+  km             Int
+  year           Int
+  power          Int
+  fuel           FuelType?
+  euroStandard   EuroStandard?
+  images         String[]
+  startingPrice  Float
+  currentPrice   Float
+  reservePrice   Float?
+  auctionEndDate DateTime
+  status         String        @default("active")
+  winnerBidId    String?       @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  owner     User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bids      Bid[]
+  winnerBid Bid?  @relation("WinningBid", fields: [winnerBidId], references: [id])
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([auctionEndDate])
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  carId     String
+  bidderId  String
+  amount    Float
+  createdAt DateTime @default(now())
+
+  car    Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
+  bidder User @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  wonCar Car? @relation("WinningBid")
+
+  @@index([carId])
+  @@index([bidderId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String   @db.Text
+  type      String
+  carId     String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model Rating {
+  id          String   @id @default(cuid())
+  ratedUserId String
+  raterUserId String
+  carId       String?
+  score       Int
+  comment     String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  ratedUser User @relation("RatingsReceived", fields: [ratedUserId], references: [id], onDelete: Cascade)
+  raterUser User @relation("RatingsGiven", fields: [raterUserId], references: [id], onDelete: Cascade)
+
+  @@unique([ratedUserId, raterUserId, carId])
+  @@index([ratedUserId])
+}
