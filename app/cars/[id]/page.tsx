@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { BiddingSection } from '@/components/BiddingSection'
+import { AuctionMessages } from '@/components/AuctionMessages'
 import { useSession } from 'next-auth/react'
 
 interface Car {
@@ -202,6 +203,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
                 ownerId={car.owner.id}
                 onBidPlaced={fetchCar}
               />
+              <AuctionMessages carId={car.id} ownerId={car.owner.id} />
             </div>
 
             {/* Actions */}

@@ -1,7 +1,0 @@
-{
-  "datasources": {
-    "db": {
-      "url": "postgresql://postgres:POSTGRESJavad@localhost:5433/next-auction_next_auction_postgres_data"
-    }
-  }
-}

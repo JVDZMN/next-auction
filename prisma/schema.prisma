@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
 enum EuroStandard {
   euro1
   euro2
@@ -50,6 +49,7 @@ model User {
   notifications Notification[]
   ratings       Rating[]       @relation("RatingsReceived")
   ratingsGiven  Rating[]       @relation("RatingsGiven")
+  messages      Message[]
 }
 
 model Account {
@@ -110,9 +110,10 @@ model Car {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  owner     User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   bids      Bid[]
-  winnerBid Bid?  @relation("WinningBid", fields: [winnerBidId], references: [id])
+  winnerBid Bid?      @relation("WinningBid", fields: [winnerBidId], references: [id])
+  messages  Message[]
 
   @@index([ownerId])
   @@index([status])
@@ -165,4 +166,19 @@ model Rating {
 
   @@unique([ratedUserId, raterUserId, carId])
   @@index([ratedUserId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  carId       String
+  senderEmail String
+  receiverId  String
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+
+  car      Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
+  receiver User @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([carId])
+  @@index([receiverId])
 }

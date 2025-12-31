@@ -95,7 +95,7 @@ export default async function HomePage() {
                   {car.images?.[0] ? (
                     <Image
                       src={car.images[0]}
-                      alt={car.title}
+                      alt={`${car.year} ${car.brand} ${car.model}`}
                       fill
                       className="object-cover"
                     />
