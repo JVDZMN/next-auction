@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
 enum EuroStandard {
   euro1
   euro2
@@ -42,14 +43,15 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  cars          Car[]
-  bids          Bid[]
-  notifications Notification[]
-  ratings       Rating[]       @relation("RatingsReceived")
-  ratingsGiven  Rating[]       @relation("RatingsGiven")
-  messages      Message[]
+  accounts         Account[]
+  sessions         Session[]
+  cars             Car[]
+  bids             Bid[]
+  notifications    Notification[]
+  ratings          Rating[]       @relation("RatingsReceived")
+  ratingsGiven     Rating[]       @relation("RatingsGiven")
+  messagesSent     Message[]      @relation("MessagesSent")
+  messagesReceived Message[]      @relation("MessagesReceived")
 }
 
 model Account {
@@ -169,16 +171,22 @@ model Rating {
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  carId       String
-  senderEmail String
-  receiverId  String
-  content     String   @db.Text
-  createdAt   DateTime @default(now())
+  id               String   @id @default(cuid())
+  carId            String
+  senderId         String
+  receiverId       String
+  content          String?   @db.Text
+  createdAt        DateTime @default(now())
+  replyToMessageId String? // for threading/reply
 
-  car      Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
-  receiver User @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+  car      Car       @relation(fields: [carId], references: [id], onDelete: Cascade)
+  sender   User      @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User      @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  replyTo  Message?  @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replies  Message[] @relation("MessageReplies")
 
   @@index([carId])
+  @@index([senderId])
   @@index([receiverId])
+  @@index([replyToMessageId])
 }

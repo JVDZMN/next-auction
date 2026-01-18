@@ -2,18 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { Prisma } from '@prisma/client'
 
-interface Bid {
-  id: string
-  amount: number
-  createdAt: string
-  bidder: {
-    id: string
-    name: string | null
-    email: string
-    rating: number
-  }
-}
+type BidWithBidder = Prisma.BidGetPayload<{ include: { bidder: true } }>
 
 interface BiddingSectionProps {
   carId: string
@@ -33,7 +24,7 @@ export function BiddingSection({
   onBidPlaced,
 }: BiddingSectionProps) {
   const { data: session } = useSession()
-  const [bids, setBids] = useState<Bid[]>([])
+  const [bids, setBids] = useState<BidWithBidder[]>([])
   const [bidAmount, setBidAmount] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +46,8 @@ export function BiddingSection({
       const response = await fetch(`/api/bids?carId=${carId}`)
       if (response.ok) {
         const data = await response.json()
-        setBids(data)
+        // Expecting { bids: BidWithBidder[] }
+        setBids(data.bids || [])
       }
     } catch (err) {
       console.error('Error fetching bids:', err)
@@ -141,7 +133,7 @@ export function BiddingSection({
       {/* Place Bid Form */}
       {session && isAuctionActive && !isOwner && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Place Your Bid</h3>
+          <h3 className="text-lg font-semibold text-black mb-4">Place Your Bid</h3>
           
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
@@ -202,7 +194,7 @@ export function BiddingSection({
       )}
 
       {/* Bid History */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white border border-gray-200 text-gray-900 rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Bid History</h3>
         {isLoading ? (
           <p className="text-gray-500 text-center py-4">Loading bids...</p>
@@ -227,7 +219,7 @@ export function BiddingSection({
                     )}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {bid.bidder.name || 'Anonymous'} • {formatDate(bid.createdAt)}
+                    {bid.bidder.name || 'Anonymous'} • {formatDate(bid.createdAt.toISOString().slice(0, 16))}
                   </p>
                 </div>
                 <div className="text-right">

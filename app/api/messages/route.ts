@@ -6,31 +6,39 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const { carId, message } = await request.json()
-    if (!carId || !message) {
-      return NextResponse.json({ error: 'Missing carId or message' }, { status: 400 })
+    const { carId, receiverId, replyToMessageId, content } = await request.json();
+    if (!carId || !content) {
+      return NextResponse.json({ error: 'Missing carId or content' }, { status: 400 });
     }
     // Find car and owner
     const car = await prisma.car.findUnique({
       where: { id: carId },
       select: { ownerId: true },
-    })
+    });
     if (!car) {
-      return NextResponse.json({ error: 'Car not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Car not found' }, { status: 404 });
     }
-    // Create message
+    // Use receiverId from body if present, else default to car.ownerId
+    const finalReceiverId = receiverId || car.ownerId;
+    // Create message (no content field)
     const newMessage = await prisma.message.create({
       data: {
         carId,
-        senderEmail: session.user.email,
-        receiverId: car.ownerId,
-        content: message,
+        senderId: session.user.id,
+        receiverId: finalReceiverId,
+        content,
+        replyToMessageId: replyToMessageId || null,
       },
-    })
-    return NextResponse.json({ message: newMessage })
+      include: {
+        sender: { select: { id: true, email: true, name: true } },
+        receiver: { select: { id: true, email: true, name: true } },
+        replyTo: true,
+      },
+    });
+    return NextResponse.json({ message: newMessage });
   } catch (error) {
     console.error('Error sending message:', error)
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
@@ -40,7 +48,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { searchParams } = new URL(request.url)
@@ -53,11 +61,16 @@ export async function GET(request: NextRequest) {
       where: {
         carId,
         OR: [
-          { senderEmail: session.user.email },
+          { senderId: session.user.id },
           { receiverId: session.user.id },
         ],
       },
       orderBy: { createdAt: 'asc' },
+      include: {
+        sender: { select: { id: true, email: true, name: true } },
+        receiver: { select: { id: true, email: true, name: true } },
+        replyTo: true,
+      },
     })
     return NextResponse.json({ messages })
   } catch (error) {
