@@ -3,7 +3,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 
 async function getActiveCars() {
   const cars = await prisma.car.findMany({
@@ -29,7 +28,7 @@ function getTimeRemaining(endDate: Date) {
 
 export default async function HomePage() {
   const cars = await getActiveCars()
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
 
   return (
     <div className="min-h-screen bg-gray-50">

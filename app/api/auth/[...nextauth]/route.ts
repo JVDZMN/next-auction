@@ -1,51 +1,97 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
-import { prisma } from "@/lib/prisma";
-import { Session } from "next-auth";
-import bcrypt from "bcryptjs";
+import NextAuth, { SessionStrategy } from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { prisma } from '@/lib/prisma'
+import { Role, User } from '@prisma/client'
+import bcrypt from 'bcrypt'
 
 export const authOptions = {
-    providers: [
-        CredentialsProvider({
-            name: "Credentials",
-            credentials: {
-                email: { label: "Email", type: "text" },
-                password: { label: "Password", type: "password" },
-            },
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
-                const user = await prisma.user.findUnique({
-                    where: { email: credentials.email },
-            });
-                if (!user || !user.password) return null;
-                const isValid = await bcrypt.compare(credentials.password, user.password);
-                if (!isValid) return null;
-                return user;
-            },
-        }),
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        }),
+  adapter: PrismaAdapter(prisma) as any,
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Invalid credentials')
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        })
+
+        if (!user || !user.password) {
+          throw new Error('Invalid credentials')
+        }
+
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password,
+          user.password
+        )
+
+        if (!isCorrectPassword) {
+          throw new Error('Invalid credentials')
+        }
+
+        return user
+      },
+    }),
   ],
   callbacks: {
-  async session({ session, token }: { session: Session; token: any }) {
-    const email = session.user?.email ?? token?.email;
-    if (!email) return session;
-    const dbUser = await prisma.user.findUnique({
-      where: { email },
-      select: { role: true },
-    });
-    if (dbUser) {
-      session.user.role = dbUser.role;
-    }
-    return session;
+    async jwt({ token, user, account, profile }: { token: any; user?: any; account?: any; profile?: any }) {
+      // Set user id for both credentials and OAuth logins
+        if (user) {
+          token.id = user.id;
+          token.email = user.email;
+          token.name = user.name;
+          if ((user as User).role) token.role = (user as User).role;
+          console.log('JWT callback: user object', user);
+      }
+      // For OAuth logins, fetch user from DB if id is missing
+        if (!token.id && token.email) {
+          const dbUser = await prisma.user.findUnique({ where: { email: token.email } });
+          console.log('JWT callback: dbUser lookup for email', token.email, dbUser);
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+        }
+      }
+        console.log('JWT callback: final token', token);
+      return token;
+    },
+    async session({ session, token }: { session: any; token: any }) {
+      if (session?.user) {
+        session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+        session.user.image = (token.picture as string) || (token.image as string) || null;
+        session.user.role =
+          typeof token.role === 'string' && Object.values(Role).includes(token.role as Role)
+            ? (token.role as Role)
+            : Role.User;
+        console.log('SESSION callback: session.user after assignment', session.user);
+        console.log('SESSION callback: token', token);
+      }
+      return session;
+    },
   },
-},
-  // ...other options (adapter, secret, etc.)...
-};
+  pages: {
+    signIn: '/auth/signin',
+  },
+  session: {
+    strategy: 'jwt' as SessionStrategy,
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+}
 
-const handler = NextAuth(authOptions);
+const handler = NextAuth(authOptions)
 
-export { handler as GET, handler as POST };
+export { handler as GET, handler as POST }

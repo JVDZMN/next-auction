@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
@@ -30,15 +30,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
+    console.log('DEBUG SESSION:', session)
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized', debugSession: session }, { status: 401 })
     }
 
     const body = await request.json()
-    
+
     // Validate required fields
-    const { brand, model, condition, km, year, power, fuel, startingPrice, auctionEndDate, images } = body
-    
+    const { brand, model, condition, km, year, power, fuel, startingPrice, auctionEndDate, images, addressLine, zipcode, city } = body
+
     if (!brand || !model || !condition || km === undefined || !year || !power || !fuel || !startingPrice || !auctionEndDate) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -67,6 +68,9 @@ export async function POST(request: NextRequest) {
         reservePrice: body.reservePrice ? parseFloat(body.reservePrice) : null,
         auctionEndDate: new Date(auctionEndDate),
         status: 'active',
+        addressLine: addressLine || null,
+        zipcode: zipcode || null,
+        city: city || null,
       },
       include: {
         owner: { select: { id: true, name: true, email: true } },

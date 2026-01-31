@@ -20,6 +20,16 @@ enum Role {
   Admin
 }
 
+enum GearType {
+  Manual
+  Automatic
+}
+
+enum Geartype {
+  Manual
+  Automatic
+}
+
 enum FuelType {
   Benzin
   Diesel
@@ -102,6 +112,12 @@ model Car {
   power          Int
   fuel           FuelType?
   euroStandard   EuroStandard?
+  gearType       GearType?
+  nextInspection DateTime?
+  lastInspection DateTime?
+  addressLine    String?
+  zipcode        String?
+  city           String?
   images         String[]
   startingPrice  Float
   currentPrice   Float
@@ -175,7 +191,7 @@ model Message {
   carId            String
   senderId         String
   receiverId       String
-  content          String?   @db.Text
+  content          String?  @db.Text
   createdAt        DateTime @default(now())
   replyToMessageId String? // for threading/reply
 
