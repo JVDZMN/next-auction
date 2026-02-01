@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { sendBidNotification } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,22 +18,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const { carId, amount } = await request.json()
 
-    if (!carId || !amount || amount <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid bid data' },
-        { status: 400 }
-      )
+    const body = await request.json();
+    const { BidCreateSchema } = await import('@/lib/zod');
+    const parseResult = BidCreateSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
     }
+    let { carId, amount } = parseResult.data;
+    amount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
-    // Get the car with current bids
+    // Get the car with current bids and owner
     const car = await prisma.car.findUnique({
       where: { id: carId },
       include: {
         bids: {
           orderBy: { createdAt: 'desc' },
           take: 1,
+        },
+        owner: {
+          select: { id: true, email: true, name: true },
         },
       },
     })
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: `Bid must be higher than current price: $${car.currentPrice}` },
         { status: 400 }
-      )
+      );
     }
 
     // Check if user is not the owner
@@ -75,11 +80,26 @@ export async function POST(request: NextRequest) {
 
     // Create the bid and update car price in a transaction
     const result = await prisma.$transaction(async (tx) => {
+      // Atomically update car only if currentPrice matches (prevents race)
+      const carUpdate = await tx.car.updateMany({
+        where: {
+          id: carId,
+          currentPrice: car.currentPrice, // must match what we just read
+        },
+        data: {
+          currentPrice: amount,
+        },
+      });
+
+      if (carUpdate.count !== 1) {
+        throw new Error('Bid rejected: another bid was placed just before yours. Please try again.');
+      }
+
       const bid = await tx.bid.create({
         data: {
           carId,
           bidderId: user.id,
-          amount,
+          amount: amount,
         },
         include: {
           bidder: {
@@ -90,20 +110,28 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-      })
+      });
 
+      // Set winnerBidId after bid is created
       await tx.car.update({
         where: { id: carId },
-        data: {
-          currentPrice: amount,
-          winnerBidId: bid.id,
-        },
-      })
+        data: { winnerBidId: bid.id },
+      });
 
-      return bid
-    })
+      return bid;
+    });
 
-    return NextResponse.json(result, { status: 201 })
+    // Send email notification to car owner (idempotent: only if owner is not the bidder)
+    if (car.owner && car.owner.email && car.owner.id !== user.id) {
+      await sendBidNotification({
+      to: car.owner.email,
+      carTitle: `${car.brand} ${car.model}`,
+      bidAmount: amount,
+      carId: car.id,
+      });
+    }
+
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('Error creating bid:', error)
     return NextResponse.json(

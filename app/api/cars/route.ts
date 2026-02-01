@@ -35,49 +35,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized', debugSession: session }, { status: 401 })
     }
 
-    const body = await request.json()
-
-    // Validate required fields
-    const { brand, model, condition, km, year, power, fuel, startingPrice, auctionEndDate, images, addressLine, zipcode, city } = body
-
-    if (!brand || !model || !condition || km === undefined || !year || !power || !fuel || !startingPrice || !auctionEndDate) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    const body = await request.json();
+    const { CarCreateSchema } = await import('@/lib/zod');
+    const parseResult = CarCreateSchema.safeParse(body);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
     }
-
+    const data = parseResult.data;
     // Validate auction end date is in the future
-    if (new Date(auctionEndDate) <= new Date()) {
-      return NextResponse.json({ error: 'Auction end date must be in the future' }, { status: 400 })
+    if (new Date(data.auctionEndDate) <= new Date()) {
+      return NextResponse.json({ error: 'Auction end date must be in the future' }, { status: 400 });
     }
-
     const car = await prisma.car.create({
       data: {
         ownerId: session.user.id,
-        brand,
-        model,
-        description: body.description || '',
-        specs: body.specs || null,
-        condition,
-        km: parseInt(km),
-        year: parseInt(year),
-        power: parseInt(power),
-        fuel,
-        euroStandard: body.euroStandard || null,
-        images: images || [],
-        startingPrice: parseFloat(startingPrice),
-        currentPrice: parseFloat(startingPrice),
-        reservePrice: body.reservePrice ? parseFloat(body.reservePrice) : null,
-        auctionEndDate: new Date(auctionEndDate),
+        brand: data.brand,
+        model: data.model,
+        description: data.description || '',
+        specs: data.specs || null,
+        condition: data.condition,
+        km: parseInt(data.km as any),
+        year: parseInt(data.year as any),
+        power: parseInt(data.power as any),
+        fuel: data.fuel as import('@prisma/client').FuelType,
+        euroStandard: data.euroStandard ? (data.euroStandard as import('@prisma/client').EuroStandard) : null,
+        images: data.images || [],
+        startingPrice: parseFloat(data.startingPrice as any),
+        currentPrice: parseFloat(data.startingPrice as any),
+        reservePrice: data.reservePrice ? parseFloat(data.reservePrice as any) : null,
+        auctionEndDate: new Date(data.auctionEndDate),
         status: 'active',
-        addressLine: addressLine || null,
-        zipcode: zipcode || null,
-        city: city || null,
+        addressLine: data.addressLine || null,
+        zipcode: data.zipcode || null,
+        city: data.city || null,
       },
       include: {
         owner: { select: { id: true, name: true, email: true } },
       },
-    })
-
-    return NextResponse.json(car, { status: 201 })
+    });
+    return NextResponse.json(car, { status: 201 });
   } catch (error) {
     console.error('Failed to create car:', error)
     return NextResponse.json({ error: 'Failed to create car' }, { status: 500 })

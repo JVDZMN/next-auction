@@ -20,51 +20,60 @@ export const authOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        const genericError = new Error('Invalid email or password');
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Invalid credentials')
+          throw genericError;
         }
 
+        // Only select fields needed for session
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-        })
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: true,
+            password: true, // needed for password check only
+          },
+        });
 
         if (!user || !user.password) {
-          throw new Error('Invalid credentials')
+          throw genericError;
         }
 
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,
           user.password
-        )
+        );
 
         if (!isCorrectPassword) {
-          throw new Error('Invalid credentials')
+          throw genericError;
         }
 
-        return user
+        // Return sanitized user object (exclude password)
+        const { password, ...sanitizedUser } = user;
+        return sanitizedUser;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, account, profile }: { token: any; user?: any; account?: any; profile?: any }) {
       // Set user id for both credentials and OAuth logins
-        if (user) {
-          token.id = user.id;
-          token.email = user.email;
-          token.name = user.name;
-          if ((user as User).role) token.role = (user as User).role;
-          console.log('JWT callback: user object', user);
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        if ((user as User).role) token.role = (user as User).role;
       }
-      // For OAuth logins, fetch user from DB if id is missing
-        if (!token.id && token.email) {
-          const dbUser = await prisma.user.findUnique({ where: { email: token.email } });
-          console.log('JWT callback: dbUser lookup for email', token.email, dbUser);
-          if (dbUser) {
-            token.id = dbUser.id;
-            token.role = dbUser.role;
+      // Hydrate role if missing and email present (for OAuth logins)
+      if (!token.role && token.email) {
+        const dbUser = await prisma.user.findUnique({ where: { email: token.email } });
+        if (dbUser) {
+          if (!token.id) token.id = dbUser.id;
+          token.role = dbUser.role;
         }
       }
-        console.log('JWT callback: final token', token);
       return token;
     },
     async session({ session, token }: { session: any; token: any }) {
@@ -77,8 +86,6 @@ export const authOptions = {
           typeof token.role === 'string' && Object.values(Role).includes(token.role as Role)
             ? (token.role as Role)
             : Role.User;
-        console.log('SESSION callback: session.user after assignment', session.user);
-        console.log('SESSION callback: token', token);
       }
       return session;
     },

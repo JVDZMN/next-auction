@@ -152,6 +152,7 @@ model Bid {
   @@index([carId])
   @@index([bidderId])
   @@index([createdAt])
+  @@index([carId, amount(sort: Desc), createdAt(sort: Desc)])
 }
 
 model Notification {
