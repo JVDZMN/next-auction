@@ -2,12 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
+import { CarStatus } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status') || 'active'
-    
+    const allowedStatuses: CarStatus[] = [
+      'active',
+      'completed',
+      'cancelled',
+      'reserve_not_met',
+    ];
+    const { searchParams } = new URL(request.url);
+    const status = (searchParams.get('status') || 'active') as CarStatus;
+
+    if (!allowedStatuses.includes(status)) {
+      return NextResponse.json({ error: `Invalid status. Allowed: ${allowedStatuses.join(', ')}` }, { status: 400 });
+    }
+
+    // Only allow normal users to see 'active' cars. All other statuses require admin.
+    if (status !== 'active') {
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.role || session.user.role !== 'Admin') {
+        return NextResponse.json({ error: 'Admin access required to view this status' }, { status: 403 });
+      }
+    }
+
     const cars = await prisma.car.findMany({
       where: { status },
       include: {
@@ -19,11 +38,11 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
-    })
+    });
 
-    return NextResponse.json(cars)
+    return NextResponse.json(cars);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch cars' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch cars' }, { status: 500 });
   }
 }
 

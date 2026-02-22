@@ -1,3 +1,10 @@
+enum CarStatus {
+  active
+  completed
+  cancelled
+  reserve_not_met
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -62,6 +69,7 @@ model User {
   ratingsGiven     Rating[]       @relation("RatingsGiven")
   messagesSent     Message[]      @relation("MessagesSent")
   messagesReceived Message[]      @relation("MessagesReceived")
+  likes            Like[]
 }
 
 model Account {
@@ -123,7 +131,7 @@ model Car {
   currentPrice   Float
   reservePrice   Float?
   auctionEndDate DateTime
-  status         String        @default("active")
+  status         CarStatus     @default(active)
   winnerBidId    String?       @unique
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -132,11 +140,27 @@ model Car {
   bids      Bid[]
   winnerBid Bid?      @relation("WinningBid", fields: [winnerBidId], references: [id])
   messages  Message[]
+  likedBy   Like[]
 
   @@index([ownerId])
   @@index([status])
   @@index([auctionEndDate])
 }
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  carId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  car  Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, carId])
+  @@index([carId])
+  @@index([userId])
+}
+
 
 model Bid {
   id        String   @id @default(cuid())

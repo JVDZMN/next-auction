@@ -18,5 +18,17 @@ services:
       timeout: 5s
       retries: 5
 
+  auction-cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    container_name: next-auction-cron
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/next_auction_db"
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+
 volumes:
   next_auction_postgres_data:

@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm install --legacy-peer-deps
+
+# Install cron (Alpine's built-in crond, not dcron)
+RUN apk add --no-cache curl bash
+
+# Add cron job: run every minute
+RUN echo '* * * * * cd /app && node --loader ts-node/esm -r tsconfig-paths/register app/api/cron/auction-status.ts >> /app/cron.log 2>&1' > /etc/crontabs/root
+
+CMD ["crond", "-f", "-l", "2"]
