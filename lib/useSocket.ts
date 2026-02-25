@@ -1,20 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-let socket: Socket | null = null;
 
 export function useSocket(carId: string, onMessage: (msg: any) => void) {
+  // Always create a new socket instance per component
+  const [socket, setSocket] = useState<Socket | null>(null);
+
   useEffect(() => {
-    if (!socket) {
-      socket = io({ path: '/api/socketio' });
-    }
+    const newSocket = io('http://localhost:4000', { path: '/api/socketio' });
+    setSocket(newSocket);
     if (carId) {
-      socket.emit('joinCarRoom', carId);
+      newSocket.emit('joinCarRoom', carId);
     }
-    socket.on('newMessage', onMessage);
+    newSocket.on('newMessage', onMessage);
     return () => {
-      socket?.off('newMessage', onMessage);
+      newSocket.off('newMessage', onMessage);
+      newSocket.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carId, onMessage]);
 
   return socket;

@@ -1,8 +1,8 @@
-// tailwind.config.js
-const {heroui} = require("@heroui/theme");
+// tailwind.config.js (ESM)
+import { heroui } from "@heroui/theme";
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   content: [
     "./node_modules/@heroui/theme/dist/components/(button|ripple|spinner).js",
   ],
@@ -12,3 +12,4 @@ module.exports = {
   darkMode: "class",
   plugins: [heroui()],
 };
+export default config;

@@ -2,12 +2,21 @@ import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
-import { getServerSession } from 'next-auth'
+import auth from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 async function getActiveCars() {
   const cars = await prisma.car.findMany({
     where: { status: 'active', auctionEndDate: { gte: new Date() } },
-    include: {
+    select: {
+      id: true,
+      year: true,
+      brand: true,
+      model: true,
+      images: true,
+      condition: true,
+      currentPrice: true,
+      auctionEndDate: true,
       owner: { select: { name: true, rating: true } },
       bids: { orderBy: { createdAt: 'desc' }, take: 1 },
       _count: { select: { bids: true } },
@@ -26,9 +35,9 @@ function getTimeRemaining(endDate: Date) {
   return days > 0 ? `${days}d ${hours}h remaining` : `${hours}h remaining`
 }
 
-export default async function HomePage() {
+export default async function Home() {
   const cars = await getActiveCars()
-  const session = await getServerSession()
+  const session = await auth(authOptions)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -109,7 +118,7 @@ export default async function HomePage() {
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-bold mb-2 line-clamp-1">
-                    {car.title}
+                    {car.brand} {car.model} {car.year}
                   </h3>
                   <p className="text-sm text-gray-600 mb-4">
                     By {car.owner.name}

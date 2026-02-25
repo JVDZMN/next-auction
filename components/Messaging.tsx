@@ -81,22 +81,19 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
         setLoading(false);
         return;
       }
-      const postBody = { carId, receiverId, replyToMessageId, content: input.trim() };
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(postBody),
+      // Send message via Socket.IO server
+      socket?.emit('sendMessage', {
+        carId,
+        message: {
+          carId,
+          sender: session?.user,
+          receiverId,
+          content: input.trim(),
+          replyToMessageId,
+        },
       });
-      const data = await res.json();
-      if (data.message) {
-        setMessages((prev) => [...prev, data.message]);
-        setInput('');
-        setReplyTo(null);
-        // Optionally emit socket event
-        socket?.emit && socket.emit('sendMessage', { ...data.message, carId });
-      } else {
-        setError(data.error || 'Failed to send message');
-      }
+      setInput('');
+      setReplyTo(null);
     } catch (e) {
       setError('Failed to send message');
     } finally {

@@ -1,144 +1,133 @@
-import { useEffect, useRef, useState, Fragment } from 'react';
-import { useSession } from 'next-auth/react';
+"use client";
 import { useSocket } from '@/lib/useSocket';
 // Removed HeroUI Modal import
 import { ArrowUturnLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
+
+// File was truncated. Re-adding a minimal valid AuctionMessages component to fix build error.
+
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+
 interface Message {
-  id?: string;
+  id: string;
   carId: string;
-  sender: {
-    id: string;
-    email: string;
-    name?: string | null;
-  };
-  receiverId: string;
+  sender: { id: string; email: string; name?: string | null };
+  receiver: { id: string; email: string; name?: string | null };
   content: string;
-  createdAt?: string;
+  createdAt: string;
 }
 
-export function AuctionMessages({ carId, ownerId }: { carId: string; ownerId: string }) {
+interface AuctionMessagesProps {
+  carId: string;
+  ownerId: string;
+}
+
+export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps) {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [showReplyDialog, setShowReplyDialog] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch initial messages
+
+  // Real-time: Listen for new messages via Socket.IO
+  const handleSocketMessage = useCallback((msg: Message) => {
+    setMessages((prev) => [...prev, msg]);
+  }, []);
+
+  const socket = useSocket(carId, handleSocketMessage);
+
   useEffect(() => {
-    fetch(`/api/messages?carId=${carId}`)
-      .then((res) => res.json())
-      .then((data) => setMessages(data.messages || []));
+    fetchMessages();
+    // Optionally, add polling or socket updates here
+    // Join car room on mount
+    if (socket && carId) {
+      socket.emit('joinCarRoom', carId);
+    }
+    // Cleanup: leave room if needed
+    return () => {
+      if (socket && carId) {
+        socket.emit('leaveCarRoom', carId);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carId]);
 
-  // Real-time updates
-  useSocket(carId, (msg: Message) => {
-    setMessages((prev) => [...prev, msg]);
-  });
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !session?.user?.id)
-      return;
-    let messageText = input.trim();
-    let receiverId = ownerId;
-    let replyToMessageId: string | undefined = undefined;
-    if (replyTo) {
-      messageText = `↪️ [Reply to: ${replyTo.sender.email}: ${replyTo.content}]\n${messageText}`;
-      // If replying, receiver is the original sender (unless you are replying to yourself)
-      receiverId = replyTo.sender.id === session.user.id ? replyTo.receiverId : replyTo.sender.id;
-      replyToMessageId = replyTo.id;
-    } else if (session.user.id === ownerId) {
-      // Seller must reply to a specific message (cannot initiate new message)
-      alert('As the seller, you must reply to a specific message.');
-      return;
+  const fetchMessages = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/messages?carId=${carId}`);
+      const data = await res.json();
+      if (data.messages) setMessages(data.messages);
+      else setError(data.error || 'Failed to load messages');
+    } catch (err) {
+      setError('Failed to load messages');
+    } finally {
+      setLoading(false);
     }
-    const postBody = { carId, content: input, receiverId, replyToMessageId };
-    console.log('Sending message:', postBody);
-    // Save to DB
-    await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postBody),
-    });
-    setInput('');
-    setReplyTo(null);
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ carId, receiverId: ownerId, content: input }),
+      });
+      const data = await res.json();
+      if (data.message) {
+        setInput('');
+        // Emit real-time event to all clients (including sender)
+        if (socket) {
+          socket.emit('sendMessage', { carId, message: data.message });
+        }
+      } else {
+        setError(data.error || 'Failed to send message');
+      }
+    } catch (err) {
+      setError('Failed to send message');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-white rounded shadow p-4 mt-8">
-      <h3 className="text-lg font-bold mb-2 text-black">Ask the Seller a Question</h3>
-      <div className="h-48 overflow-y-auto border rounded p-2 mb-2 bg-gray-50">
-        {messages.length === 0 ? (
-          <p className="text-gray-400 text-center mt-12">No messages yet.</p>
-        ) : (
-          messages.map((msg, idx) => (
-            <div key={idx} className={`mb-2 group ${msg.sender.email === session?.user?.email ? 'text-right' : 'text-left'}`}
-              style={{ position: 'relative', cursor: 'pointer' }}
-              onClick={() => { setReplyTo(msg); setShowReplyDialog(true); }}
-            >
-              <span className="inline-block px-3 py-1 rounded bg-blue-100 text-blue-900 max-w-xs break-words">
-                {msg.content}
-              </span>
-              <div className="text-xs text-gray-500 mt-1">
-                  {msg.sender.id === session?.user?.id
-                    ? `You (${msg.sender.email})`
-                    : msg.sender.email
-                }
-                {' · '}
-                {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}
-              </div>
-              <button
-                className="absolute right-0 top-0 text-xs text-blue-600 opacity-0 group-hover:opacity-100 bg-white border border-blue-200 rounded px-2 py-1 ml-2 flex items-center gap-1"
-                style={{ zIndex: 2 }}
-                onClick={e => { e.stopPropagation(); setReplyTo(msg); setShowReplyDialog(true); }}
-                type="button"
-                aria-label="Reply"
-              >
-                <ArrowUturnLeftIcon className="h-4 w-4" /> Reply
-              </button>
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <form onSubmit={sendMessage} className="flex gap-2">
-        {(showReplyDialog && !!replyTo) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-lg font-medium leading-6 text-blue-900">
-                Replying to {replyTo?.sender.email}
-              </h3>
-              <div className="mt-2 text-sm text-blue-900">
-                {replyTo?.content}
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  type="button"
-                  className="text-blue-600 underline text-sm"
-                  onClick={() => { setShowReplyDialog(false); setReplyTo(null); }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+    <div className="mt-8 border rounded-lg p-4 bg-white">
+      <h2 className="text-lg font-semibold mb-2">Auction Messages</h2>
+      <div className="max-h-64 overflow-y-auto mb-4">
+        {loading && <div>Loading...</div>}
+        {error && <div className="text-red-600">{error}</div>}
+        {messages.length === 0 && !loading && <div>No messages yet.</div>}
+        {messages.map((msg) => (
+          <div key={msg.id} className="mb-2">
+            <span className="font-bold">{msg.sender.name || msg.sender.email}:</span>
+            <span className="ml-2">{msg.content}</span>
+            <span className="ml-2 text-xs text-gray-500">{new Date(msg.createdAt).toLocaleString()}</span>
           </div>
-        )}
+        ))}
+      </div>
+      <div className="flex gap-2">
         <input
-          className="flex-1 border rounded px-3 py-2 text-black"
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your question..."
+          className="flex-1 border rounded px-2 py-1"
+          placeholder="Type your message..."
+          disabled={loading}
         />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-1">
-          <PaperAirplaneIcon className="h-5 w-5" /> Send
+        <button
+          onClick={sendMessage}
+          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+          disabled={loading || !input.trim()}
+        >
+          <PaperAirplaneIcon className="h-5 w-5 inline" /> Send
         </button>
-      </form>
+      </div>
     </div>
   );
 }

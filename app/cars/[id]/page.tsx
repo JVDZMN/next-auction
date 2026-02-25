@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { BiddingSection } from '@/components/BiddingSection'
-import { AuctionMessages } from '@/components/AuctionMessages'
+import AuctionMessages from '@/components/AuctionMessages'
 import { useSession } from 'next-auth/react'
 
 interface Car {
@@ -42,13 +42,16 @@ interface Car {
   }>
 }
 
-export default function CarDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter()
-  const { data: session } = useSession()
-  const { id } = use(params)
-  const [car, setCar] = useState<Car | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+
+export default function CarDetailPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+  const router = useRouter();
+  const { data: session } = useSession();
+  // Unwrap params if it's a Promise (Next.js 16 dynamic API)
+  const resolvedParams = typeof params.then === 'function' ? use(params) : params;
+  const { id } = resolvedParams;
+  const [car, setCar] = useState<Car | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCar()
