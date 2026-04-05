@@ -38,6 +38,13 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
 
   const socket = useSocket(carId, handleSocketMessage);
 
+  // Join user room for direct messages
+  useEffect(() => {
+    if (socket && session?.user?.id) {
+      socket.emit('joinUserRoom', session.user.id);
+    }
+  }, [socket, session]);
+
   useEffect(() => {
     fetchMessages();
     // Optionally, add polling or socket updates here
@@ -84,7 +91,7 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
         setInput('');
         // Emit real-time event to all clients (including sender)
         if (socket) {
-          socket.emit('sendMessage', { carId, message: data.message });
+          socket.emit('sendMessage', { carId, message: data.message, receiverId: ownerId });
         }
       } else {
         setError(data.error || 'Failed to send message');
@@ -97,7 +104,7 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
   };
 
   return (
-    <div className="mt-8 border rounded-lg p-4 bg-white">
+    <div className="mt-8 border rounded-lg p-4 bg-white" style={{ color: '#000' }}>
       <h2 className="text-lg font-semibold mb-2">Auction Messages</h2>
       <div className="max-h-64 overflow-y-auto mb-4">
         {loading && <div>Loading...</div>}

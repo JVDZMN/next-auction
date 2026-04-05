@@ -1,14 +1,52 @@
-'use client'
 
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Menu, Transition } from '@headlessui/react'
-import { Fragment } from 'react'
-import { UserCircleIcon, ArrowRightOnRectangleIcon, Bars3Icon } from '@heroicons/react/24/outline'
+import { Menu } from '@headlessui/react'
+import { UserCircleIcon, BellIcon, ChatBubbleLeftRightIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState, useCallback } from 'react'
+import { useUserChatSocket } from '@/lib/useUserChatSocket'
+
 
 export function Header() {
   const { data: session, status } = useSession()
   const isAdmin = session?.user?.role === 'Admin'
+  const [showNotifModal, setShowNotifModal] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [messageUsers, setMessageUsers] = useState<{id: string, name: string, image: string | null}[]>([])
+  const [activeChatUser, setActiveChatUser] = useState<{id: string, name: string, image: string | null} | null>(null)
+  const [chatMessages, setChatMessages] = useState<any[]>([])
+  const [chatInput, setChatInput] = useState('')
+
+  const handleSocketMessage = useCallback((msg: any) => {
+    setChatMessages((prev) => [...prev, msg])
+  }, [])
+
+  // Always call the hook to preserve hook order
+  const chatSocket = useUserChatSocket(
+    session?.user?.id || '',
+    activeChatUser?.id || '',
+    handleSocketMessage
+  )
+
+  useEffect(() => {
+    if (!session?.user) return;
+    // Fetch users who messaged the auction owner
+    const fetchMessageUsers = async () => {
+      try {
+        const res = await fetch('/api/messages/notifications');
+        if (!res.ok) return;
+        const data = await res.json();
+        // Expecting: { users: [{id, name, image}], unreadCount: number }
+        setMessageUsers(data.users || []);
+        setUnreadCount(data.unreadCount || 0);
+      } catch (err) {
+        // Optionally handle error
+        setMessageUsers([]);
+        setUnreadCount(0);
+      }
+    };
+    fetchMessageUsers();
+  }, [session]);
 
   return (
     <header className="w-full bg-white border-b shadow-sm">
@@ -22,6 +60,20 @@ export function Header() {
           )}
         </nav>
         <div className="flex items-center gap-2">
+          {session && (
+            <button
+              className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+              onClick={() => setShowNotifModal(true)}
+              aria-label="Messages"
+            >
+              <BellIcon className="h-6 w-6 text-gray-500" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          )}
           {status === 'loading' ? (
             <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
           ) : session ? (
@@ -47,31 +99,6 @@ export function Header() {
                   </span>
                 </Menu.Button>
               </div>
-              <Transition
-                as={Fragment}
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-50">
-                  <div className="py-1">
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={() => signOut()}
-                          className={`w-full flex items-center px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
-                        >
-                          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400" />
-                          Sign Out
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </div>
-                </Menu.Items>
-              </Transition>
             </Menu>
           ) : (
             <button
@@ -81,69 +108,97 @@ export function Header() {
               Sign In
             </button>
           )}
-          {/* Mobile menu button */}
-          <Menu as="div" className="sm:hidden relative inline-block text-left ml-2">
-            <div>
-              <Menu.Button className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-gray-100 focus:outline-none">
-                <Bars3Icon className="h-6 w-6" />
-              </Menu.Button>
-            </div>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-50">
-                <div className="py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <Link href="/cars" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>Browse Cars</Link>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <Link href="/dashboard" className={`block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}>Dashboard</Link>
-                    )}
-                  </Menu.Item>
-                  {isAdmin && (
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link href="/admin/dashboard" className={`block px-4 py-2 text-sm text-purple-600 font-semibold ${active ? 'bg-gray-100' : ''}`}>👑 Admin</Link>
-                      )}
-                    </Menu.Item>
-                  )}
-                  <Menu.Item>
-                    {({ active }) => (
-                      status === 'loading' ? (
-                        <div className="h-8 w-24 bg-gray-200 animate-pulse rounded mx-4 my-2" />
-                      ) : session ? (
-                        <button
-                          onClick={() => signOut()}
-                          className={`w-full flex items-center px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
-                        >
-                          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400" />
-                          Sign Out
-                        </button>
-                      ) : (
-                        <button
-                          className="w-full px-4 py-2 text-left text-blue-600 hover:underline"
-                          onClick={() => signIn()}
-                        >
-                          Sign In
-                        </button>
-                      )
-                    )}
-                  </Menu.Item>
-                </div>
-              </Menu.Items>
-            </Transition>
-          </Menu>
         </div>
       </div>
+      {showNotifModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-lg shadow-lg w-96 max-w-full p-4 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                setShowNotifModal(false)
+                setActiveChatUser(null)
+              }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            {!activeChatUser ? (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Messages</h3>
+                {messageUsers.length === 0 ? (
+                  <div className="text-gray-500">No messages yet.</div>
+                ) : (
+                  <ul className="divide-y divide-gray-200">
+                    {messageUsers.map(user => (
+                      <li key={user.id} className="py-2 flex items-center gap-3">
+                        {user.image ? (
+                          <img src={user.image} alt={user.name} className="h-8 w-8 rounded-full" />
+                        ) : (
+                          <ChatBubbleLeftRightIcon className="h-8 w-8 text-blue-400" />
+                        )}
+                        <span className="font-medium text-gray-900">{user.name}</span>
+                        <button
+                          className="ml-auto px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          onClick={() => setActiveChatUser(user)}
+                        >
+                          Open Chat
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <div>
+                <button
+                  className="mb-2 text-blue-600 hover:underline"
+                  onClick={() => setActiveChatUser(null)}
+                >← Back to messages</button>
+                <h3 className="text-lg font-semibold mb-2">Chat with {activeChatUser ? activeChatUser.name : ''}</h3>
+                <div className="border rounded p-2 h-48 overflow-y-auto bg-gray-50 mb-2">
+                  {chatMessages.length === 0 ? (
+                    <div className="text-gray-500 text-sm">Chat room between you and {activeChatUser ? activeChatUser.name : ''}.</div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {chatMessages.map((msg, idx) => (
+                        <li key={idx} className={session && session.user && msg.senderId === session.user.id ? 'text-right' : 'text-left'}>
+                          <span className={session && session.user && msg.senderId === session.user.id ? 'bg-blue-100 text-blue-800 px-2 py-1 rounded' : 'bg-gray-200 text-gray-800 px-2 py-1 rounded'}>
+                            {msg.content}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <form
+                  onSubmit={e => {
+                    e.preventDefault()
+                    if (!chatInput.trim() || !chatSocket || !session || !session.user || !activeChatUser) return
+                    chatSocket.emit('sendMessage', {
+                      senderId: session.user.id,
+                      receiverId: activeChatUser.id,
+                      content: chatInput,
+                    })
+                    setChatMessages(prev => [...prev, { senderId: session.user.id, content: chatInput }])
+                    setChatInput('')
+                  }}
+                  className="flex gap-2"
+                >
+                  <input
+                    type="text"
+                    className="w-full border rounded px-2 py-1 mb-2"
+                    placeholder="Type a message..."
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                  />
+                  <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Send</button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

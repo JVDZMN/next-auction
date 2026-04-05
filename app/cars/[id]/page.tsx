@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { BiddingSection } from '@/components/BiddingSection'
-import AuctionMessages from '@/components/AuctionMessages'
+import MessageSeller from '@/components/MessageSeller'
 import { useSession } from 'next-auth/react'
 
 interface Car {
@@ -42,37 +42,34 @@ interface Car {
   }>
 }
 
-
 export default function CarDetailPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const router = useRouter();
   const { data: session } = useSession();
-  // Unwrap params if it's a Promise (Next.js 16 dynamic API)
-  const resolvedParams = typeof params.then === 'function' ? use(params) : params;
+  // Next.js 16: unwrap params if it's a Promise
+  const resolvedParams = typeof (params as any)?.then === 'function' ? use(params as Promise<{ id: string }>) : params as { id: string };
   const { id } = resolvedParams;
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCar()
-  }, [id])
+    fetchCar();
+  }, [id]);
 
   const fetchCar = async () => {
     try {
-      const response = await fetch(`/api/cars/${id}`)
-      
+      const response = await fetch(`/api/cars/${id}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch car')
+        throw new Error('Failed to fetch car');
       }
-
-      const data = await response.json()
-      setCar(data)
+      const data = await response.json();
+      setCar(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -82,7 +79,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
           <div className="text-center">Loading...</div>
         </main>
       </div>
-    )
+    );
   }
 
   if (error || !car) {
@@ -95,16 +92,15 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
           </div>
         </main>
       </div>
-    )
+    );
   }
 
-  const isOwner = session?.user?.id === car.owner.id
-  const auctionEnded = new Date(car.auctionEndDate) < new Date()
+  const isOwner = session?.user?.id === car.owner.id;
+  const auctionEnded = new Date(car.auctionEndDate) < new Date();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Images Gallery */}
@@ -206,7 +202,8 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
                 ownerId={car.owner.id}
                 onBidPlaced={fetchCar}
               />
-              <AuctionMessages carId={car.id} ownerId={car.owner.id} />
+              {/* Message Seller Button and Modal */}
+              <MessageSeller carId={car.id} ownerId={car.owner.id} ownerName={car.owner.name} />
             </div>
 
             {/* Actions */}
