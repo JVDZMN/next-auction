@@ -1,4 +1,6 @@
 
+'use client'
+
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
@@ -7,17 +9,28 @@ import { useEffect, useState, useCallback } from 'react'
 import { useUserChatSocket } from '@/lib/useUserChatSocket'
 
 
+type ChatMessage = {
+  senderId: string
+  content: string
+}
+
+type ChatUser = {
+  id: string
+  name: string
+  image: string | null
+}
+
 export function Header() {
   const { data: session, status } = useSession()
   const isAdmin = session?.user?.role === 'Admin'
   const [showNotifModal, setShowNotifModal] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const [messageUsers, setMessageUsers] = useState<{id: string, name: string, image: string | null}[]>([])
-  const [activeChatUser, setActiveChatUser] = useState<{id: string, name: string, image: string | null} | null>(null)
-  const [chatMessages, setChatMessages] = useState<any[]>([])
+  const [messageUsers, setMessageUsers] = useState<ChatUser[]>([])
+  const [activeChatUser, setActiveChatUser] = useState<ChatUser | null>(null)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
 
-  const handleSocketMessage = useCallback((msg: any) => {
+  const handleSocketMessage = useCallback((msg: ChatMessage) => {
     setChatMessages((prev) => [...prev, msg])
   }, [])
 

@@ -2,52 +2,8 @@
 
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header } from '@/components/Header'
-
-interface Car {
-  id: string
-  brand: string
-  model: string
-  description: string
-  specs: string | null
-  condition: string
-  km: number
-  year: number
-  power: number
-  fuel: string
-  euroStandard: string | null
-  images: string[]
-  startingPrice: number
-  currentPrice: number
-  reservePrice: number | null
-  auctionEndDate: string
-  status: string
-  createdAt: string
-  owner: {
-    id: string
-    name: string | null
-    email: string
-    rating: number
-    ratingCount: number
-    createdAt: string
-  }
-  bids: Array<{
-    id: string
-    amount: number
-    createdAt: string
-    bidder: {
-      id: string
-      name: string | null
-      email: string
-      rating: number
-      ratingCount: number
-      _count: {
-        bids: number
-        cars: number
-      }
-    }
-  }>
-}
+import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
+import type { Car } from '@/types/car'
 
 interface BidStats {
   totalBids: number
@@ -90,38 +46,14 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
-    )
-  }
-
-  if (error || !data) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center text-red-600">
-            {error || 'Failed to load car details'}
-          </div>
-        </main>
-      </div>
-    )
-  }
+  if (loading) return <LoadingPage />
+  if (error || !data) return <ErrorPage message={error || 'Failed to load car details'} />
 
   const { car, bidStats } = data
   const auctionEnded = new Date(car.auctionEndDate) < new Date()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 py-8">
+    <PageLayout>
         <button
           onClick={() => router.push('/admin/dashboard')}
           className="mb-6 text-blue-600 hover:text-blue-700 flex items-center gap-2"
@@ -309,12 +241,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
                   <p className="text-sm text-gray-600">Fuel Type</p>
                   <p className="font-semibold">{car.fuel}</p>
                 </div>
-                {car.euroStandard && (
-                  <div className="bg-gray-50 p-3 rounded">
-                    <p className="text-sm text-gray-600">Euro Standard</p>
-                    <p className="font-semibold uppercase">{car.euroStandard}</p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -335,7 +261,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </PageLayout>
   )
 }

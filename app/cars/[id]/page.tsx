@@ -2,45 +2,12 @@
 
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header } from '@/components/Header'
+import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import { BiddingSection } from '@/components/BiddingSection'
 import MessageSeller from '@/components/MessageSeller'
 import { useSession } from 'next-auth/react'
+import type { Car } from '@/types/car'
 
-interface Car {
-  id: string
-  brand: string
-  model: string
-  description: string
-  specs: string | null
-  condition: string
-  km: number
-  year: number
-  power: number
-  fuel: string
-  euroStandard: string | null
-  images: string[]
-  startingPrice: number
-  currentPrice: number
-  reservePrice: number | null
-  auctionEndDate: string
-  status: string
-  createdAt: string
-  owner: {
-    id: string
-    name: string
-    email: string
-    rating: number
-  }
-  bids: Array<{
-    id: string
-    amount: number
-    createdAt: string
-    bidder: {
-      name: string
-    }
-  }>
-}
 
 export default function CarDetailPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const router = useRouter();
@@ -71,38 +38,15 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error || !car) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center text-red-600">
-            {error || 'Car not found'}
-          </div>
-        </main>
-      </div>
-    );
-  }
+  if (loading) return <LoadingPage />
+  if (error || !car) return <ErrorPage message={error || 'Car not found'} />
 
   const isOwner = session?.user?.id === car.owner.id;
   const auctionEnded = new Date(car.auctionEndDate) < new Date();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <PageLayout>
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Images Gallery */}
           {car.images.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-4">
@@ -158,12 +102,6 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
                 <p className="text-sm text-gray-600">Fuel</p>
                 <p className="font-semibold">{car.fuel}</p>
               </div>
-              {car.euroStandard && (
-                <div>
-                  <p className="text-sm text-gray-600">Euro Standard</p>
-                  <p className="font-semibold uppercase">{car.euroStandard}</p>
-                </div>
-              )}
               <div>
                 <p className="text-sm text-gray-600">Starting Price</p>
                 <p className="font-semibold">${car.startingPrice.toLocaleString()}</p>
@@ -225,7 +163,6 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </PageLayout>
   )
 }

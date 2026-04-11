@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { serverError } from '@/lib/api'
 import { Role } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true },
-    })
-
-    if (!user || user.role !== Role.Admin) {
+    const session = await requireAdmin()
+    if (!session) {
       return NextResponse.json({ error: 'Forbidden - Admin access only' }, { status: 403 })
     }
 
@@ -198,10 +188,6 @@ export async function GET(request: NextRequest) {
       topBidders: topBiddersWithDetails,
     })
   } catch (error) {
-    console.error('Error fetching admin stats:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch admin statistics' },
-      { status: 500 }
-    )
+    return serverError('Failed to fetch admin statistics', error)
   }
 }

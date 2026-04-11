@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/Header";
+import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout";
 
 interface User {
   id: string;
@@ -61,32 +61,11 @@ export default function UserDashboardPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error || !user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <div className="text-center text-red-600">{error || "Failed to load user data"}</div>
-        </main>
-      </div>
-    );
-  }
+  if (loading) return <LoadingPage maxWidth="max-w-4xl" />
+  if (error || !user) return <ErrorPage message={error || "Failed to load user data"} maxWidth="max-w-4xl" />
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="max-w-4xl mx-auto px-4 py-8">
+    <PageLayout maxWidth="max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">My Dashboard</h1>
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex items-center gap-6">
@@ -166,7 +145,6 @@ export default function UserDashboardPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </PageLayout>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Header } from '@/components/Header'
+import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import AdminTabs from '@/components/AdminTabs'
 
 interface Stats {
@@ -96,35 +96,11 @@ export default function AdminDashboard() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center">Loading...</div>
-        </main>
-      </div>
-    )
-  }
-
-  if (error || !data) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center text-red-600">
-            {error || 'Failed to load dashboard'}
-          </div>
-        </main>
-      </div>
-    )
-  }
+  if (loading) return <LoadingPage />
+  if (error || !data) return <ErrorPage message={error || 'Failed to load dashboard'} />
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 py-8">
+    <PageLayout>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">Manage users, cars, and monitor auction activity</p>
@@ -308,8 +284,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </PageLayout>
   )
 }
 

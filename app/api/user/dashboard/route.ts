@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { serverError } from '@/lib/api'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user?.email) {
+    const session = await requireAuth()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       include: {
         cars: {
           orderBy: { createdAt: 'desc' },
@@ -49,7 +50,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ user })
   } catch (error) {
-    console.error('Error fetching user dashboard:', error)
-    return NextResponse.json({ error: 'Failed to fetch user dashboard' }, { status: 500 })
+    return serverError('Failed to fetch user dashboard', error)
   }
 }

@@ -1,9 +1,12 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth'
+import { serverError } from '@/lib/api'
 
 export async function POST(request: NextRequest) {
   try {
-    const { authOptions } = await import('@/lib/auth');
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = await requireAuth()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { carId, receiverId, replyToMessageId, content } = await request.json();
@@ -34,16 +37,14 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ message: newMessage });
   } catch (error) {
-    console.error('Error sending message:', error);
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
+    return serverError('Failed to send message', error);
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const { authOptions } = await import('@/lib/auth');
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const session = await requireAuth()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { searchParams } = new URL(request.url);
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
     const messages = await prisma.message.findMany({
       where: {
-        carId: carId || undefined,
+        carId,
         OR: [
           { senderId: session.user.id },
           { receiverId: session.user.id },
@@ -68,10 +69,6 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ messages });
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    return serverError('Failed to fetch messages', error);
   }
 }
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { prisma } from '@/lib/prisma';

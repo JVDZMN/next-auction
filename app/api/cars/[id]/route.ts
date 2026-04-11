@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma, ownerSelect, bidderSelect } from '@/lib/prisma'
+import { serverError } from '@/lib/api'
 
 export async function GET(
   request: NextRequest,
@@ -7,28 +8,15 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    
+
     const car = await prisma.car.findUnique({
       where: { id },
       include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            rating: true,
-          },
-        },
+        owner: { select: ownerSelect },
         bids: {
           orderBy: { createdAt: 'desc' },
           take: 10,
-          include: {
-            bidder: {
-              select: {
-                name: true,
-              },
-            },
-          },
+          include: { bidder: { select: bidderSelect } },
         },
       },
     })
@@ -39,7 +27,6 @@ export async function GET(
 
     return NextResponse.json(car)
   } catch (error) {
-    console.error('Failed to fetch car:', error)
-    return NextResponse.json({ error: 'Failed to fetch car' }, { status: 500 })
+    return serverError('Failed to fetch car', error)
   }
 }

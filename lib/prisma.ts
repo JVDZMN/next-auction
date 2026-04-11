@@ -13,11 +13,30 @@ const pool = globalForPrisma.pool ?? new Pool({
 const adapter = new PrismaPg(pool)
 
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ 
-  adapter 
-} as any)  // Type assertion needed for Prisma 5.22.0 adapter support
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma
   globalForPrisma.pool = pool
-} 
+}
+
+// Shared Prisma select/include fragments
+export const ownerSelect = {
+  id: true,
+  name: true,
+  email: true,
+  rating: true,
+} as const
+
+export const bidderSelect = {
+  id: true,
+  name: true,
+  email: true,
+  rating: true,
+} as const
+
+export const latestBidInclude = {
+  orderBy: { createdAt: 'desc' as const },
+  take: 1,
+  include: { bidder: { select: { name: true } } },
+} as const

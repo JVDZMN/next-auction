@@ -5,6 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { Role, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import type { SessionStrategy } from 'next-auth';
+import { getServerSession } from 'next-auth';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -89,3 +90,20 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+export async function requireAuth() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) return null
+  return session
+}
+
+export async function requireAdmin() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) return null
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  })
+  if (!user || user.role !== Role.Admin) return null
+  return session
+}

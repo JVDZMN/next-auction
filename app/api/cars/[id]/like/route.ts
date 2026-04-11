@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { requireAuth, requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 // Like a car
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  const session = await requireAuth()
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
@@ -25,8 +24,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
 // Unlike a car
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  const session = await requireAuth()
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   await prisma.like.deleteMany({
@@ -40,8 +39,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
 // Get all users who liked a car (admin only)
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.role || session.user.role !== 'Admin') {
+  const session = await requireAdmin()
+  if (!session) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
   const likes = await prisma.like.findMany({

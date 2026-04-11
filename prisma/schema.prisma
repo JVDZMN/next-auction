@@ -13,14 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum EuroStandard {
-  euro1
-  euro2
-  euro3
-  euro4
-  euro5
-  euro6
-}
 
 enum Role {
   User
@@ -119,11 +111,9 @@ model Car {
   year           Int
   power          Int
   fuel           FuelType?
-  euroStandard   EuroStandard?
   gearType       GearType?
   nextInspection DateTime?
   lastInspection DateTime?
-  addressLine    String?
   zipcode        String?
   city           String?
   images         String[]

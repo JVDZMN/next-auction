@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { requireAuth, requireAdmin } from '@/lib/auth'
+import { prisma, ownerSelect, latestBidInclude } from '@/lib/prisma'
+import { serverError } from '@/lib/api'
 import { CarStatus } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
 
     // Only allow normal users to see 'active' cars. All other statuses require admin.
     if (status !== 'active') {
-      const session = await getServerSession(authOptions);
-      if (!session?.user?.role || session.user.role !== 'Admin') {
+      const session = await requireAdmin()
+      if (!session) {
         return NextResponse.json({ error: 'Admin access required to view this status' }, { status: 403 });
       }
     }
@@ -30,28 +30,23 @@ export async function GET(request: NextRequest) {
     const cars = await prisma.car.findMany({
       where: { status },
       include: {
-        owner: { select: { id: true, name: true, email: true, rating: true } },
-        bids: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          include: { bidder: { select: { name: true } } },
-        },
+        owner: { select: ownerSelect },
+        bids: latestBidInclude,
       },
       orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json(cars);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch cars' }, { status: 500 });
+    return serverError('Failed to fetch cars', error)
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    console.log('DEBUG SESSION:', session)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized', debugSession: session }, { status: 401 })
+    const session = await requireAuth()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json();
@@ -77,14 +72,12 @@ export async function POST(request: NextRequest) {
         year: parseInt(data.year as any),
         power: parseInt(data.power as any),
         fuel: data.fuel as import('@prisma/client').FuelType,
-        euroStandard: data.euroStandard ? (data.euroStandard as import('@prisma/client').EuroStandard) : null,
         images: data.images || [],
         startingPrice: parseFloat(data.startingPrice as any),
         currentPrice: parseFloat(data.startingPrice as any),
         reservePrice: data.reservePrice ? parseFloat(data.reservePrice as any) : null,
         auctionEndDate: new Date(data.auctionEndDate),
         status: 'active',
-        addressLine: data.addressLine || null,
         zipcode: data.zipcode || null,
         city: data.city || null,
       },
@@ -94,7 +87,6 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(car, { status: 201 });
   } catch (error) {
-    console.error('Failed to create car:', error)
-    return NextResponse.json({ error: 'Failed to create car' }, { status: 500 })
+    return serverError('Failed to create car', error)
   }
 }

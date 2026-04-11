@@ -10,12 +10,10 @@ export const CarCreateSchema = z.object({
   year: z.union([z.string(), z.number()]),
   power: z.union([z.string(), z.number()]),
   fuel: z.string().min(1),
-  euroStandard: z.string().optional().nullable(),
   images: z.array(z.string()).optional(),
   startingPrice: z.union([z.string(), z.number()]),
   reservePrice: z.union([z.string(), z.number()]).optional().nullable(),
   auctionEndDate: z.string(),
-  addressLine: z.string().optional().nullable(),
   zipcode: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
 });

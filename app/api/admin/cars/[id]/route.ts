@@ -1,26 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { Role } from '@prisma/client'
+import { serverError } from '@/lib/api'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession()
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true },
-    })
-
-    if (!user || user.role !== Role.Admin) {
+    const session = await requireAdmin()
+    if (!session) {
       return NextResponse.json({ error: 'Forbidden - Admin access only' }, { status: 403 })
     }
 
@@ -83,10 +72,6 @@ export async function GET(
       bidStats,
     })
   } catch (error) {
-    console.error('Error fetching car details:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch car details' },
-      { status: 500 }
-    )
+    return serverError('Failed to fetch car details', error)
   }
 }

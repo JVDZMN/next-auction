@@ -25,11 +25,9 @@ export default function CreateCarPage() {
     year: '',
     power: '',
     fuel: 'Benzin',
-    euroStandard: '',
     startingPrice: '',
     reservePrice: '',
     auctionEndDate: '',
-    addressLine: '',
     zipcode: '',
     city: '',
   })
@@ -67,7 +65,6 @@ export default function CreateCarPage() {
           power: parseInt(formData.power),
           startingPrice: parseFloat(formData.startingPrice),
           reservePrice: formData.reservePrice ? parseFloat(formData.reservePrice) : null,
-          euroStandard: formData.euroStandard || null,
           auctionEndDate: new Date(formData.auctionEndDate).toISOString(),
         }),
       })
@@ -108,20 +105,6 @@ export default function CreateCarPage() {
             />
 
             <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="addressLine" className="block text-sm font-medium text-gray-700 mb-1">
-                  Address (Street & House No.)
-                </label>
-                <input
-                  id="addressLine"
-                  name="addressLine"
-                  type="text"
-                  value={formData.addressLine}
-                  onChange={handleChange}
-                  placeholder="123 Main St, Apt 4B"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                />
-              </div>
               <div>
                 <label htmlFor="zipcode" className="block text-sm font-medium text-gray-700 mb-1">
                   Zip Code (4 digits)
@@ -305,26 +288,6 @@ export default function CreateCarPage() {
                 </select>
               </div>
 
-              <div>
-                <label htmlFor="euroStandard" className="block text-sm font-medium text-gray-700 mb-1">
-                  Euro Standard
-                </label>
-                <select 
-                  id="euroStandard"
-                  name="euroStandard"
-                  value={formData.euroStandard}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                >
-                  <option value="">Not specified</option>
-                  <option value="euro6">Euro 6</option>
-                  <option value="euro5">Euro 5</option>
-                  <option value="euro4">Euro 4</option>
-                  <option value="euro3">Euro 3</option>
-                  <option value="euro2">Euro 2</option>
-                  <option value="euro1">Euro 1</option>
-                </select>
-              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">

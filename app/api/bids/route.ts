@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma, bidderSelect } from '@/lib/prisma'
+import { serverError } from '@/lib/api'
 import { sendBidNotification } from '@/lib/email'
+import { requireAuth } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user?.email) {
+    const session = await requireAuth()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+    const user = { id: session.user.id }
 
 
     const body = await request.json();
@@ -25,7 +19,8 @@ export async function POST(request: NextRequest) {
     if (!parseResult.success) {
       return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
     }
-    let { carId, amount } = parseResult.data;
+    const { carId } = parseResult.data;
+    let { amount } = parseResult.data;
     amount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
     // Get the car with current bids and owner
@@ -101,15 +96,7 @@ export async function POST(request: NextRequest) {
           bidderId: user.id,
           amount: amount,
         },
-        include: {
-          bidder: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
+        include: { bidder: { select: bidderSelect } },
       });
 
       // Set winnerBidId after bid is created
@@ -133,11 +120,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error('Error creating bid:', error)
-    return NextResponse.json(
-      { error: 'Failed to place bid' },
-      { status: 500 }
-    )
+    return serverError('Failed to place bid', error)
   }
 }
 
@@ -157,24 +140,11 @@ export async function GET(request: NextRequest) {
       where: { carId },
       orderBy: { createdAt: 'desc' },
       take: 50,
-      include: {
-        bidder: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            rating: true,
-          },
-        },
-      },
+      include: { bidder: { select: bidderSelect } },
     })
 
     return NextResponse.json(bids)
   } catch (error) {
-    console.error('Error fetching bids:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch bids' },
-      { status: 500 }
-    )
+    return serverError('Failed to fetch bids', error)
   }
 }
