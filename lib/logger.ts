@@ -148,7 +148,7 @@ export const logger = {
       )
     },
 
-    failed(error: unknown, ctx: Omit<BidFailedCtx, 'action'>) {
+    failed(error: unknown, ctx: { userId?: string; carId?: string; amount?: number }) {
       logger.error(
         `Bid failed unexpectedly — userId=${ctx.userId} carId=${ctx.carId ?? '?'} amount=${ctx.amount ?? '?'}`,
         error,

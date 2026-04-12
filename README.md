@@ -1,118 +1,160 @@
-# Next.js Auction Platform
+# Next Auction
 
-A full-stack car auction platform with real-time bidding capabilities.
+A full-stack real-time car auction platform built with Next.js 16, Prisma, and Socket.io.
 
-## ✅ What's Been Set Up
+## Tech Stack
 
-### Backend & Database
-- **Prisma ORM** with PostgreSQL (Database created: `auction_db`)
-- **Database Models**: User, Car, Bid, Notification, Rating, Account, Session
-- **NextAuth.js** with Google OAuth configured
-- **Email Notifications** via Resend API
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Database | PostgreSQL + Prisma ORM |
+| Auth | NextAuth.js (Google OAuth + credentials) |
+| Real-time | Socket.io |
+| Email | Resend |
+| Image upload | Cloudinary |
+| Error tracking | Sentry |
+| Payments | Stripe (integrated) |
+| Styling | Tailwind CSS |
+| Testing | Vitest |
 
-### API Routes Created
-- `/api/auth/[...nextauth]` - Authentication (Google OAuth)
-- `/api/cars` - GET (list cars) & POST (create auction)
-- `/api/bids` - POST (place bids with validation)
+## Features
 
-### Features Implemented
+- **Real-time bidding** — Socket.io pushes live price updates and notifications to all connected users
+- **Race condition protection** — Prisma `$transaction` with Serializable isolation + optimistic locking ensures two concurrent bids can never both win
+- **Rate limiting** — 5 bids / 10 s per user; 10 messages / 60 s per user (sliding-window, in-memory)
+- **Structured logging** — JSON logs on every bid attempt/rejection/success; unexpected errors captured to Sentry
+- **Notifications** — Bell icon with unread count; real-time socket push for new bids, outbids, and messages
+- **Messaging** — Buyer ↔ seller chat per listing, with email fallback via Resend
+- **Admin panel** — Dashboard with stats, car management, and per-listing bid history
+- **Error boundaries** — `app/error.tsx` and `app/global-error.tsx` show recovery UI instead of a white screen
+- **CI** — GitHub Actions runs lint + tests + type check on every push and PR
 
-#### ✅ Bidding System
-- Users can place bids on active auctions
-- **Validation**: Owner cannot bid on own car
-- **Validation**: Bid must be higher than current price
-- **Validation**: Auction must be active and not expired
+## Getting Started
 
-#### ✅ Email Notifications
-- Car owner receives email when bid is placed
-- Previous highest bidder receives "outbid" notification
-- All outbid bidders get notified when new higher bid placed
+### Prerequisites
 
-#### ✅ User Profiles
-- Rating system (1-5 stars)
-- Bid history tracking
-- Car listing management
+- Node.js 22+
+- PostgreSQL
 
-## ��� Next Steps
+### Setup
 
-### To Start Development:
 ```bash
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+# Fill in the values in .env
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start development server
 npm run dev
 ```
 
-### Still To Build:
-1. **Frontend Pages**:
-   - Homepage with car listings
-   - Car detail page with bidding interface
-   - User profile & dashboard
-   - Create auction form
-   - Authentication pages
+Open [http://localhost:3000](http://localhost:3000).
 
-2. **WebSocket Integration**:
-   - Real-time bid updates
-   - Live auction countdown
-   - Socket.io server setup
+### Environment Variables
 
-3. **Stripe Payment**:
-   - Payment processing for winners
-   - Escrow system
+See [.env.example](.env.example) for the full list. Required variables:
 
-4. **Image Upload**:
-   - Car photo uploads (Cloudinary/AWS S3)
-   - Image gallery
+```
+DATABASE_URL
+NEXTAUTH_SECRET
+NEXTAUTH_URL
+NEXT_PUBLIC_SENTRY_DSN   # optional — app works without it
+SENTRY_DSN               # optional
+RESEND_API_KEY
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+```
 
-5. **Mobile App** (React Native):
-   - Separate project at `/c/Next.JS/next-auction-mobile`
+## Project Structure
 
-## ��� Project Structure
 ```
 next-auction/
 ├── app/
 │   ├── api/
-│   │   ├── auth/[...nextauth]/  # Google OAuth
-│   │   ├── bids/                # Bidding endpoints
-│   │   └── cars/                # Car auction endpoints
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
+│   │   ├── auth/          # NextAuth + credentials register
+│   │   ├── bids/          # Place & list bids
+│   │   ├── cars/          # CRUD + like + rating + status
+│   │   ├── messages/      # Chat + notifications
+│   │   ├── upload/        # Cloudinary image upload
+│   │   └── admin/         # Admin stats & car management
+│   ├── cars/              # Browse & detail pages
+│   ├── dashboard/         # User dashboard
+│   ├── admin/             # Admin dashboard
+│   ├── auth/              # Sign in / sign up pages
+│   ├── error.tsx          # App-level error boundary
+│   ├── global-error.tsx   # Root layout error boundary
+│   └── not-found.tsx      # 404 page
+├── components/
+│   ├── Header.tsx          # Nav + bell notifications + user menu
+│   ├── BiddingSection.tsx  # Live bid form + bid history
+│   ├── MessagesModal.tsx   # Chat modal
+│   ├── MessageSeller.tsx   # Message seller button
+│   └── PageLayout.tsx      # Shared layout wrapper
 ├── lib/
-│   ├── auth.ts       # NextAuth config
-│   ├── email.ts      # Email notifications
-│   └── prisma.ts     # Prisma client
+│   ├── bid-validation.ts   # Pure bid business rules (testable)
+│   ├── bid-error.ts        # Typed error class for bid rejections
+│   ├── rate-limit.ts       # Sliding-window rate limiter
+│   ├── logger.ts           # Structured JSON logger + Sentry
+│   ├── socket-server.ts    # Socket.io singleton
+│   ├── email.ts            # Resend email helpers
+│   ├── auth.ts             # NextAuth config
+│   ├── prisma.ts           # Prisma client
+│   └── zod.ts              # Input validation schemas
+├── pages/api/
+│   └── socketio.ts         # Socket.io handler (Pages Router)
 ├── prisma/
-│   └── schema.prisma # Database schema
-├── types/
-│   └── next-auth.d.ts
-├── .env              # Environment variables (configured)
-└── .env.example      # Template
+│   └── schema.prisma
+├── .github/workflows/
+│   └── ci.yml              # Lint + test + type check
+└── .env.example
 ```
 
-## ��� Configuration
+## API Routes
 
-All environment variables are set up in `.env`:
-- ✅ PostgreSQL connection
-- ✅ NextAuth secret
-- ✅ Google OAuth credentials
-- ✅ Resend API key
-- ⚠️  Stripe keys (add your keys)
+| Method | Route | Description |
+|---|---|---|
+| GET/POST | `/api/cars` | List / create listings |
+| GET/PATCH/DELETE | `/api/cars/[id]` | Single car |
+| POST | `/api/cars/[id]/like` | Toggle like |
+| POST | `/api/cars/[id]/rating` | Rate a user |
+| PATCH | `/api/cars/[id]/status` | Update auction status |
+| GET/POST | `/api/bids` | List / place bids |
+| GET/POST | `/api/messages` | Fetch / send messages |
+| GET/PATCH | `/api/messages/notifications` | Read notifications / mark read |
+| POST | `/api/upload` | Upload images to Cloudinary |
+| GET | `/api/admin/stats` | Platform statistics |
+| GET | `/api/admin/cars/[id]` | Admin car detail with bid stats |
 
-## ��� Core Auction Rules (Implemented in API)
+## Scripts
 
-1. Starting price set by owner
-2. Auction duration (4 days configurable)
-3. Email notifications to:
-   - Car owner (on every bid)
-   - All previous bidders when outbid
-4. Bidders stop receiving notifications if they don't re-bid
-5. Owner cannot bid on own car
-6. Bids must be higher than current price
+```bash
+npm run dev          # Start dev server
+npm test             # Run unit tests (Vitest)
+npm run test:watch   # Watch mode
+npm run test:coverage # Coverage report
+npm run lint         # ESLint
+```
 
-## ��� Database Schema
+## Bidding Rules
 
-- **User**: Profile, rating, authentication
-- **Car**: Title, description, specs, images, pricing
-- **Bid**: Amount, timestamp, relationships
-- **Notification**: Type, read status, car reference
-- **Rating**: Score, comment, timestamps
+1. Bid must be strictly higher than the current price
+2. Auction must have `active` status and not have passed its end date
+3. Owner cannot bid on their own listing
+4. Maximum 5 bids per 10 seconds per user
+5. Two concurrent bids for the same car are resolved atomically — the first to commit wins, the second receives a 409
 
-Build successful! ✅
+## Database Schema
+
+```
+User ──< Car ──< Bid
+              ──< Message
+              ──< Like
+User ──< Notification
+User ──< Rating
+```

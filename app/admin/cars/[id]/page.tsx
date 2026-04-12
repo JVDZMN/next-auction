@@ -157,7 +157,7 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
                     <p className="font-semibold text-lg">{car.owner.name || 'Anonymous'}</p>
                     <p className="text-gray-600">{car.owner.email}</p>
                     <p className="text-sm text-gray-500 mt-2">
-                      Member since {new Date(car.owner.createdAt).toLocaleDateString()}
+                      {car.owner.createdAt && <>Member since {new Date(car.owner.createdAt).toLocaleDateString()}</>}
                     </p>
                   </div>
                   <div className="text-right">
@@ -197,9 +197,9 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
                           <p className="font-semibold text-lg">{bid.bidder.name || 'Anonymous'}</p>
                           <p className="text-sm text-gray-600">{bid.bidder.email}</p>
                           <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                            <span>⭐ {bid.bidder.rating.toFixed(1)} ({bid.bidder.ratingCount} ratings)</span>
-                            <span>📦 {bid.bidder._count.cars} cars listed</span>
-                            <span>💰 {bid.bidder._count.bids} total bids</span>
+                            <span>⭐ {bid.bidder.rating?.toFixed(1) ?? '—'} ({bid.bidder.ratingCount} ratings)</span>
+                            <span>📦 {bid.bidder._count?.cars ?? 0} cars listed</span>
+                            <span>💰 {bid.bidder._count?.bids ?? 0} total bids</span>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
                             {new Date(bid.createdAt).toLocaleString()}
