@@ -139,19 +139,16 @@ export function Header() {
               className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none"
               onClick={() => {
                 setShowNotifModal(true)
-                // Always fetch fresh list when opening the modal
+                setUnreadCount(0)
+                fetch('/api/messages/notifications', { method: 'PATCH' }).catch(() => {})
+                // Fetch fresh lists (do not update unreadCount — we just zeroed it)
                 fetch('/api/messages/notifications')
                   .then((r) => r.json())
                   .then((data) => {
                     setMessageUsers(data.users || [])
                     setBidNotifications(data.bidNotifications || [])
-                    setUnreadCount(data.unreadCount || 0)
                   })
                   .catch(() => {})
-                if (unreadCount > 0) {
-                  setUnreadCount(0)
-                  fetch('/api/messages/notifications', { method: 'PATCH' })
-                }
               }}
               aria-label="Messages"
             >

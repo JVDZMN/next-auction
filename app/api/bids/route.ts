@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma, bidderSelect } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
-import { sendBidNotification } from '@/lib/email'
+import { sendBidNotification, sendOutbidNotification } from '@/lib/email'
 import { requireAuth } from '@/lib/auth'
 import { emitToUser } from '@/lib/socket-server'
 
@@ -119,11 +119,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Find all previous bidders on this car (excluding the current bidder)
+    // Find all previous bidders on this car (excluding the current bidder) with their emails
     const previousBids = await prisma.bid.findMany({
       where: { carId, bidderId: { not: user.id } },
       distinct: ['bidderId'],
-      select: { bidderId: true },
+      select: { bidderId: true, bidder: { select: { email: true } } },
     })
     const outbidUserIds = previousBids.map((b) => b.bidderId)
 
@@ -153,6 +153,20 @@ export async function POST(request: NextRequest) {
     for (const t of targets) {
       emitToUser(t.userId, 'newNotification', { type: t.type, message: t.message, carId })
     }
+
+    // Send outbid emails to previous bidders
+    await Promise.allSettled(
+      previousBids
+        .filter((b) => b.bidder.email)
+        .map((b) =>
+          sendOutbidNotification({
+            to: b.bidder.email!,
+            carTitle,
+            newBidAmount: amount,
+            carId,
+          })
+        )
+    )
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {

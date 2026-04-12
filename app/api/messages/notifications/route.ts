@@ -58,11 +58,7 @@ export async function PATCH() {
     }
 
     await prisma.notification.updateMany({
-      where: {
-        userId: session.user.id,
-        type: 'new_message',
-        read: false,
-      },
+      where: { userId: session.user.id, read: false },
       data: { read: true },
     })
 

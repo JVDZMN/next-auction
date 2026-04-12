@@ -69,3 +69,28 @@ export async function sendOutbidNotification({
     `,
   })
 }
+
+export async function sendMessageNotification({
+  to,
+  senderName,
+  preview,
+  carTitle,
+  carId,
+}: {
+  to: string
+  senderName: string
+  preview: string
+  carTitle: string
+  carId: string
+}) {
+  return sendEmail({
+    to,
+    subject: `New message from ${senderName} about ${carTitle}`,
+    html: `
+      <h2>New Message</h2>
+      <p><strong>${senderName}</strong> sent you a message about <strong>${carTitle}</strong>:</p>
+      <blockquote style="border-left:3px solid #ccc;padding-left:12px;color:#555">${preview}</blockquote>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/cars/${carId}">View Listing</a>
+    `,
+  })
+}

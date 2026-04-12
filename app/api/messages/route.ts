@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { serverError } from '@/lib/api'
 import { emitToUser } from '@/lib/socket-server'
+import { sendMessageNotification } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
     const car = await prisma.car.findUnique({
       where: { id: carId },
-      select: { ownerId: true },
+      select: { ownerId: true, brand: true, model: true },
     });
     if (!car) {
       return NextResponse.json({ error: 'Car not found' }, { status: 404 });
@@ -61,6 +62,17 @@ export async function POST(request: NextRequest) {
       content,
       carId,
     });
+
+    // Send email notification to receiver (fire-and-forget)
+    if (newMessage.receiver.email) {
+      sendMessageNotification({
+        to: newMessage.receiver.email,
+        senderName: newMessage.sender.name || newMessage.sender.email,
+        preview: content.length > 200 ? content.slice(0, 200) + '…' : content,
+        carTitle: `${car.brand} ${car.model}`,
+        carId,
+      }).catch(() => {})
+    }
 
     return NextResponse.json({ message: newMessage });
   } catch (error) {
