@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-export function useUserChatSocket(userId: string, peerId: string, onMessage: (msg: any) => void) {
+export function useUserChatSocket(userId: string, peerId: string, onMessage: (msg: unknown) => void) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
