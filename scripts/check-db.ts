@@ -6,7 +6,7 @@ const pool = new Pool({
   connectionString: "postgresql://postgres:postgres@localhost:5434/next_auction_db"
 })
 const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter } as any)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('Testing database connection...')

@@ -17,6 +17,8 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  if (session?.user?.id === ownerId) return null;
+
   const sendMessage = async () => {
     if (!input.trim()) return;
     setLoading(true);
@@ -49,7 +51,7 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
           onClick={() => setOpen(true)}
         >
-          Chat? / Send message
+          Message to seller
         </button>
       </div>
       {open && (

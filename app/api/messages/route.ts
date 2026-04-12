@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { serverError } from '@/lib/api'
+import { emitToUser } from '@/lib/socket-server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +36,25 @@ export async function POST(request: NextRequest) {
         replyTo: true,
       },
     });
+    // Create a notification for the receiver
+    const notification = await prisma.notification.create({
+      data: {
+        userId: finalReceiverId,
+        type: 'new_message',
+        message: `New message from ${newMessage.sender.name || newMessage.sender.email}`,
+        carId,
+      },
+    });
+
+    // Push real-time notification to the receiver's socket room
+    emitToUser(finalReceiverId, 'newNotification', {
+      id: notification.id,
+      message: notification.message,
+      type: notification.type,
+      carId: notification.carId,
+      createdAt: notification.createdAt,
+    });
+
     return NextResponse.json({ message: newMessage });
   } catch (error) {
     return serverError('Failed to send message', error);

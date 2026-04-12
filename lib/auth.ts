@@ -2,13 +2,16 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import type { SessionStrategy } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
+import type { Session, User } from 'next-auth';
+import type { Adapter } from 'next-auth/adapters';
 import { getServerSession } from 'next-auth';
 
 export const authOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -52,7 +55,7 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: any; user?: any }) {
+    async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -68,7 +71,7 @@ export const authOptions = {
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (session?.user) {
         session.user.id = token.id as string;
         session.user.name = token.name as string;

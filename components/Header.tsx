@@ -7,6 +7,7 @@ import { Menu } from '@headlessui/react'
 import { UserCircleIcon, BellIcon, ChatBubbleLeftRightIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState, useCallback } from 'react'
 import { useUserChatSocket } from '@/lib/useUserChatSocket'
+import { useNotificationSocket } from '@/lib/useNotificationSocket'
 
 
 type ChatMessage = {
@@ -41,19 +42,23 @@ export function Header() {
     handleSocketMessage
   )
 
+  // Real-time: bump bell count when a new message notification arrives
+  const handleNewNotification = useCallback(() => {
+    setUnreadCount((prev) => prev + 1)
+  }, [])
+
+  useNotificationSocket(session?.user?.id || '', handleNewNotification)
+
   useEffect(() => {
     if (!session?.user) return;
-    // Fetch users who messaged the auction owner
     const fetchMessageUsers = async () => {
       try {
         const res = await fetch('/api/messages/notifications');
         if (!res.ok) return;
         const data = await res.json();
-        // Expecting: { users: [{id, name, image}], unreadCount: number }
         setMessageUsers(data.users || []);
         setUnreadCount(data.unreadCount || 0);
-      } catch (err) {
-        // Optionally handle error
+      } catch {
         setMessageUsers([]);
         setUnreadCount(0);
       }
@@ -76,7 +81,13 @@ export function Header() {
           {session && (
             <button
               className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none"
-              onClick={() => setShowNotifModal(true)}
+              onClick={() => {
+                setShowNotifModal(true)
+                if (unreadCount > 0) {
+                  setUnreadCount(0)
+                  fetch('/api/messages/notifications', { method: 'PATCH' })
+                }
+              }}
               aria-label="Messages"
             >
               <BellIcon className="h-6 w-6 text-gray-500" />

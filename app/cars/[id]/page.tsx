@@ -12,8 +12,8 @@ import type { Car } from '@/types/car'
 export default function CarDetailPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const router = useRouter();
   const { data: session } = useSession();
-  // Next.js 16: unwrap params if it's a Promise
-  const resolvedParams = typeof (params as any)?.then === 'function' ? use(params as Promise<{ id: string }>) : params as { id: string };
+  // Next.js 15+: params may be a Promise
+  const resolvedParams = params instanceof Promise ? use(params) : params;
   const { id } = resolvedParams;
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
