@@ -29,6 +29,7 @@ export function Header() {
   const [showNotifModal, setShowNotifModal] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [messageUsers, setMessageUsers] = useState<ChatUser[]>([])
+  const [bidNotifications, setBidNotifications] = useState<{ id: string; message: string; type: string; carId: string | null; createdAt: string }[]>([])
   const [activeChatUser, setActiveChatUser] = useState<ChatUser | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
@@ -45,12 +46,15 @@ export function Header() {
     handleSocketMessage
   )
 
-  // Real-time: bump bell count and refresh user list when a new message notification arrives
+  // Real-time: bump bell count and refresh lists when any notification arrives
   const handleNewNotification = useCallback(() => {
     setUnreadCount((prev) => prev + 1)
     fetch('/api/messages/notifications')
       .then((r) => r.json())
-      .then((data) => { setMessageUsers(data.users || []) })
+      .then((data) => {
+        setMessageUsers(data.users || [])
+        setBidNotifications(data.bidNotifications || [])
+      })
       .catch(() => {})
   }, [])
 
@@ -89,6 +93,7 @@ export function Header() {
         if (!res.ok) return;
         const data = await res.json();
         setMessageUsers(data.users || []);
+        setBidNotifications(data.bidNotifications || []);
         setUnreadCount(data.unreadCount || 0);
       } catch {
         setMessageUsers([]);
@@ -139,6 +144,7 @@ export function Header() {
                   .then((r) => r.json())
                   .then((data) => {
                     setMessageUsers(data.users || [])
+                    setBidNotifications(data.bidNotifications || [])
                     setUnreadCount(data.unreadCount || 0)
                   })
                   .catch(() => {})
@@ -196,6 +202,7 @@ export function Header() {
       {showNotifModal && (
         <MessagesModal
           messageUsers={messageUsers}
+          bidNotifications={bidNotifications}
           activeChatUser={activeChatUser}
           chatMessages={chatMessages}
           chatInput={chatInput}

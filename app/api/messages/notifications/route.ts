@@ -12,31 +12,37 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const [unreadMessages, senderUsers] = await Promise.all([
-      // Count unread message notifications
+    const [unreadCount, senderUsers, bidNotifications] = await Promise.all([
+      // Count ALL unread notifications (messages + bids)
       prisma.notification.count({
-        where: {
-          userId: session.user.id,
-          type: 'new_message',
-          read: false,
-        },
+        where: { userId: session.user.id, read: false },
       }),
-      // Get distinct senders who have messaged this user
+      // Distinct senders who have messaged this user
       prisma.message.findMany({
         where: { receiverId: session.user.id },
         distinct: ['senderId'],
         orderBy: { createdAt: 'desc' },
         select: {
-          sender: {
-            select: { id: true, name: true, image: true },
-          },
+          sender: { select: { id: true, name: true, image: true } },
         },
+      }),
+      // Recent unread bid notifications
+      prisma.notification.findMany({
+        where: {
+          userId: session.user.id,
+          type: { in: ['new_bid', 'outbid'] },
+          read: false,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: { id: true, message: true, type: true, carId: true, createdAt: true },
       }),
     ])
 
     return NextResponse.json({
-      unreadCount: unreadMessages,
+      unreadCount,
       users: senderUsers.map((m) => m.sender),
+      bidNotifications,
     })
   } catch (error) {
     return serverError('Failed to fetch notifications', error)

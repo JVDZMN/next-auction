@@ -14,8 +14,17 @@ type ChatUser = {
   image: string | null
 }
 
+type BidNotification = {
+  id: string
+  message: string
+  type: string
+  carId: string | null
+  createdAt: string
+}
+
 type Props = {
   messageUsers: ChatUser[]
+  bidNotifications: BidNotification[]
   activeChatUser: ChatUser | null
   chatMessages: ChatMessage[]
   chatInput: string
@@ -29,6 +38,7 @@ type Props = {
 
 export function MessagesModal({
   messageUsers,
+  bidNotifications,
   activeChatUser,
   chatMessages,
   chatInput,
@@ -51,10 +61,34 @@ export function MessagesModal({
         </button>
 
         {!activeChatUser ? (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Messages</h3>
+          <div className="max-h-[70vh] overflow-y-auto">
+            {bidNotifications.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Bid Activity</h3>
+                <ul className="space-y-2">
+                  {bidNotifications.map((n) => (
+                    <li key={n.id} className="flex items-start gap-2 p-2 rounded bg-amber-50 border border-amber-100">
+                      <span className="mt-0.5 text-lg">{n.type === 'outbid' ? '⚠️' : '🔔'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800">{n.message}</p>
+                        {n.carId && (
+                          <a
+                            href={`/cars/${n.carId}`}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            View listing
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Messages</h3>
             {messageUsers.length === 0 ? (
-              <div className="text-gray-500">No messages yet.</div>
+              <div className="text-gray-500 text-sm">No messages yet.</div>
             ) : (
               <ul className="divide-y divide-gray-200">
                 {messageUsers.map(user => (

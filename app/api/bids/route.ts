@@ -3,6 +3,7 @@ import { prisma, bidderSelect } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { sendBidNotification } from '@/lib/email'
 import { requireAuth } from '@/lib/auth'
+import { emitToUser } from '@/lib/socket-server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -108,14 +109,49 @@ export async function POST(request: NextRequest) {
       return bid;
     });
 
-    // Send email notification to car owner (idempotent: only if owner is not the bidder)
+    // Send email notification to car owner
     if (car.owner && car.owner.email && car.owner.id !== user.id) {
       await sendBidNotification({
-      to: car.owner.email,
-      carTitle: `${car.brand} ${car.model}`,
-      bidAmount: amount,
-      carId: car.id,
+        to: car.owner.email,
+        carTitle: `${car.brand} ${car.model}`,
+        bidAmount: amount,
+        carId: car.id,
       });
+    }
+
+    // Find all previous bidders on this car (excluding the current bidder)
+    const previousBids = await prisma.bid.findMany({
+      where: { carId, bidderId: { not: user.id } },
+      distinct: ['bidderId'],
+      select: { bidderId: true },
+    })
+    const outbidUserIds = previousBids.map((b) => b.bidderId)
+
+    const carTitle = `${car.brand} ${car.model}`
+
+    // Notification targets: owner (new bid) + all previous bidders (outbid)
+    type NotifTarget = { userId: string; type: string; message: string }
+    const targets: NotifTarget[] = [
+      {
+        userId: car.ownerId,
+        type: 'new_bid',
+        message: `New bid of ${amount} on your ${carTitle}`,
+      },
+      ...outbidUserIds.map((bidderId) => ({
+        userId: bidderId,
+        type: 'outbid',
+        message: `You have been outbid on ${carTitle}. New highest bid: ${amount}`,
+      })),
+    ]
+
+    // Persist to DB
+    await prisma.notification.createMany({
+      data: targets.map((t) => ({ userId: t.userId, type: t.type, message: t.message, carId })),
+    })
+
+    // Emit real-time socket events
+    for (const t of targets) {
+      emitToUser(t.userId, 'newNotification', { type: t.type, message: t.message, carId })
     }
 
     return NextResponse.json(result, { status: 201 });
