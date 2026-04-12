@@ -4,6 +4,9 @@ import { requireAuth } from '@/lib/auth'
 import { serverError } from '@/lib/api'
 import { emitToUser } from '@/lib/socket-server'
 import { sendMessageNotification } from '@/lib/email'
+import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
+
+const MSG_RATE_LIMIT = { limit: 10, windowMs: 60_000 } // 10 messages per minute per user
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +14,14 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const rl = rateLimit(`msg:${session.user.id}`, MSG_RATE_LIMIT)
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many messages. Please slow down.' },
+        { status: 429, headers: rateLimitHeaders(rl, MSG_RATE_LIMIT) },
+      )
+    }
+
     const { carId, receiverId, replyToMessageId, content } = await request.json();
     if (!carId || !content) {
       return NextResponse.json({ error: 'Missing carId or content' }, { status: 400 });

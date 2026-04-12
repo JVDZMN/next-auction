@@ -7,6 +7,9 @@ import { requireAuth } from '@/lib/auth'
 import { emitToUser } from '@/lib/socket-server'
 import { validateBid } from '@/lib/bid-validation'
 import { BidError } from '@/lib/bid-error'
+import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
+
+const BID_RATE_LIMIT = { limit: 5, windowMs: 10_000 } // 5 bids per 10 s per user
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +18,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const user = { id: session.user.id }
+
+    // Rate-limit check — runs before any DB work
+    const rl = rateLimit(`bid:${user.id}`, BID_RATE_LIMIT)
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many bids. Please wait a moment before trying again.' },
+        { status: 429, headers: rateLimitHeaders(rl, BID_RATE_LIMIT) },
+      )
+    }
 
     const body = await request.json()
     const { BidCreateSchema } = await import('@/lib/zod')
