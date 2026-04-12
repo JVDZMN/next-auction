@@ -140,11 +140,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2">
         <Link href="/" className="text-2xl font-bold text-blue-600">Next Auction</Link>
         <nav className="hidden sm:flex gap-6 items-center">
-          <Link href="/cars" className="hover:text-blue-600">Browse Cars</Link>
-          {isAdmin && (
-            <p >👑 Admin</p>
-          )}
-          <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} className="hover:text-blue-600">Dashboard</Link>
+          <Link href="/cars" className="hover:text-blue-600">Browse Cars</Link>          <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} className="hover:text-blue-600">Dashboard</Link>
           {isAdmin && (
             <Link href="/admin/dashboard" className="text-purple-600 font-semibold">👑 Admin</Link>
           )}
