@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { useSession } from 'next-auth/react'
 import { Prisma } from '@prisma/client'
 
@@ -26,7 +26,7 @@ export function BiddingSection({
   const { data: session } = useSession()
   const [bids, setBids] = useState<BidWithBidder[]>([])
   const [bidAmount, setBidAmount] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -56,41 +56,39 @@ export function BiddingSection({
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
-    setIsSubmitting(true)
 
-    try {
-      const amount = parseFloat(bidAmount)
-      if (isNaN(amount) || amount <= currentPrice) {
-        setError(`Bid must be higher than $${currentPrice.toFixed(2)}`)
-        setIsSubmitting(false)
-        return
-      }
-
-      const response = await fetch('/api/bids', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ carId, amount }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to place bid')
-      }
-
-      setSuccess('Bid placed successfully!')
-      setBidAmount('')
-      fetchBids()
-      onBidPlaced?.()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to place bid')
-    } finally {
-      setIsSubmitting(false)
+    const amount = parseFloat(bidAmount)
+    if (isNaN(amount) || amount <= currentPrice) {
+      setError(`Bid must be higher than $${currentPrice.toFixed(2)}`)
+      return
     }
+
+    startTransition(async () => {
+      try {
+        const response = await fetch('/api/bids', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ carId, amount }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to place bid')
+        }
+
+        setSuccess('Bid placed successfully!')
+        setBidAmount('')
+        fetchBids()
+        onBidPlaced?.()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to place bid')
+      }
+    })
   }
 
   const formatDate = (dateString: string) => {
@@ -166,10 +164,17 @@ export function BiddingSection({
             </div>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Placing Bid...' : 'Place Bid'}
+              {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Placing Bid...
+                </span>
+              ) : (
+                'Place Bid'
+              )}
             </button>
           </form>
         </div>
