@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
       createdAt: notification.createdAt,
     });
 
+    // Push the actual message content so an open chat window updates immediately
+    emitToUser(finalReceiverId, 'newMessage', {
+      senderId: session.user.id,
+      content,
+      carId,
+    });
+
     return NextResponse.json({ message: newMessage });
   } catch (error) {
     return serverError('Failed to send message', error);
@@ -69,17 +76,30 @@ export async function GET(request: NextRequest) {
     }
     const { searchParams } = new URL(request.url);
     const carId = searchParams.get('carId');
-    if (!carId) {
-      return NextResponse.json({ error: 'Missing carId' }, { status: 400 });
+    const peerId = searchParams.get('peerId');
+
+    if (!carId && !peerId) {
+      return NextResponse.json({ error: 'Missing carId or peerId' }, { status: 400 });
     }
+
+    const where = carId
+      ? {
+          carId,
+          OR: [
+            { senderId: session.user.id },
+            { receiverId: session.user.id },
+          ],
+        }
+      : {
+          // All messages between current user and peerId, across any car
+          OR: [
+            { senderId: session.user.id, receiverId: peerId! },
+            { senderId: peerId!, receiverId: session.user.id },
+          ],
+        };
+
     const messages = await prisma.message.findMany({
-      where: {
-        carId,
-        OR: [
-          { senderId: session.user.id },
-          { receiverId: session.user.id },
-        ],
-      },
+      where,
       orderBy: { createdAt: 'asc' },
       include: {
         sender: { select: { id: true, email: true, name: true } },

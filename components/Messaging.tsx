@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSocket } from '@/lib/useSocket';
 import type { Message as PrismaMessage, User } from '@prisma/client';
@@ -19,8 +19,13 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [socket, setSocket] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const onSocketMessage = useCallback((msg: Message) => {
+    if (msg.carId === carId) setMessages((prev) => [...prev, msg]);
+  }, [carId]);
+
+  const socket = useSocket(carId, onSocketMessage);
 
   // Fetch messages
   useEffect(() => {
@@ -45,20 +50,6 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Real-time updates (Socket.IO)
-  useEffect(() => {
-    const onMessage = (msg: Message) => {
-      console.log('[Socket] Received newMessage:', msg);
-      if (msg.carId === carId) setMessages((prev) => [...prev, msg]);
-    };
-    const sock = useSocket(carId, onMessage);
-    setSocket(sock);
-    console.log('[Socket] Joined car room:', carId);
-    return () => {
-      sock?.off('newMessage', onMessage);
-    };
-  }, [carId]);
 
   // Send message
   const sendMessage = async (e: React.FormEvent) => {

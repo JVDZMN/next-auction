@@ -4,7 +4,8 @@
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
-import { UserCircleIcon, BellIcon, ChatBubbleLeftRightIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
+import { MessagesModal } from '@/components/MessagesModal'
 import { useEffect, useState, useCallback } from 'react'
 import { useUserChatSocket } from '@/lib/useUserChatSocket'
 import { useNotificationSocket } from '@/lib/useNotificationSocket'
@@ -13,6 +14,7 @@ import { useNotificationSocket } from '@/lib/useNotificationSocket'
 type ChatMessage = {
   senderId: string
   content: string
+  carId?: string
 }
 
 type ChatUser = {
@@ -30,6 +32,7 @@ export function Header() {
   const [activeChatUser, setActiveChatUser] = useState<ChatUser | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
+  const [activeChatCarId, setActiveChatCarId] = useState<string | null>(null)
 
   const handleSocketMessage = useCallback((msg: ChatMessage) => {
     setChatMessages((prev) => [...prev, msg])
@@ -42,12 +45,41 @@ export function Header() {
     handleSocketMessage
   )
 
-  // Real-time: bump bell count when a new message notification arrives
+  // Real-time: bump bell count and refresh user list when a new message notification arrives
   const handleNewNotification = useCallback(() => {
     setUnreadCount((prev) => prev + 1)
+    fetch('/api/messages/notifications')
+      .then((r) => r.json())
+      .then((data) => { setMessageUsers(data.users || []) })
+      .catch(() => {})
   }, [])
 
   useNotificationSocket(session?.user?.id || '', handleNewNotification)
+
+  // Load message history from DB when a chat is opened
+  useEffect(() => {
+    if (!activeChatUser) return
+
+    async function load() {
+      try {
+        const r = await fetch(`/api/messages?peerId=${activeChatUser!.id}`)
+        const data = await r.json()
+        const msgs: ChatMessage[] = (data.messages || []).map(
+          (m: { senderId: string; content: string; carId: string }) => ({
+            senderId: m.senderId,
+            content: m.content ?? '',
+            carId: m.carId,
+          })
+        )
+        setChatMessages(msgs)
+        setActiveChatCarId((data.messages as { carId?: string }[])?.[0]?.carId ?? null)
+      } catch {
+        setChatMessages([])
+        setActiveChatCarId(null)
+      }
+    }
+    void load()
+  }, [activeChatUser])
 
   useEffect(() => {
     if (!session?.user) return;
@@ -66,6 +98,25 @@ export function Header() {
     fetchMessageUsers();
   }, [session]);
 
+  const handleSendMessage = useCallback(async (content: string) => {
+    if (!session?.user || !activeChatUser) return
+    // Optimistic update
+    setChatMessages(prev => [...prev, { senderId: session.user.id, content }])
+    if (activeChatCarId) {
+      try {
+        await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ carId: activeChatCarId, receiverId: activeChatUser.id, content }),
+        })
+      } catch {
+        // ignore
+      }
+    } else if (chatSocket) {
+      chatSocket.emit('sendMessage', { senderId: session.user.id, receiverId: activeChatUser.id, content })
+    }
+  }, [session, activeChatUser, activeChatCarId, chatSocket])
+
   return (
     <header className="w-full bg-white border-b shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2">
@@ -83,6 +134,14 @@ export function Header() {
               className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none"
               onClick={() => {
                 setShowNotifModal(true)
+                // Always fetch fresh list when opening the modal
+                fetch('/api/messages/notifications')
+                  .then((r) => r.json())
+                  .then((data) => {
+                    setMessageUsers(data.users || [])
+                    setUnreadCount(data.unreadCount || 0)
+                  })
+                  .catch(() => {})
                 if (unreadCount > 0) {
                   setUnreadCount(0)
                   fetch('/api/messages/notifications', { method: 'PATCH' })
@@ -135,93 +194,18 @@ export function Header() {
         </div>
       </div>
       {showNotifModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg shadow-lg w-96 max-w-full p-4 relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              onClick={() => {
-                setShowNotifModal(false)
-                setActiveChatUser(null)
-              }}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            {!activeChatUser ? (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Messages</h3>
-                {messageUsers.length === 0 ? (
-                  <div className="text-gray-500">No messages yet.</div>
-                ) : (
-                  <ul className="divide-y divide-gray-200">
-                    {messageUsers.map(user => (
-                      <li key={user.id} className="py-2 flex items-center gap-3">
-                        {user.image ? (
-                          <img src={user.image} alt={user.name} className="h-8 w-8 rounded-full" />
-                        ) : (
-                          <ChatBubbleLeftRightIcon className="h-8 w-8 text-blue-400" />
-                        )}
-                        <span className="font-medium text-gray-900">{user.name}</span>
-                        <button
-                          className="ml-auto px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                          onClick={() => setActiveChatUser(user)}
-                        >
-                          Open Chat
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : (
-              <div>
-                <button
-                  className="mb-2 text-blue-600 hover:underline"
-                  onClick={() => setActiveChatUser(null)}
-                >← Back to messages</button>
-                <h3 className="text-lg font-semibold mb-2">Chat with {activeChatUser ? activeChatUser.name : ''}</h3>
-                <div className="border rounded p-2 h-48 overflow-y-auto bg-gray-50 mb-2">
-                  {chatMessages.length === 0 ? (
-                    <div className="text-gray-500 text-sm">Chat room between you and {activeChatUser ? activeChatUser.name : ''}.</div>
-                  ) : (
-                    <ul className="space-y-1">
-                      {chatMessages.map((msg, idx) => (
-                        <li key={idx} className={session && session.user && msg.senderId === session.user.id ? 'text-right' : 'text-left'}>
-                          <span className={session && session.user && msg.senderId === session.user.id ? 'bg-blue-100 text-blue-800 px-2 py-1 rounded' : 'bg-gray-200 text-gray-800 px-2 py-1 rounded'}>
-                            {msg.content}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <form
-                  onSubmit={e => {
-                    e.preventDefault()
-                    if (!chatInput.trim() || !chatSocket || !session || !session.user || !activeChatUser) return
-                    chatSocket.emit('sendMessage', {
-                      senderId: session.user.id,
-                      receiverId: activeChatUser.id,
-                      content: chatInput,
-                    })
-                    setChatMessages(prev => [...prev, { senderId: session.user.id, content: chatInput }])
-                    setChatInput('')
-                  }}
-                  className="flex gap-2"
-                >
-                  <input
-                    type="text"
-                    className="w-full border rounded px-2 py-1 mb-2"
-                    placeholder="Type a message..."
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                  />
-                  <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">Send</button>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
+        <MessagesModal
+          messageUsers={messageUsers}
+          activeChatUser={activeChatUser}
+          chatMessages={chatMessages}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          currentUserId={session?.user?.id ?? ''}
+          onClose={() => { setShowNotifModal(false); setActiveChatUser(null); setActiveChatCarId(null) }}
+          onSelectUser={setActiveChatUser}
+          onBackToList={() => { setActiveChatUser(null); setActiveChatCarId(null) }}
+          onSendMessage={handleSendMessage}
+        />
       )}
     </header>
   )

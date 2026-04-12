@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-interface BidUpdate {
-  carId: string;
-  currentPrice: number;
-  bidderId: string;
-  createdAt: string;
-}
-
-export function useSocket(carId: string, onMessage: (msg: BidUpdate) => void) {
-  // Always create a new socket instance per component
+export function useSocket<T = unknown>(carId: string, onMessage: (msg: T) => void) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {

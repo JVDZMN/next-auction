@@ -141,7 +141,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
                 onBidPlaced={fetchCar}
               />
               {/* Message Seller Button and Modal */}
-              <MessageSeller carId={car.id} ownerId={car.owner.id} ownerName={car.owner.name} />
+              <MessageSeller carId={car.id} ownerId={car.owner.id} ownerName={car.owner.name || 'Seller'} />
             </div>
 
             {/* Actions */}
