@@ -3,10 +3,10 @@
 
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Menu } from '@headlessui/react'
 import { UserCircleIcon, BellIcon } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 import { MessagesModal } from '@/components/MessagesModal'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useUserChatSocket } from '@/lib/useUserChatSocket'
 import { useNotificationSocket } from '@/lib/useNotificationSocket'
 
@@ -34,6 +34,18 @@ export function Header() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [activeChatCarId, setActiveChatCarId] = useState<string | null>(null)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSocketMessage = useCallback((msg: ChatMessage) => {
     setChatMessages((prev) => [...prev, msg])
@@ -63,6 +75,7 @@ export function Header() {
   // Load message history from DB when a chat is opened
   useEffect(() => {
     if (!activeChatUser) return
+
 
     async function load() {
       try {
@@ -128,7 +141,10 @@ export function Header() {
         <Link href="/" className="text-2xl font-bold text-blue-600">Next Auction</Link>
         <nav className="hidden sm:flex gap-6 items-center">
           <Link href="/cars" className="hover:text-blue-600">Browse Cars</Link>
-          <Link href="/dashboard" className="hover:text-blue-600">Dashboard</Link>
+          {isAdmin && (
+            <p >👑 Admin</p>
+          )}
+          <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} className="hover:text-blue-600">Dashboard</Link>
           {isAdmin && (
             <Link href="/admin/dashboard" className="text-purple-600 font-semibold">👑 Admin</Link>
           )}
@@ -163,29 +179,49 @@ export function Header() {
           {status === 'loading' ? (
             <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
           ) : session ? (
-            <Menu as="div" className="relative inline-block text-left">
-              <div>
-                <Menu.Button className="inline-flex items-center gap-2 px-3 py-2 border rounded-md shadow-sm bg-white hover:bg-gray-50">
-                  {session.user?.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || 'User'}
-                      className="h-8 w-8 rounded-full"
-                    />
-                  ) : (
-                    <UserCircleIcon className="h-8 w-8 text-gray-400" />
-                  )}
-                  <span className="flex flex-col text-left">
-                    <span className="text-sm font-medium text-gray-900">
-                      {session.user?.name || 'User'}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {session.user?.email || ''}
-                    </span>
+            <div className="relative" ref={userMenuRef}>
+              <button
+                className="inline-flex items-center gap-2 px-3 py-2 border rounded-md shadow-sm bg-white hover:bg-gray-50"
+                onClick={() => setShowUserMenu((v) => !v)}
+              >
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || 'User'}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                )}
+                <span className="flex flex-col text-left">
+                  <span className="text-sm font-medium text-gray-900">
+                    {session.user?.name || 'User'}
                   </span>
-                </Menu.Button>
-              </div>
-            </Menu>
+                  <span className="text-xs text-gray-500">
+                    {session.user?.email || ''}
+                  </span>
+                </span>
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-50">
+                  <Link
+                    href={isAdmin ? '/admin/dashboard' : '/dashboard'}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    onClick={() => { setShowUserMenu(false); signOut() }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

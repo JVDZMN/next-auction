@@ -6,7 +6,7 @@ export function useUserChatSocket(userId: string, peerId: string, onMessage: (ms
 
   useEffect(() => {
     if (!userId || !peerId) return;
-    const newSocket = io('http://localhost:4000', { path: '/api/socketio' });
+    const newSocket = io({ path: '/api/socketio' });
     setSocket(newSocket);
     // Join both user rooms
     newSocket.emit('joinUserRoom', userId);

@@ -4,6 +4,7 @@ import { serverError } from '@/lib/api'
 import { sendBidNotification, sendOutbidNotification } from '@/lib/email'
 import { requireAuth } from '@/lib/auth'
 import { emitToUser } from '@/lib/socket-server'
+import { validateBid } from '@/lib/bid-validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,36 +43,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Car not found' }, { status: 404 })
     }
 
-    // Check if auction is still active
-    if (car.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Auction is not active' },
-        { status: 400 }
-      )
-    }
+    const validation = validateBid({
+      amount,
+      currentPrice: car.currentPrice,
+      status: car.status,
+      auctionEndDate: new Date(car.auctionEndDate),
+      ownerId: car.ownerId,
+      bidderId: user.id,
+    })
 
-    // Check if auction has ended
-    if (new Date(car.auctionEndDate) < new Date()) {
-      return NextResponse.json(
-        { error: 'Auction has ended' },
-        { status: 400 }
-      )
-    }
-
-    // Check if bid is higher than current price
-    if (amount <= car.currentPrice) {
-      return NextResponse.json(
-        { error: `Bid must be higher than current price: $${car.currentPrice}` },
-        { status: 400 }
-      );
-    }
-
-    // Check if user is not the owner
-    if (car.ownerId === user.id) {
-      return NextResponse.json(
-        { error: 'You cannot bid on your own car' },
-        { status: 400 }
-      )
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: validation.httpStatus })
     }
 
     // Create the bid and update car price in a transaction
