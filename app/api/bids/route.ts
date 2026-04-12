@@ -8,20 +8,26 @@ import { emitToUser } from '@/lib/socket-server'
 import { validateBid } from '@/lib/bid-validation'
 import { BidError } from '@/lib/bid-error'
 import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 const BID_RATE_LIMIT = { limit: 5, windowMs: 10_000 } // 5 bids per 10 s per user
 
 export async function POST(request: NextRequest) {
+  let userId: string | undefined
+  let carId: string | undefined
+  let amount: number | undefined
+
   try {
     const session = await requireAuth()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const user = { id: session.user.id }
+    userId = session.user.id
 
-    // Rate-limit check — runs before any DB work
-    const rl = rateLimit(`bid:${user.id}`, BID_RATE_LIMIT)
+    // Rate-limit check — before any DB work
+    const rl = rateLimit(`bid:${userId}`, BID_RATE_LIMIT)
     if (!rl.allowed) {
+      logger.bid.rateLimited({ userId })
       return NextResponse.json(
         { error: 'Too many bids. Please wait a moment before trying again.' },
         { status: 429, headers: rateLimitHeaders(rl, BID_RATE_LIMIT) },
@@ -34,11 +40,13 @@ export async function POST(request: NextRequest) {
     if (!parseResult.success) {
       return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 })
     }
-    const { carId } = parseResult.data
-    const amount =
+    carId = parseResult.data.carId
+    amount =
       typeof parseResult.data.amount === 'string'
         ? parseFloat(parseResult.data.amount)
         : parseResult.data.amount
+
+    logger.bid.attempted({ userId, carId, amount })
 
     // -----------------------------------------------------------------------
     // Atomic transaction
@@ -64,12 +72,12 @@ export async function POST(request: NextRequest) {
         if (!car) throw new BidError('Car not found', 404)
 
         const validation = validateBid({
-          amount,
+          amount: amount!,
           currentPrice: car.currentPrice,
           status: car.status,
           auctionEndDate: new Date(car.auctionEndDate),
           ownerId: car.ownerId,
-          bidderId: user.id,
+          bidderId: userId!,
         })
 
         if (!validation.valid) throw new BidError(validation.error, validation.httpStatus)
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
         }
 
         const bid = await tx.bid.create({
-          data: { carId, bidderId: user.id, amount },
+          data: { carId: carId!, bidderId: userId!, amount: amount! },
           include: { bidder: { select: bidderSelect } },
         })
 
@@ -103,12 +111,14 @@ export async function POST(request: NextRequest) {
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     )
 
+    logger.bid.placed({ userId, carId: car.id, amount })
+
     // -----------------------------------------------------------------------
     // Post-transaction side-effects (emails, notifications, sockets)
     // These run only after the transaction has committed successfully.
     // -----------------------------------------------------------------------
 
-    if (car.owner?.email && car.owner.id !== user.id) {
+    if (car.owner?.email && car.owner.id !== userId) {
       await sendBidNotification({
         to: car.owner.email,
         carTitle: `${car.brand} ${car.model}`,
@@ -118,7 +128,7 @@ export async function POST(request: NextRequest) {
     }
 
     const previousBids = await prisma.bid.findMany({
-      where: { carId, bidderId: { not: user.id } },
+      where: { carId, bidderId: { not: userId } },
       distinct: ['bidderId'],
       select: { bidderId: true, bidder: { select: { email: true } } },
     })
@@ -140,7 +150,7 @@ export async function POST(request: NextRequest) {
     ]
 
     await prisma.notification.createMany({
-      data: targets.map((t) => ({ userId: t.userId, type: t.type, message: t.message, carId })),
+      data: targets.map((t) => ({ userId: t.userId, type: t.type, message: t.message, carId: carId! })),
     })
 
     for (const t of targets) {
@@ -154,8 +164,8 @@ export async function POST(request: NextRequest) {
           sendOutbidNotification({
             to: b.bidder.email!,
             carTitle,
-            newBidAmount: amount,
-            carId,
+            newBidAmount: amount!,
+            carId: carId!,
           }),
         ),
     )
@@ -163,8 +173,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     if (error instanceof BidError) {
+      // Expected business-rule rejection — log as warn, not error
+      logger.bid.rejected({
+        userId: userId ?? 'unknown',
+        carId: carId ?? 'unknown',
+        amount: amount ?? 0,
+        reason: error.message,
+        httpStatus: error.httpStatus,
+      })
       return NextResponse.json({ error: error.message }, { status: error.httpStatus })
     }
+    // Unexpected failure — captured to Sentry via logger.error inside serverError
+    logger.bid.failed(error, { userId, carId, amount })
     return serverError('Failed to place bid', error)
   }
 }

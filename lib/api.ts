@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 export function serverError(message: string, error?: unknown) {
-  console.error(message, error)
+  logger.error(message, error ?? new Error(message))
   return NextResponse.json({ error: message }, { status: 500 })
 }
