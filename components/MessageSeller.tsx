@@ -42,7 +42,7 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
       } else {
         setError(data.error || 'Failed to send message');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to send message');
     } finally {
       setLoading(false);

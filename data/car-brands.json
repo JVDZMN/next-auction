@@ -1,258 +1,51 @@
 {
   "country": "Denmark",
   "vehicle_type": "passenger_cars",
-  "notes": "Auction-oriented brand/model list for Denmark (passenger cars only). Models are common DK market names; includes ICE, hybrid, and EV variants where relevant.",
+  "notes": "Expanded and alphabetized auction-oriented brand/model list for Denmark (2026 update). Includes ICE, hybrid, and EV variants.",
   "brands": [
-    { "brand": "Tesla", "models": ["Model S", "Model 3", "Model X", "Model Y"] },
-    { "brand": "BYD", "models": ["Atto 3", "Dolphin", "Seal", "Han", "Tang"] },
-
-    {
-      "brand": "Volkswagen",
-      "models": [
-        "Up", "Polo", "Golf", "Golf Variant",
-        "Passat", "Passat Variant", "Arteon",
-        "T-Cross", "T-Roc", "Tiguan", "Touareg",
-        "Touran", "Sharan",
-        "ID.3", "ID.4", "ID.5", "ID.7", "ID.Buzz"
-      ]
-    },
-    {
-      "brand": "Skoda",
-      "models": [
-        "Citigo", "Fabia", "Scala",
-        "Octavia", "Octavia Combi",
-        "Superb", "Superb Combi",
-        "Kamiq", "Karoq", "Kodiaq",
-        "Enyaq iV"
-      ]
-    },
-    {
-      "brand": "Toyota",
-      "models": [
-        "Aygo", "Yaris", "Corolla", "Corolla Touring Sports",
-        "Camry", "Avensis", "Prius",
-        "C-HR", "RAV4", "bZ4X"
-      ]
-    },
-    {
-      "brand": "Hyundai",
-      "models": [
-        "i10", "i20", "i30", "i30 Wagon",
-        "Bayon",
-        "Kona", "Kona Electric",
-        "Tucson", "Santa Fe",
-        "Ioniq", "Ioniq 5", "Ioniq 6"
-      ]
-    },
-    {
-      "brand": "Kia",
-      "models": [
-        "Picanto", "Rio",
-        "Ceed", "Ceed SW", "XCeed",
-        "Stonic",
-        "Niro", "Niro EV",
-        "Sportage", "Sorento",
-        "EV6", "EV9"
-      ]
-    },
-    {
-      "brand": "Volvo",
-      "models": [
-        "V40", "V60", "V90",
-        "S60", "S90",
-        "XC40", "XC60", "XC90",
-        "C40 Recharge",
-        "EX30", "EX40"
-      ]
-    },
-    {
-      "brand": "BMW",
-      "models": [
-        "1 Series", "2 Series", "3 Series", "3 Series Touring",
-        "4 Series", "5 Series", "5 Series Touring",
-        "X1", "X2", "X3", "X4", "X5", "X6", "X7",
-        "i3", "i4", "i5", "i7", "iX1", "iX3"
-      ]
-    },
-    {
-      "brand": "Mercedes-Benz",
-      "models": [
-        "A-Class", "B-Class", "C-Class", "C-Class Estate",
-        "E-Class", "E-Class Estate",
-        "CLA", "GLA", "GLB", "GLC", "GLS", "G-Class",
-        "EQA", "EQB", "EQC", "EQE", "EQE SUV", "EQS", "EQS SUV"
-      ]
-    },
-    {
-      "brand": "Audi",
-      "models": [
-        "A1", "A3", "A4", "A4 Avant",
-        "A5", "A6", "A6 Avant", "A7", "A8",
-        "Q2", "Q3", "Q5", "Q7",
-        "e-tron", "e-tron GT", "Q4 e-tron", "Q6 e-tron", "Q8 e-tron"
-      ]
-    },
-
-    {
-      "brand": "Ford",
-      "models": [
-        "Ka", "Fiesta", "Focus", "Focus Wagon",
-        "Mondeo", "Mondeo Wagon",
-        "Puma", "Kuga", "S-Max", "Galaxy",
-        "Mustang", "Mustang Mach-E"
-      ]
-    },
-    {
-      "brand": "Fiat",
-      "models": [
-        "500", "500e", "Panda", "Punto", "Grande Punto",
-        "Tipo", "Bravo", "Doblo", "Freemont"
-      ]
-    },
-    {
-      "brand": "Peugeot",
-      "models": [
-        "107", "108", "206", "207", "208", "e-208",
-        "308", "308 SW",
-        "408",
-        "407", "508", "508 SW",
-        "2008", "e-2008", "3008", "5008"
-      ]
-    },
-    {
-      "brand": "Citroën",
-      "models": [
-        "C1", "C2", "C3", "e-C3",
-        "C3 Aircross",
-        "C4", "ë-C4", "C4 X",
-        "C5", "C5 X", "C5 Aircross",
-        "Berlingo", "ë-Berlingo"
-      ]
-    },
-    {
-      "brand": "Renault",
-      "models": [
-        "Twingo", "Clio", "Megane", "Megane Estate",
-        "Laguna", "Talisman",
-        "Captur", "Kadjar", "Arkana", "Austral",
-        "Zoe", "Megane E-Tech"
-      ]
-    },
-    {
-      "brand": "Opel",
-      "models": [
-        "Adam", "Karl",
-        "Corsa", "Corsa-e",
-        "Astra", "Astra Sports Tourer",
-        "Insignia", "Insignia Sports Tourer",
-        "Mokka", "Mokka-e",
-        "Crossland", "Grandland"
-      ]
-    },
-    {
-      "brand": "Nissan",
-      "models": [
-        "Micra", "Note",
-        "Juke", "Qashqai",
-        "X-Trail", "Leaf",
-        "Pulsar", "Primera"
-      ]
-    },
-    {
-      "brand": "Mazda",
-      "models": [
-        "Mazda2", "Mazda3", "Mazda6",
-        "CX-3", "CX-30", "CX-5",
-        "MX-5", "MX-30"
-      ]
-    },
-    {
-      "brand": "Suzuki",
-      "models": [
-        "Alto", "Splash",
-        "Swift", "Baleno",
-        "Ignis",
-        "SX4", "S-Cross",
-        "Vitara", "Jimny"
-      ]
-    },
-
-    {
-      "brand": "Seat",
-      "models": ["Ibiza", "Leon", "Leon ST", "Arona", "Ateca", "Tarraco"]
-    },
-    {
-      "brand": "Cupra",
-      "models": ["Born", "Formentor", "Leon", "Leon Sportstourer"]
-    },
-    {
-      "brand": "Dacia",
-      "models": ["Sandero", "Logan", "Jogger", "Duster", "Spring"]
-    },
-    {
-      "brand": "MG",
-      "models": ["MG4", "MG5", "ZS EV", "HS", "Marvel R"]
-    },
-
-    {
-      "brand": "Porsche",
-      "models": ["Macan", "Cayenne", "Panamera", "Taycan"]
-    },
-    {
-      "brand": "Mini",
-      "models": ["One", "Cooper", "Cooper S", "Clubman", "Countryman", "Electric"]
-    },
-    {
-      "brand": "Smart",
-      "models": ["Fortwo", "Forfour", "EQ Fortwo", "#1", "#3"]
-    },
-    {
-      "brand": "Honda",
-      "models": ["Jazz", "Civic", "Accord", "HR-V", "CR-V", "e"]
-    },
-    {
-      "brand": "Mitsubishi",
-      "models": ["Space Star", "ASX", "Outlander", "Outlander PHEV", "Eclipse Cross"]
-    },
-    {
-      "brand": "Subaru",
-      "models": ["Impreza", "XV", "Forester", "Outback", "Solterra"]
-    },
-    {
-      "brand": "Alfa Romeo",
-      "models": ["MiTo", "Giulietta", "Giulia", "Stelvio", "Tonale"]
-    },
-    {
-      "brand": "DS Automobiles",
-      "models": ["DS 3", "DS 3 E-Tense", "DS 4", "DS 7"]
-    },
-    {
-      "brand": "Abarth",
-      "models": ["595", "695"]
-    },
-    {
-      "brand": "Chevrolet",
-      "models": ["Spark", "Cruze", "Malibu", "Camaro", "Corvette", "Bolt EV"]
-    },
-    {
-      "brand": "Jeep",
-      "models": ["Renegade", "Compass", "Cherokee", "Grand Cherokee", "Wrangler", "Avenger"]
-    },
-    {
-      "brand": "Polestar",
-      "models": ["Polestar 1", "Polestar 2", "Polestar 3", "Polestar 4"]
-    },
-    {
-      "brand": "NIO",
-      "models": ["ET5", "ET7", "EL6", "EL7"]
-    },
-    {
-      "brand": "XPeng",
-      "models": ["P7", "G3", "G6", "G9"]
-    },
-    {
-      "brand": "Aiways",
-      "models": ["U5", "U6"]
-    }
+    { "brand": "Abarth", "models": ["595", "600e", "695"] },
+    { "brand": "Aiways", "models": ["U5", "U6"] },
+    { "brand": "Alfa Romeo", "models": ["Giulia", "Giulietta", "MiTo", "Stelvio", "Tonale"] },
+    { "brand": "Alpine", "models": ["A110", "A290"] },
+    { "brand": "Aston Martin", "models": ["DB12", "DBX", "Vantage", "Vanquish"] },
+    { "brand": "Audi", "models": ["A1", "A3", "A4", "A4 Avant", "A5", "A6", "A6 Avant", "A7", "A8", "e-tron", "e-tron GT", "Q2", "Q3", "Q4 e-tron", "Q5", "Q6 e-tron", "Q7", "Q8 e-tron"] },
+    { "brand": "Bentley", "models": ["Bentayga", "Continental GT", "Flying Spur"] },
+    { "brand": "BMW", "models": ["1 Series", "2 Series", "3 Series", "3 Series Touring", "4 Series", "5 Series", "5 Series Touring", "i3", "i4", "i5", "i7", "iX1", "iX2", "iX3", "X1", "X2", "X3", "X4", "X5", "X6", "X7"] },
+    { "brand": "BYD", "models": ["Atto 3", "Dolphin", "Han", "Seal", "Tang"] },
+    { "brand": "Chevrolet", "models": ["Bolt EV", "Camaro", "Corvette", "Cruze", "Malibu", "Spark"] },
+    { "brand": "Citroën", "models": ["Berlingo", "C1", "C2", "C3", "C3 Aircross", "C4", "C4 X", "C5 Aircross", "C5 X", "e-C3", "ë-Berlingo", "ë-C4"] },
+    { "brand": "Cupra", "models": ["Born", "Formentor", "Leon", "Leon Sportstourer", "Tavascan", "Terramar"] },
+    { "brand": "Dacia", "models": ["Duster", "Jogger", "Logan", "Sandero", "Spring"] },
+    { "brand": "DS Automobiles", "models": ["DS 3", "DS 3 E-Tense", "DS 4", "DS 7", "DS 9"] },
+    { "brand": "Fiat", "models": ["500", "500e", "600e", "Bravo", "Doblo", "Freemont", "Grande Punto", "Panda", "Punto", "Tipo"] },
+    { "brand": "Ford", "models": ["Explorer EV", "Fiesta", "Focus", "Focus Wagon", "Galaxy", "Ka", "Kuga", "Mondeo", "Mondeo Wagon", "Mustang", "Mustang Mach-E", "Puma", "S-Max"] },
+    { "brand": "Honda", "models": ["Accord", "Civic", "CR-V", "e", "e:Ny1", "HR-V", "Jazz"] },
+    { "brand": "Hyundai", "models": ["Bayon", "i10", "i20", "i30", "i30 Wagon", "Ioniq", "Ioniq 5", "Ioniq 6", "Kona", "Kona Electric", "Santa Fe", "Tucson"] },
+    { "brand": "Jeep", "models": ["Avenger", "Cherokee", "Compass", "Grand Cherokee", "Renegade", "Wrangler"] },
+    { "brand": "Kia", "models": ["Ceed", "Ceed SW", "EV3", "EV6", "EV9", "Niro", "Niro EV", "Picanto", "Rio", "Sorento", "Sportage", "Stonic", "XCeed"] },
+    { "brand": "Lamborghini", "models": ["Revuelto", "Urus"] },
+    { "brand": "Land Rover", "models": ["Defender", "Discovery", "Discovery Sport", "Range Rover", "Range Rover Evoque", "Range Rover Sport", "Range Rover Velar"] },
+    { "brand": "Mazda", "models": ["CX-3", "CX-30", "CX-5", "CX-60", "CX-80", "Mazda2", "Mazda3", "Mazda6", "MX-30", "MX-5"] },
+    { "brand": "Mercedes-Benz", "models": ["A-Class", "B-Class", "C-Class", "C-Class Estate", "CLA", "E-Class", "E-Class Estate", "EQA", "EQB", "EQC", "EQE", "EQE SUV", "EQS", "EQS SUV", "G-Class", "GLA", "GLB", "GLC", "GLS"] },
+    { "brand": "MG", "models": ["Cyberster", "HS", "Marvel R", "MG3", "MG4", "MG5", "ZS EV"] },
+    { "brand": "Mini", "models": ["Aceman", "Clubman", "Cooper", "Cooper S", "Countryman", "Electric", "One"] },
+    { "brand": "Mitsubishi", "models": ["ASX", "Colt", "Eclipse Cross", "Outlander", "Outlander PHEV", "Space Star"] },
+    { "brand": "NIO", "models": ["EL6", "EL7", "ET5", "ET5 Touring", "ET7"] },
+    { "brand": "Nissan", "models": ["Ariya", "Juke", "Leaf", "Micra", "Note", "Primera", "Pulsar", "Qashqai", "X-Trail"] },
+    { "brand": "Opel", "models": ["Adam", "Astra", "Astra Sports Tourer", "Corsa", "Corsa-e", "Crossland", "Grandland", "Insignia", "Insignia Sports Tourer", "Karl", "Mokka", "Mokka-e"] },
+    { "brand": "Peugeot", "models": ["107", "108", "2008", "206", "207", "208", "3008", "308", "308 SW", "407", "408", "5008", "508", "508 SW", "e-2008", "e-208"] },
+    { "brand": "Polestar", "models": ["Polestar 1", "Polestar 2", "Polestar 3", "Polestar 4"] },
+    { "brand": "Porsche", "models": ["911", "Cayenne", "Macan", "Panamera", "Taycan"] },
+    { "brand": "Renault", "models": ["Arkana", "Austral", "Captur", "Clio", "Kadjar", "Laguna", "Megane", "Megane E-Tech", "Megane Estate", "Rafale", "Renault 5 E-Tech", "Scenic E-Tech", "Talisman", "Twingo", "Zoe"] },
+    { "brand": "Seat", "models": ["Arona", "Ateca", "Ibiza", "Leon", "Leon ST", "Tarraco"] },
+    { "brand": "Skoda", "models": ["Citigo", "Enyaq iV", "Fabia", "Kamiq", "Karoq", "Kodiaq", "Octavia", "Octavia Combi", "Scala", "Superb", "Superb Combi", "Elroq"] },
+    { "brand": "Smart", "models": ["#1", "#3", "#5", "EQ Fortwo", "Forfour", "Fortwo"] },
+    { "brand": "Subaru", "models": ["Forester", "Impreza", "Outback", "Solterra", "XV"] },
+    { "brand": "Suzuki", "models": ["Alto", "Baleno", "Ignis", "Jimny", "S-Cross", "Splash", "Swift", "SX4", "Vitara"] },
+    { "brand": "Tesla", "models": ["Model 3", "Model S", "Model X", "Model Y"] },
+    { "brand": "Toyota", "models": ["Aygo", "Aygo X", "bZ4X", "Camry", "C-HR", "Corolla", "Corolla Touring Sports", "Prius", "RAV4", "Urban Cruiser", "Yaris", "Yaris Cross"] },
+    { "brand": "Volkswagen", "models": ["Arteon", "Golf", "Golf Variant", "ID.3", "ID.4", "ID.5", "ID.7", "ID.Buzz", "Passat", "Passat Variant", "Polo", "Sharan", "T-Cross", "Tiguan", "Touareg", "Touran", "T-Roc", "Up"] },
+    { "brand": "Volvo", "models": ["C40 Recharge", "EX30", "EX40", "EX90", "S60", "S90", "V40", "V60", "V90", "XC40", "XC60", "XC90"] },
+    { "brand": "XPeng", "models": ["G3", "G6", "G9", "P7"] }
   ]
 }

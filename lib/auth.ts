@@ -37,6 +37,7 @@ export const authOptions = {
             image: true,
             role: true,
             password: true,
+            emailVerified: true,
           },
         });
         if (!user || !user.password) {
@@ -49,7 +50,12 @@ export const authOptions = {
         if (!isCorrectPassword) {
           throw genericError;
         }
-        const { password, ...sanitizedUser } = user;
+        if (!user.emailVerified) {
+          throw new Error('Please verify your email before signing in. Check your inbox.');
+        }
+        const { password, ...rest } = user;
+        const { emailVerified: _, ...sanitizedUser } = rest;
+        void _;
         return sanitizedUser;
       },
     }),

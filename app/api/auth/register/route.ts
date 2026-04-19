@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
+import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +17,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate password length
     if (password.length < 6) {
       return NextResponse.json(
         { error: 'Password must be at least 6 characters' },
@@ -23,11 +24,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    })
-
+    const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already registered' },
@@ -35,26 +32,28 @@ export async function POST(request: Request) {
       )
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create user
     const user = await prisma.user.create({
+      data: { name, email, password: hashedPassword },
+      select: { id: true, name: true, email: true, createdAt: true },
+    })
+
+    // Generate verification token valid for 24 hours
+    const token = crypto.randomBytes(32).toString('hex')
+    await prisma.verificationToken.create({
       data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
+        identifier: email,
+        token,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     })
 
+    // Fire-and-forget — don't block the response on email delivery
+    sendVerificationEmail({ to: email, token, email }).catch(() => {})
+
     return NextResponse.json(
-      { message: 'User created successfully', user },
+      { message: 'Account created. Please check your email to verify your address.', user },
       { status: 201 }
     )
   } catch (error) {
