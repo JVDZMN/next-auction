@@ -201,7 +201,7 @@ export function Header() {
                 </span>
               </button>
               {showUserMenu && (
-                <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-50">
+                <div className="absolute right-0 mt-1 w-56 bg-white border rounded-md shadow-lg z-50">
                   <Link
                     href={isAdmin ? '/admin/dashboard' : '/dashboard'}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -209,6 +209,19 @@ export function Header() {
                   >
                     Dashboard
                   </Link>
+                  {(session.user as { mitIdVerified?: boolean }).mitIdVerified ? (
+                    <div className="px-4 py-2 text-sm text-green-600 flex items-center gap-2">
+                      <span>✅</span> MitID Verified
+                    </div>
+                  ) : (
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      onClick={() => { setShowUserMenu(false); window.location.href = '/api/mitid/start' }}
+                    >
+                      <span>🇩🇰</span> Verify with MitID
+                    </button>
+                  )}
+                  <div className="border-t my-1" />
                   <button
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     onClick={() => { setShowUserMenu(false); signOut() }}

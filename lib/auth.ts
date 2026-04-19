@@ -61,6 +61,15 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ account, profile }: { account: { provider: string } | null; profile?: { email?: string } }) {
+      if (account?.provider === 'google' && profile?.email) {
+        await prisma.user.updateMany({
+          where: { email: profile.email, emailVerified: null },
+          data: { emailVerified: new Date() },
+        });
+      }
+      return true;
+    },
     async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
         token.id = user.id;
@@ -73,7 +82,16 @@ export const authOptions = {
         if (dbUser) {
           if (!token.id) token.id = dbUser.id;
           token.role = dbUser.role;
+          token.mitIdVerified = dbUser.mitIdVerified;
         }
+      }
+      // Re-check from DB while not yet verified so the token updates immediately after verification
+      if (token.id && !token.mitIdVerified) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { mitIdVerified: true },
+        });
+        token.mitIdVerified = dbUser?.mitIdVerified ?? false;
       }
       return token;
     },
@@ -87,6 +105,7 @@ export const authOptions = {
           typeof token.role === 'string' && Object.values(Role).includes(token.role as Role)
             ? (token.role as Role)
             : Role.User;
+        session.user.mitIdVerified = (token.mitIdVerified as boolean) ?? false;
       }
       return session;
     },
