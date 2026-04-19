@@ -160,10 +160,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
                       {car.owner.createdAt && <>Member since {new Date(car.owner.createdAt).toLocaleDateString()}</>}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">⭐ {car.owner.rating.toFixed(1)}</p>
-                    <p className="text-sm text-gray-600">{car.owner.ratingCount} ratings</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -197,7 +193,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
                           <p className="font-semibold text-lg">{bid.bidder.name || 'Anonymous'}</p>
                           <p className="text-sm text-gray-600">{bid.bidder.email}</p>
                           <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                            <span>⭐ {bid.bidder.rating?.toFixed(1) ?? '—'} ({bid.bidder.ratingCount} ratings)</span>
                             <span>📦 {bid.bidder._count?.cars ?? 0} cars listed</span>
                             <span>💰 {bid.bidder._count?.bids ?? 0} total bids</span>
                           </div>

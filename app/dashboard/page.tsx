@@ -10,8 +10,6 @@ interface User {
   email: string;
   image?: string | null;
   role: string;
-  rating: number;
-  ratingCount: number;
   createdAt: string;
   cars: Array<{
     id: string;
@@ -76,7 +74,6 @@ export default function UserDashboardPage() {
               <h2 className="text-2xl font-semibold">{user.name || user.email}</h2>
               <p className="text-gray-600">{user.email}</p>
               <div className="flex gap-4 mt-2 text-sm">
-                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">⭐ {user.rating.toFixed(1)} ({user.ratingCount} ratings)</span>
                 <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Role: {user.role}</span>
                 <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
               </div>

@@ -20,7 +20,6 @@ interface User {
   id: string
   name: string | null
   email: string
-  rating?: number
   createdAt?: string
   role?: string
   _count?: {
@@ -222,7 +221,6 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">{seller._count?.cars || 0} cars listed</p>
-                      <p className="text-sm text-gray-600">⭐ {seller.rating?.toFixed(1) || '0.0'}</p>
                     </div>
                   </div>
                 ))}
@@ -245,7 +243,6 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">{bidder._count?.bids || 0} bids placed</p>
-                      <p className="text-sm text-gray-600">⭐ {bidder.rating?.toFixed(1) || '0.0'}</p>
                     </div>
                   </div>
                 ))}

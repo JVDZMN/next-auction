@@ -10,8 +10,9 @@ const allowedStatuses = [
   'reserve_not_met',
 ];
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await requireAuth()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     // Fetch car to check ownership/admin
-    const car = await prisma.car.findUnique({ where: { id: params.id }, select: { ownerId: true } });
+    const car = await prisma.car.findUnique({ where: { id }, select: { ownerId: true } });
     if (!car) {
       return NextResponse.json({ error: 'Car not found' }, { status: 404 });
     }
@@ -37,7 +38,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     const updated = await prisma.car.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
     });
     return NextResponse.json(updated);

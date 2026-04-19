@@ -69,7 +69,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
                   {car.year} {car.brand} {car.model}
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  Listed by {car.owner.name} (⭐ {car.owner.rating.toFixed(1)})
+                  Listed by {car.owner.name}
                 </p>
               </div>
               <div className="text-right">

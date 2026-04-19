@@ -20,8 +20,6 @@ export interface Car {
     id: string
     name: string | null
     email: string
-    rating: number
-    ratingCount?: number
     createdAt?: string
   }
   bids: Array<{
@@ -32,8 +30,6 @@ export interface Car {
       id?: string
       name: string | null
       email?: string
-      rating?: number
-      ratingCount?: number
       _count?: {
         bids: number
         cars: number

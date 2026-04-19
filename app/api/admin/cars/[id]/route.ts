@@ -24,8 +24,6 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-            rating: true,
-            ratingCount: true,
             createdAt: true,
           },
         },
@@ -37,8 +35,6 @@ export async function GET(
                 id: true,
                 name: true,
                 email: true,
-                rating: true,
-                ratingCount: true,
                 _count: {
                   select: {
                     bids: true,

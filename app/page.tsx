@@ -1,11 +1,11 @@
 import { prisma } from '@/lib/prisma'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
-import auth from 'next-auth'
+import { CarCard } from '@/components/CarCard'
+import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-async function getActiveCars() {
+async function getActiveCars(userId: string) {
   const cars = await prisma.car.findMany({
     where: { status: 'active', auctionEndDate: { gte: new Date() } },
     select: {
@@ -17,27 +17,25 @@ async function getActiveCars() {
       condition: true,
       currentPrice: true,
       auctionEndDate: true,
-      owner: { select: { name: true, rating: true } },
+      owner: { select: { name: true } },
       bids: { orderBy: { createdAt: 'desc' }, take: 1 },
-      _count: { select: { bids: true } },
+      _count: { select: { bids: true, likedBy: true } },
+      likedBy: { where: { userId }, select: { userId: true } },
     },
     orderBy: { createdAt: 'desc' },
     take: 12,
   })
-  return cars
+  return cars.map((car) => ({
+    ...car,
+    likeCount: car._count.likedBy,
+    isLiked: car.likedBy.length > 0,
+  }))
 }
 
-function getTimeRemaining(endDate: Date) {
-  const diff = endDate.getTime() - new Date().getTime()
-  if (diff <= 0) return 'Auction ended'
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  return days > 0 ? `${days}d ${hours}h remaining` : `${hours}h remaining`
-}
 
 export default async function Home() {
-  const cars = await getActiveCars()
-  const session = await auth(authOptions)
+  const session = await getServerSession(authOptions)
+  const cars = await getActiveCars(session?.user?.id ?? '')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,57 +92,7 @@ export default async function Home() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {cars.map((car) => (
-              <Link
-                key={car.id}
-                href={`/cars/${car.id}`}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow overflow-hidden"
-              >
-                <div className="relative h-48 bg-gray-200">
-                  {car.images?.[0] ? (
-                    <Image
-                      src={car.images[0]}
-                      alt={`${car.year} ${car.brand} ${car.model}`}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      No image
-                    </div>
-                  )}
-                  <div className="absolute top-3 right-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold">
-                    {car.condition}
-                  </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-bold mb-2 line-clamp-1">
-                    {car.brand} {car.model} {car.year}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    By {car.owner.name}
-                    {car.owner.rating > 0 && (
-                      <span className="ml-2 text-yellow-500">
-                        ★ {car.owner.rating.toFixed(1)}
-                      </span>
-                    )}
-                  </p>
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-gray-600">Current Bid</span>
-                      <span className="text-xl font-bold text-blue-600">
-                        ${car.currentPrice.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>{car._count.bids} bids</span>
-                      <span>{getTimeRemaining(car.auctionEndDate)}</span>
-                    </div>
-                  </div>
-                  <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    View & Bid
-                  </button>
-                </div>
-              </Link>
+              <CarCard key={car.id} car={car} />
             ))}
           </div>
         )}

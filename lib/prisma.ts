@@ -25,14 +25,12 @@ export const ownerSelect = {
   id: true,
   name: true,
   email: true,
-  rating: true,
 } as const
 
 export const bidderSelect = {
   id: true,
   name: true,
   email: true,
-  rating: true,
 } as const
 
 export const latestBidInclude = {

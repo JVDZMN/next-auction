@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           email: true,
-          rating: true,
           _count: {
             select: { cars: true },
           },
@@ -74,7 +73,6 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           email: true,
-          rating: true,
           _count: {
             select: { bids: true },
           },
@@ -159,7 +157,6 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             email: true,
-            rating: true,
           },
         })
         return {

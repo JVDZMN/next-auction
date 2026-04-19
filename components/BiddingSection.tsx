@@ -227,11 +227,6 @@ export function BiddingSection({
                     {bid.bidder.name || 'Anonymous'} • {formatDate(bid.createdAt.toISOString().slice(0, 16))}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">
-                    ⭐ {bid.bidder.rating.toFixed(1)}
-                  </p>
-                </div>
               </div>
             ))}
           </div>

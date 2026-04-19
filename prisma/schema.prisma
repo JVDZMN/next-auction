@@ -47,8 +47,6 @@ model User {
   password      String?
   googleId      String?   @unique
   role          Role      @default(User)
-  rating        Float     @default(0)
-  ratingCount   Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -57,8 +55,6 @@ model User {
   cars             Car[]
   bids             Bid[]
   notifications    Notification[]
-  ratings          Rating[]       @relation("RatingsReceived")
-  ratingsGiven     Rating[]       @relation("RatingsGiven")
   messagesSent     Message[]      @relation("MessagesSent")
   messagesReceived Message[]      @relation("MessagesReceived")
   likes            Like[]
@@ -183,22 +179,6 @@ model Notification {
   @@index([userId])
   @@index([read])
   @@index([createdAt])
-}
-
-model Rating {
-  id          String   @id @default(cuid())
-  ratedUserId String
-  raterUserId String
-  carId       String?
-  score       Int
-  comment     String?  @db.Text
-  createdAt   DateTime @default(now())
-
-  ratedUser User @relation("RatingsReceived", fields: [ratedUserId], references: [id], onDelete: Cascade)
-  raterUser User @relation("RatingsGiven", fields: [raterUserId], references: [id], onDelete: Cascade)
-
-  @@unique([ratedUserId, raterUserId, carId])
-  @@index([ratedUserId])
 }
 
 model Message {
