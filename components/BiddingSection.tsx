@@ -12,6 +12,8 @@ interface BiddingSectionProps {
   auctionEndDate: string
   status: string
   ownerId: string
+  reservePrice?: number | null
+  bidIncrement?: number | null
   onBidPlaced?: () => void
 }
 
@@ -21,6 +23,8 @@ export function BiddingSection({
   auctionEndDate,
   status,
   ownerId,
+  reservePrice,
+  bidIncrement,
   onBidPlaced,
 }: BiddingSectionProps) {
   const { data: session } = useSession()
@@ -30,6 +34,10 @@ export function BiddingSection({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [proxyMax, setProxyMax] = useState('')
+  const [proxyPending, setProxyPending] = useState(false)
+  const [proxySuccess, setProxySuccess] = useState<string | null>(null)
+  const [proxyError, setProxyError] = useState<string | null>(null)
 
   const isAuctionActive = status === 'active' && new Date(auctionEndDate) > new Date()
   const isOwner = session?.user?.email && ownerId === session.user.id
@@ -91,6 +99,37 @@ export function BiddingSection({
     })
   }
 
+  const minNextBid = bidIncrement && bidIncrement > 0
+    ? currentPrice + bidIncrement
+    : currentPrice + 1
+
+  const handleProxySubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setProxyError(null)
+    setProxySuccess(null)
+    const max = parseFloat(proxyMax)
+    if (isNaN(max) || max <= currentPrice) {
+      setProxyError(`Max must be greater than current price $${currentPrice.toFixed(2)}`)
+      return
+    }
+    setProxyPending(true)
+    try {
+      const res = await fetch('/api/proxy-bids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ carId, maxAmount: max }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+      setProxySuccess(`Proxy bid set — we'll bid for you up to $${max.toFixed(2)}`)
+      setProxyMax('')
+    } catch (err) {
+      setProxyError(err instanceof Error ? err.message : 'Failed to set proxy bid')
+    } finally {
+      setProxyPending(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleString()
@@ -126,6 +165,17 @@ export function BiddingSection({
             {bids.length} bid{bids.length !== 1 ? 's' : ''}
           </p>
         )}
+        {reservePrice != null && isAuctionActive && (
+          currentPrice >= reservePrice ? (
+            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded">
+              Reserve met
+            </span>
+          ) : (
+            <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">
+              Reserve not yet met
+            </span>
+          )
+        )}
       </div>
 
       {/* Place Bid Form */}
@@ -145,6 +195,10 @@ export function BiddingSection({
             </div>
           )}
 
+          <p className="text-sm text-gray-500 mb-2">
+            Minimum next bid: <span className="font-semibold text-gray-800">${minNextBid.toFixed(2)}</span>
+            {bidIncrement && bidIncrement > 0 && <span className="text-gray-400"> (increment: ${bidIncrement})</span>}
+          </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="bidAmount" className="block text-sm font-medium text-gray-700 mb-1">
@@ -154,10 +208,10 @@ export function BiddingSection({
                 id="bidAmount"
                 type="number"
                 step="0.01"
-                min={currentPrice + 0.01}
+                min={minNextBid}
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
-                placeholder={`Minimum: $${(currentPrice + 0.01).toFixed(2)}`}
+                placeholder={`Minimum: $${minNextBid.toFixed(2)}`}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
@@ -180,6 +234,35 @@ export function BiddingSection({
         </div>
       )}
 
+      {/* Proxy bid form */}
+      {session && isAuctionActive && !isOwner && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-black mb-1">Set Proxy Bid</h3>
+          <p className="text-sm text-gray-500 mb-4">We'll automatically bid for you up to your maximum.</p>
+          {proxyError && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{proxyError}</div>}
+          {proxySuccess && <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">{proxySuccess}</div>}
+          <form onSubmit={handleProxySubmit} className="flex gap-2">
+            <input
+              type="number"
+              step="0.01"
+              min={minNextBid}
+              value={proxyMax}
+              onChange={(e) => setProxyMax(e.target.value)}
+              placeholder={`Max amount (> $${currentPrice.toFixed(2)})`}
+              required
+              className="flex-1 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-sm"
+            />
+            <button
+              type="submit"
+              disabled={proxyPending}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {proxyPending ? 'Saving...' : 'Set Max'}
+            </button>
+          </form>
+        </div>
+      )}
+
       {!session && isAuctionActive && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
           <p className="text-yellow-800">Please sign in to place a bid</p>
@@ -195,6 +278,27 @@ export function BiddingSection({
       {!isAuctionActive && status === 'active' && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
           <p className="text-gray-600">Auction has ended</p>
+        </div>
+      )}
+
+      {status === 'completed' && (
+        <div className="bg-green-50 border border-green-300 rounded-lg p-4 text-center">
+          <p className="text-green-800 font-semibold text-lg">Auction Closed — Sold</p>
+          <p className="text-green-700 text-sm mt-1">This auction has ended and a winner has been selected.</p>
+        </div>
+      )}
+
+      {status === 'reserve_not_met' && (
+        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-center">
+          <p className="text-yellow-800 font-semibold text-lg">Auction Closed — Reserve Not Met</p>
+          <p className="text-yellow-700 text-sm mt-1">The auction ended but the reserve price was not reached.</p>
+        </div>
+      )}
+
+      {status === 'cancelled' && (
+        <div className="bg-red-50 border border-red-300 rounded-lg p-4 text-center">
+          <p className="text-red-800 font-semibold text-lg">Auction Cancelled</p>
+          <p className="text-red-700 text-sm mt-1">This auction was cancelled.</p>
         </div>
       )}
 

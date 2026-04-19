@@ -2,8 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Update watchlist notification preference
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireAuth()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { id } = await params
+  const { notifyNearClose } = await request.json()
+  await prisma.like.updateMany({
+    where: { userId: session.user.id, carId: id },
+    data: { notifyNearClose: Boolean(notifyNearClose) },
+  })
+  return NextResponse.json({ success: true })
+}
+
 // Like a car
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAuth()
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -24,7 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 }
 
 // Unlike a car
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAuth()
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -40,7 +53,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 }
 
 // Get all users who liked a car (admin only)
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin()
   if (!session) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })

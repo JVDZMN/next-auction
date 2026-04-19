@@ -1,147 +1,285 @@
 "use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout"
+
+interface SavedSearch {
+  id: string
+  label: string | null
+  brand: string | null
+  maxPrice: number | null
+  minYear: number | null
+  fuel: string | null
+  notifyNewListing: boolean
+  createdAt: string
+}
+
+interface UserCar {
+  id: string
+  brand: string
+  model: string
+  year: number
+  status: string
+  isDraft: boolean
+  currentPrice: number
+  startingPrice: number
+  auctionEndDate: string
+  views: number
+  _count: { bids: number }
+}
 
 interface User {
-  id: string;
-  name: string | null;
-  email: string;
-  image?: string | null;
-  role: string;
-  createdAt: string;
-  cars: Array<{
-    id: string;
-    brand: string;
-    model: string;
-    year: number;
-    status: string;
-    currentPrice: number;
-    auctionEndDate: string;
-  }>;
+  id: string
+  name: string | null
+  email: string
+  image?: string | null
+  role: string
+  createdAt: string
+  cars: UserCar[]
   bids: Array<{
-    id: string;
+    id: string
     car: {
-      id: string;
-      brand: string;
-      model: string;
-      year: number;
-      status: string;
-      currentPrice: number;
-      auctionEndDate: string;
-    };
-    amount: number;
-    createdAt: string;
-  }>;
+      id: string
+      brand: string
+      model: string
+      year: number
+      status: string
+      currentPrice: number
+      auctionEndDate: string
+    }
+    amount: number
+    createdAt: string
+  }>
+  savedSearches: SavedSearch[]
 }
 
 export default function UserDashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [newSearch, setNewSearch] = useState({ label: '', brand: '', maxPrice: '', minYear: '', fuel: '' })
+  const [addingSearch, setAddingSearch] = useState(false)
+  const [showSearchForm, setShowSearchForm] = useState(false)
+  const router = useRouter()
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
+  useEffect(() => { fetchUser() }, [])
 
   const fetchUser = async () => {
     try {
-      const res = await fetch("/api/user/dashboard");
-      if (!res.ok) throw new Error("Failed to fetch user data");
-      const data = await res.json();
-      setUser(data.user);
+      const res = await fetch("/api/user/dashboard")
+      if (!res.ok) throw new Error("Failed to fetch user data")
+      const data = await res.json()
+      setUser(data.user)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const handleAddSearch = async () => {
+    setAddingSearch(true)
+    try {
+      const res = await fetch('/api/saved-searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: newSearch.label || undefined,
+          brand: newSearch.brand || undefined,
+          maxPrice: newSearch.maxPrice ? parseFloat(newSearch.maxPrice) : undefined,
+          minYear: newSearch.minYear ? parseInt(newSearch.minYear) : undefined,
+          fuel: newSearch.fuel || undefined,
+          notifyNewListing: true,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      setNewSearch({ label: '', brand: '', maxPrice: '', minYear: '', fuel: '' })
+      setShowSearchForm(false)
+      await fetchUser()
+    } catch {
+      alert('Failed to save search.')
+    } finally {
+      setAddingSearch(false)
+    }
+  }
+
+  const handleDeleteSearch = async (id: string) => {
+    await fetch(`/api/saved-searches/${id}`, { method: 'DELETE' })
+    await fetchUser()
+  }
 
   if (loading) return <LoadingPage maxWidth="max-w-4xl" />
   if (error || !user) return <ErrorPage message={error || "Failed to load user data"} maxWidth="max-w-4xl" />
 
+  const activeCars = user.cars.filter(c => c.status === 'active' && !c.isDraft)
+  const totalViews = user.cars.reduce((s, c) => s + c.views, 0)
+  const totalBidsReceived = user.cars.reduce((s, c) => s + c._count.bids, 0)
+  const soldCars = user.cars.filter(c => c.status === 'completed')
+
   return (
     <PageLayout maxWidth="max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">My Dashboard</h1>
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-center gap-6">
-            {user.image && (
-              <img src={user.image} alt={user.name || user.email} className="w-20 h-20 rounded-full object-cover border" />
-            )}
-            <div>
-              <h2 className="text-2xl font-semibold">{user.name || user.email}</h2>
-              <p className="text-gray-600">{user.email}</p>
-              <div className="flex gap-4 mt-2 text-sm">
-                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Role: {user.role}</span>
-                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
-              </div>
+      <h1 className="text-3xl font-bold mb-6">My Dashboard</h1>
+
+      {/* Profile */}
+      <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="flex items-center gap-6">
+          {user.image && (
+            <img src={user.image} alt={user.name || user.email} className="w-20 h-20 rounded-full object-cover border" />
+          )}
+          <div>
+            <h2 className="text-2xl font-semibold">{user.name || user.email}</h2>
+            <p className="text-gray-600">{user.email}</p>
+            <div className="flex gap-4 mt-2 text-sm">
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Role: {user.role}</span>
+              <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* My Listings */}
+      {/* Seller Analytics */}
+      {user.cars.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-xl font-bold mb-3">My Listings</h3>
-          {user.cars.length === 0 ? (
-            <p className="text-gray-500">You have not listed any cars for auction yet.</p>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-              {user.cars.map((car) => (
-                <div key={car.id} className="bg-white rounded shadow p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <div>
-                      <p className="font-semibold">{car.year} {car.brand} {car.model}</p>
-                      <p className="text-xs text-gray-500">Status: {car.status}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-green-600 font-bold">${car.currentPrice.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">Ends: {new Date(car.auctionEndDate).toLocaleString()}</p>
+          <h3 className="text-xl font-bold mb-3">Seller Analytics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Active Listings', value: activeCars.length },
+              { label: 'Total Views', value: totalViews.toLocaleString() },
+              { label: 'Total Bids Received', value: totalBidsReceived.toLocaleString() },
+              { label: 'Cars Sold', value: soldCars.length },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-white rounded shadow p-4 text-center">
+                <p className="text-2xl font-bold text-blue-600">{value}</p>
+                <p className="text-sm text-gray-500 mt-1">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* My Listings */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-xl font-bold">My Listings</h3>
+          <button onClick={() => router.push('/cars/create')} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+            + New Listing
+          </button>
+        </div>
+        {user.cars.length === 0 ? (
+          <p className="text-gray-500">You have not listed any cars for auction yet.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {user.cars.map((car) => (
+              <div key={car.id} className="bg-white rounded shadow p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="font-semibold">{car.year} {car.brand} {car.model}</p>
+                    <div className="flex gap-1 mt-1">
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                        car.status === 'active' ? 'bg-green-100 text-green-800' :
+                        car.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                        car.status === 'reserve_not_met' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>{car.status}</span>
+                      {car.isDraft && <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-700">draft</span>}
                     </div>
                   </div>
-                  <button
-                    onClick={() => router.push(`/cars/${car.id}`)}
-                    className="text-blue-600 hover:underline text-sm mt-2"
-                  >
-                    View Auction
-                  </button>
+                  <div className="text-right">
+                    <p className="text-green-600 font-bold">${car.currentPrice.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">{car.views} views · {car._count.bids} bids</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="text-xs text-gray-500 mb-2">Ends: {new Date(car.auctionEndDate).toLocaleString()}</p>
+                <button onClick={() => router.push(`/cars/${car.id}`)} className="text-blue-600 hover:underline text-sm">
+                  View Auction →
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* My Bids */}
+      <div className="mb-8">
+        <h3 className="text-xl font-bold mb-3">My Bids</h3>
+        {user.bids.length === 0 ? (
+          <p className="text-gray-500">You have not placed any bids yet.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {user.bids.map((bid) => (
+              <div key={bid.id} className="bg-white rounded shadow p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <div>
+                    <p className="font-semibold">{bid.car.year} {bid.car.brand} {bid.car.model}</p>
+                    <p className="text-xs text-gray-500">Status: {bid.car.status}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-green-600 font-bold">Bid: ${bid.amount.toLocaleString()}</p>
+                    <p className="text-xs text-gray-500">Current: ${bid.car.currentPrice.toLocaleString()}</p>
+                  </div>
+                </div>
+                <button onClick={() => router.push(`/cars/${bid.car.id}`)} className="text-blue-600 hover:underline text-sm">
+                  View Auction →
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Saved Searches */}
+      <div>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-xl font-bold">Saved Searches</h3>
+          <button onClick={() => setShowSearchForm(v => !v)} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+            + Add Search
+          </button>
         </div>
 
-        {/* My Bids */}
-        <div>
-          <h3 className="text-xl font-bold mb-3">My Bids</h3>
-          {user.bids.length === 0 ? (
-            <p className="text-gray-500">You have not placed any bids yet.</p>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-              {user.bids.map((bid) => (
-                <div key={bid.id} className="bg-white rounded shadow p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <div>
-                      <p className="font-semibold">{bid.car.year} {bid.car.brand} {bid.car.model}</p>
-                      <p className="text-xs text-gray-500">Status: {bid.car.status}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-green-600 font-bold">Bid: ${bid.amount.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">Ends: {new Date(bid.car.auctionEndDate).toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => router.push(`/cars/${bid.car.id}`)}
-                    className="text-blue-600 hover:underline text-sm mt-2"
-                  >
-                    View Auction
-                  </button>
-                </div>
-              ))}
+        {showSearchForm && (
+          <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <input placeholder="Label (optional)" value={newSearch.label} onChange={e => setNewSearch(s => ({ ...s, label: e.target.value }))}
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
+              <input placeholder="Brand (e.g. BMW)" value={newSearch.brand} onChange={e => setNewSearch(s => ({ ...s, brand: e.target.value }))}
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
+              <input placeholder="Max price" type="number" value={newSearch.maxPrice} onChange={e => setNewSearch(s => ({ ...s, maxPrice: e.target.value }))}
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
+              <input placeholder="Min year" type="number" value={newSearch.minYear} onChange={e => setNewSearch(s => ({ ...s, minYear: e.target.value }))}
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
+              <input placeholder="Fuel type" value={newSearch.fuel} onChange={e => setNewSearch(s => ({ ...s, fuel: e.target.value }))}
+                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
             </div>
-          )}
-        </div>
+            <div className="flex gap-2">
+              <button onClick={handleAddSearch} disabled={addingSearch} className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 disabled:opacity-50">
+                {addingSearch ? 'Saving...' : 'Save Search'}
+              </button>
+              <button onClick={() => setShowSearchForm(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {user.savedSearches.length === 0 ? (
+          <p className="text-gray-500">No saved searches yet. Add one to get email alerts for new matching listings.</p>
+        ) : (
+          <div className="space-y-2">
+            {user.savedSearches.map((s) => (
+              <div key={s.id} className="bg-white rounded shadow p-3 flex justify-between items-center">
+                <div>
+                  <p className="font-medium text-sm">{s.label || 'Unnamed search'}</p>
+                  <p className="text-xs text-gray-500">
+                    {[s.brand, s.maxPrice && `max $${s.maxPrice}`, s.minYear && `from ${s.minYear}`, s.fuel].filter(Boolean).join(' · ') || 'Any car'}
+                  </p>
+                </div>
+                <button onClick={() => handleDeleteSearch(s.id)} className="text-red-500 hover:text-red-700 text-sm">Remove</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </PageLayout>
-  );
+  )
 }

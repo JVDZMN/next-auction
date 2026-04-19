@@ -5,6 +5,7 @@ export type BidValidationInput = {
   auctionEndDate: Date
   ownerId: string
   bidderId: string
+  bidIncrement?: number | null
 }
 
 export type BidValidationResult =
@@ -20,7 +21,16 @@ export function validateBid(input: BidValidationInput): BidValidationResult {
     return { valid: false, error: 'Auction has ended', httpStatus: 400 }
   }
 
-  if (input.amount <= input.currentPrice) {
+  if (input.bidIncrement && input.bidIncrement > 0) {
+    const minBid = input.currentPrice + input.bidIncrement
+    if (input.amount < minBid) {
+      return {
+        valid: false,
+        error: `Minimum bid increment is $${input.bidIncrement}. Minimum bid: $${minBid.toFixed(2)}`,
+        httpStatus: 400,
+      }
+    }
+  } else if (input.amount <= input.currentPrice) {
     return {
       valid: false,
       error: `Bid must be higher than current price: $${input.currentPrice}`,

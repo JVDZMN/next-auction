@@ -28,9 +28,15 @@ export default function CreateCarPage() {
     startingPrice: '',
     reservePrice: '',
     auctionEndDate: '',
+    auctionStartDate: '',
     zipcode: '',
     city: '',
+    vin: '',
+    inspectionReportUrl: '',
+    bidIncrement: '',
   })
+  const [isDraft, setIsDraft] = useState(false)
+  const [serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -66,6 +72,12 @@ export default function CreateCarPage() {
           startingPrice: parseFloat(formData.startingPrice),
           reservePrice: formData.reservePrice ? parseFloat(formData.reservePrice) : null,
           auctionEndDate: new Date(formData.auctionEndDate).toISOString(),
+          auctionStartDate: formData.auctionStartDate ? new Date(formData.auctionStartDate).toISOString() : null,
+          vin: formData.vin || null,
+          inspectionReportUrl: formData.inspectionReportUrl || null,
+          serviceHistoryUrls,
+          bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : null,
+          isDraft,
         }),
       })
 
@@ -343,6 +355,85 @@ export default function CreateCarPage() {
               </div>
             </div>
 
+            {/* Advanced auction options */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="auctionStartDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Auction Start Date (optional)
+                </label>
+                <input
+                  id="auctionStartDate"
+                  name="auctionStartDate"
+                  type="datetime-local"
+                  value={formData.auctionStartDate}
+                  onChange={handleChange}
+                  min={new Date().toISOString().slice(0, 16)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="bidIncrement" className="block text-sm font-medium text-gray-700 mb-1">
+                  Minimum Bid Increment ($, optional)
+                </label>
+                <input
+                  id="bidIncrement"
+                  name="bidIncrement"
+                  type="number"
+                  value={formData.bidIncrement}
+                  onChange={handleChange}
+                  placeholder="e.g. 500"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+            </div>
+
+            {/* Vehicle documentation */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-1">
+                  VIN (optional)
+                </label>
+                <input
+                  id="vin"
+                  name="vin"
+                  type="text"
+                  value={formData.vin}
+                  onChange={handleChange}
+                  placeholder="17-character VIN"
+                  maxLength={17}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="inspectionReportUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                  Inspection Report URL (optional)
+                </label>
+                <input
+                  id="inspectionReportUrl"
+                  name="inspectionReportUrl"
+                  type="url"
+                  value={formData.inspectionReportUrl}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service History URLs (optional, one per line)
+              </label>
+              <textarea
+                rows={2}
+                placeholder="https://..."
+                onChange={(e) => setServiceHistoryUrls(e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              />
+            </div>
+
             <div>
               <label htmlFor="specs" className="block text-sm font-medium text-gray-700 mb-1">
                 Additional Notes (Optional)
@@ -353,9 +444,22 @@ export default function CreateCarPage() {
                 value={formData.specs}
                 onChange={handleChange}
                 rows={2}
-                placeholder="VIN, service history, modifications, etc..."
+                placeholder="Modifications, known issues, etc..."
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="isDraft"
+                type="checkbox"
+                checked={isDraft}
+                onChange={(e) => setIsDraft(e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="isDraft" className="text-sm text-gray-700">
+                Save as draft (not visible to buyers)
+              </label>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -364,7 +468,7 @@ export default function CreateCarPage() {
                 disabled={isSubmitting}
                 className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating...' : 'Create Auction'}
+                {isSubmitting ? 'Creating...' : isDraft ? 'Save Draft' : 'Create Auction'}
               </button>
               <button
                 type="button"

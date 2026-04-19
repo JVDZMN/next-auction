@@ -3,6 +3,42 @@ import { requireAuth, requireAdmin } from '@/lib/auth'
 import { prisma, ownerSelect, latestBidInclude } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { CarStatus } from '@prisma/client'
+import { sendEmail } from '@/lib/email'
+
+async function notifySavedSearches(car: { id: string; brand: string; model: string; year: number; currentPrice: number; fuel: string | null }) {
+  try {
+    const searches = await prisma.savedSearch.findMany({
+      where: {
+        notifyNewListing: true,
+        ...(car.brand ? { OR: [{ brand: null }, { brand: car.brand }] } : {}),
+      },
+      include: { user: { select: { email: true, name: true } } },
+    })
+
+    for (const s of searches) {
+      if (s.brand && s.brand !== car.brand) continue
+      if (s.maxPrice && car.currentPrice > s.maxPrice) continue
+      if (s.minYear && car.year < s.minYear) continue
+      if (s.fuel && car.fuel !== s.fuel) continue
+
+      void sendEmail({
+        to: s.user.email,
+        subject: `New listing matches your saved search: ${car.year} ${car.brand} ${car.model}`,
+        html: `
+          <h2>New matching listing!</h2>
+          <p>Hi ${s.user.name ?? 'there'},</p>
+          <p>A new car matching your saved search${s.label ? ` "<strong>${s.label}</strong>"` : ''} was just listed:</p>
+          <p><strong>${car.year} ${car.brand} ${car.model}</strong> — $${car.currentPrice.toLocaleString()}</p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/cars/${car.id}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+            View Listing
+          </a>
+        `,
+      })
+    }
+  } catch {
+    // non-fatal
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     const cars = await prisma.car.findMany({
-      where: { status },
+      where: { status, isDraft: false },
       include: {
         owner: { select: ownerSelect },
         bids: latestBidInclude,
@@ -60,6 +96,7 @@ export async function POST(request: NextRequest) {
     if (new Date(data.auctionEndDate) <= new Date()) {
       return NextResponse.json({ error: 'Auction end date must be in the future' }, { status: 400 });
     }
+    const isDraft = data.isDraft ?? false
     const car = await prisma.car.create({
       data: {
         ownerId: session.user.id,
@@ -77,7 +114,13 @@ export async function POST(request: NextRequest) {
         currentPrice: Number(data.startingPrice),
         reservePrice: data.reservePrice != null ? Number(data.reservePrice) : null,
         auctionEndDate: new Date(data.auctionEndDate),
-        status: 'active',
+        auctionStartDate: data.auctionStartDate ? new Date(data.auctionStartDate) : null,
+        status: isDraft ? 'active' : 'active',
+        isDraft,
+        vin: data.vin || null,
+        inspectionReportUrl: data.inspectionReportUrl || null,
+        serviceHistoryUrls: data.serviceHistoryUrls || [],
+        bidIncrement: data.bidIncrement != null ? Number(data.bidIncrement) : null,
         zipcode: data.zipcode || null,
         city: data.city || null,
       },
@@ -85,6 +128,12 @@ export async function POST(request: NextRequest) {
         owner: { select: { id: true, name: true, email: true } },
       },
     });
+
+    // Notify users whose saved searches match this new listing
+    if (!isDraft) {
+      void notifySavedSearches(car)
+    }
+
     return NextResponse.json(car, { status: 201 });
   } catch (error) {
     return serverError('Failed to create car', error)

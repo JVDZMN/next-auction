@@ -78,12 +78,11 @@ export async function POST(request: NextRequest) {
           auctionEndDate: new Date(car.auctionEndDate),
           ownerId: car.ownerId,
           bidderId: userId!,
+          bidIncrement: car.bidIncrement,
         })
 
         if (!validation.valid) throw new BidError(validation.error, validation.httpStatus)
 
-        // Optimistic lock: only succeeds if the price has not changed since
-        // our read above.  count === 0 means a concurrent bid already won.
         const carUpdate = await tx.car.updateMany({
           where: { id: carId, currentPrice: car.currentPrice },
           data: { currentPrice: amount },
@@ -101,15 +100,70 @@ export async function POST(request: NextRequest) {
           include: { bidder: { select: bidderSelect } },
         })
 
-        await tx.car.update({
-          where: { id: carId },
-          data: { winnerBidId: bid.id },
-        })
+        // Anti-sniping: extend auction if bid placed within the snipe window
+        const now = new Date()
+        const snipeWindow = car.antiSnipingMinutes * 60 * 1000
+        if (car.auctionEndDate.getTime() - now.getTime() < snipeWindow) {
+          await tx.car.update({
+            where: { id: carId },
+            data: {
+              winnerBidId: bid.id,
+              auctionEndDate: new Date(now.getTime() + snipeWindow),
+            },
+          })
+        } else {
+          await tx.car.update({
+            where: { id: carId },
+            data: { winnerBidId: bid.id },
+          })
+        }
 
         return { bid, car }
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     )
+
+    // Proxy bidding: if another user has an active proxy bid with max > placed amount, auto-counter
+    const competingProxy = await prisma.proxyBid.findFirst({
+      where: {
+        carId: carId!,
+        isActive: true,
+        bidderId: { not: userId },
+        maxAmount: { gt: amount! },
+      },
+      orderBy: { maxAmount: 'desc' },
+      include: { bidder: { select: { id: true, email: true, name: true } } },
+    })
+
+    if (competingProxy) {
+      const increment = car.bidIncrement ?? 1
+      const proxyAmount = Math.min(
+        amount! + increment,
+        competingProxy.maxAmount,
+      )
+      try {
+        await prisma.$transaction(async (tx) => {
+          const freshCar = await tx.car.findUnique({ where: { id: carId! } })
+          if (!freshCar || freshCar.currentPrice >= competingProxy.maxAmount) return
+
+          const carUpdate = await tx.car.updateMany({
+            where: { id: carId!, currentPrice: freshCar.currentPrice },
+            data: { currentPrice: proxyAmount },
+          })
+          if (carUpdate.count !== 1) return
+
+          const proxyBidRecord = await tx.bid.create({
+            data: { carId: carId!, bidderId: competingProxy.bidderId, amount: proxyAmount },
+          })
+          await tx.car.update({
+            where: { id: carId! },
+            data: { winnerBidId: proxyBidRecord.id },
+          })
+        }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+      } catch {
+        // proxy bid failure is non-fatal
+      }
+    }
 
     logger.bid.placed({ userId, carId: car.id, amount })
 

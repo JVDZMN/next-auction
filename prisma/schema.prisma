@@ -39,17 +39,18 @@ enum FuelType {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  googleId      String?   @unique
-  role          Role      @default(User)
-  mitIdVerified Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  googleId       String?   @unique
+  role           Role      @default(User)
+  mitIdVerified  Boolean   @default(false)
+  sellerVerified Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   accounts         Account[]
   sessions         Session[]
@@ -59,6 +60,8 @@ model User {
   messagesSent     Message[]      @relation("MessagesSent")
   messagesReceived Message[]      @relation("MessagesReceived")
   likes            Like[]
+  savedSearches    SavedSearch[]
+  proxyBids        ProxyBid[]
 }
 
 model Account {
@@ -97,37 +100,46 @@ model VerificationToken {
 }
 
 model Car {
-  id             String        @id @default(cuid())
-  ownerId        String
-  brand          String
-  model          String
-  description    String        @db.Text
-  specs          String?       @db.Text
-  condition      String
-  km             Int
-  year           Int
-  power          Int
-  fuel           FuelType?
-  gearType       GearType?
-  nextInspection DateTime?
-  lastInspection DateTime?
-  zipcode        String?
-  city           String?
-  images         String[]
-  startingPrice  Float
-  currentPrice   Float
-  reservePrice   Float?
-  auctionEndDate DateTime
-  status         CarStatus     @default(active)
-  winnerBidId    String?       @unique
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  ownerId             String
+  brand               String
+  model               String
+  description         String        @db.Text
+  specs               String?       @db.Text
+  condition           String
+  km                  Int
+  year                Int
+  power               Int
+  fuel                FuelType?
+  gearType            GearType?
+  nextInspection      DateTime?
+  lastInspection      DateTime?
+  zipcode             String?
+  city                String?
+  images              String[]
+  startingPrice       Float
+  currentPrice        Float
+  reservePrice        Float?
+  auctionEndDate      DateTime
+  auctionStartDate    DateTime?
+  status              CarStatus     @default(active)
+  isDraft             Boolean       @default(false)
+  winnerBidId         String?       @unique
+  vin                 String?
+  inspectionReportUrl String?
+  serviceHistoryUrls  String[]
+  bidIncrement        Float?
+  antiSnipingMinutes  Int           @default(2)
+  views               Int           @default(0)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   bids      Bid[]
   winnerBid Bid?      @relation("WinningBid", fields: [winnerBidId], references: [id])
   messages  Message[]
   likedBy   Like[]
+  proxyBids ProxyBid[]
 
   @@index([ownerId])
   @@index([status])
@@ -135,16 +147,50 @@ model Car {
 }
 
 model Like {
-  id        String   @id @default(cuid())
-  userId    String
-  carId     String
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  userId          String
+  carId           String
+  notifyNearClose Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   car  Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
 
   @@unique([userId, carId])
   @@index([carId])
+  @@index([userId])
+}
+
+model ProxyBid {
+  id        String   @id @default(cuid())
+  carId     String
+  bidderId  String
+  maxAmount Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  car    Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
+  bidder User @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+
+  @@unique([carId, bidderId])
+  @@index([carId])
+  @@index([bidderId])
+}
+
+model SavedSearch {
+  id               String   @id @default(cuid())
+  userId           String
+  label            String?
+  brand            String?
+  maxPrice         Float?
+  minYear          Int?
+  fuel             String?
+  notifyNewListing Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 

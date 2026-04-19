@@ -21,9 +21,16 @@ export async function GET(request: NextRequest) {
             model: true,
             year: true,
             status: true,
+            isDraft: true,
             currentPrice: true,
+            startingPrice: true,
             auctionEndDate: true,
+            views: true,
+            _count: { select: { bids: true } },
           },
+        },
+        savedSearches: {
+          orderBy: { createdAt: 'desc' },
         },
         bids: {
           orderBy: { createdAt: 'desc' },

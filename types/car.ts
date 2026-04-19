@@ -14,12 +14,21 @@ export interface Car {
   currentPrice: number
   reservePrice: number | null
   auctionEndDate: string
+  auctionStartDate: string | null
   status: string
+  isDraft: boolean
+  vin: string | null
+  inspectionReportUrl: string | null
+  serviceHistoryUrls: string[]
+  bidIncrement: number | null
+  antiSnipingMinutes: number
+  views: number
   createdAt: string
   owner: {
     id: string
     name: string | null
     email: string
+    sellerVerified?: boolean
     createdAt?: string
   }
   bids: Array<{

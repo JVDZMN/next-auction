@@ -1,14 +1,15 @@
 # Next Auction
 
-A full-stack real-time car auction platform built with Next.js 16, Prisma, and Socket.io.
+A full-stack real-time car auction platform built with Next.js 15, Prisma, and Socket.io.
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 15 (App Router) |
 | Database | PostgreSQL + Prisma ORM |
 | Auth | NextAuth.js (Google OAuth + credentials) |
+| Identity verification | MitID via Criipto / Idura broker |
 | Real-time | Socket.io |
 | Email | Resend |
 | Image upload | Cloudinary |
@@ -22,6 +23,11 @@ A full-stack real-time car auction platform built with Next.js 16, Prisma, and S
 - **Real-time bidding** — Socket.io pushes live price updates and notifications to all connected users
 - **Race condition protection** — Prisma `$transaction` with Serializable isolation + optimistic locking ensures two concurrent bids can never both win
 - **Rate limiting** — 5 bids / 10 s per user; 10 messages / 60 s per user (sliding-window, in-memory)
+- **Auction status automation** — Cron endpoint sets `completed`, `cancelled`, or `reserve_not_met` when auctions end
+- **Owner auction cancellation** — Car owners can cancel their active listing from the detail page
+- **Like system** — Users can like/unlike listings; heart icon on each card persists across sessions
+- **Email verification** — Credential signups receive a verification link; Google signups are auto-verified
+- **MitID verification** — Danish users can verify their identity via MitID (separate from login)
 - **Structured logging** — JSON logs on every bid attempt/rejection/success; unexpected errors captured to Sentry
 - **Notifications** — Bell icon with unread count; real-time socket push for new bids, outbids, and messages
 - **Messaging** — Buyer ↔ seller chat per listing, with email fallback via Resend
@@ -63,12 +69,20 @@ See [.env.example](.env.example) for the full list. Required variables:
 DATABASE_URL
 NEXTAUTH_SECRET
 NEXTAUTH_URL
-NEXT_PUBLIC_SENTRY_DSN   # optional — app works without it
-SENTRY_DSN               # optional
+NEXT_PUBLIC_APP_URL
 RESEND_API_KEY
+EMAIL_FROM
 CLOUDINARY_CLOUD_NAME
 CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
+CRON_SECRET              # protects /api/cron/auction-status
+GOOGLE_CLIENT_ID         # Google OAuth
+GOOGLE_CLIENT_SECRET
+CRIIPTO_CLIENT_ID        # MitID via Idura broker (optional)
+CRIIPTO_CLIENT_SECRET
+CRIIPTO_DOMAIN
+NEXT_PUBLIC_SENTRY_DSN   # optional — app works without it
+SENTRY_DSN               # optional
 ```
 
 ## Project Structure
@@ -77,21 +91,26 @@ CLOUDINARY_API_SECRET
 next-auction/
 ├── app/
 │   ├── api/
-│   │   ├── auth/          # NextAuth + credentials register
+│   │   ├── auth/          # NextAuth + credentials register + email verify
 │   │   ├── bids/          # Place & list bids
-│   │   ├── cars/          # CRUD + like + rating + status
+│   │   ├── cars/          # CRUD + like + status
 │   │   ├── messages/      # Chat + notifications
 │   │   ├── upload/        # Cloudinary image upload
-│   │   └── admin/         # Admin stats & car management
+│   │   ├── admin/         # Admin stats & car management
+│   │   ├── mitid/         # MitID OIDC start + callback
+│   │   └── cron/          # Auction status updater
 │   ├── cars/              # Browse & detail pages
 │   ├── dashboard/         # User dashboard
 │   ├── admin/             # Admin dashboard
-│   ├── auth/              # Sign in / sign up pages
+│   ├── auth/              # Sign in / sign up / verify-email pages
+│   ├── mitid-verified/    # MitID verification result page
 │   ├── error.tsx          # App-level error boundary
 │   ├── global-error.tsx   # Root layout error boundary
 │   └── not-found.tsx      # 404 page
 ├── components/
-│   ├── Header.tsx          # Nav + bell notifications + user menu
+│   ├── Header.tsx          # Nav + bell notifications + user menu + MitID link
+│   ├── CarCard.tsx         # Listing card with time remaining + like button
+│   ├── LikeButton.tsx      # Heart toggle, calls like API
 │   ├── BiddingSection.tsx  # Live bid form + bid history
 │   ├── MessagesModal.tsx   # Chat modal
 │   ├── MessageSeller.tsx   # Message seller button
@@ -110,6 +129,9 @@ next-auction/
 │   └── socketio.ts         # Socket.io handler (Pages Router)
 ├── prisma/
 │   └── schema.prisma
+├── types/
+│   ├── car.ts              # Car / owner / bidder TypeScript interfaces
+│   └── next-auth.d.ts      # Session / JWT type augmentation
 ├── .github/workflows/
 │   └── ci.yml              # Lint + test + type check
 └── .env.example
@@ -121,15 +143,38 @@ next-auction/
 |---|---|---|
 | GET/POST | `/api/cars` | List / create listings |
 | GET/PATCH/DELETE | `/api/cars/[id]` | Single car |
-| POST | `/api/cars/[id]/like` | Toggle like |
-| POST | `/api/cars/[id]/rating` | Rate a user |
-| PATCH | `/api/cars/[id]/status` | Update auction status |
+| POST/DELETE | `/api/cars/[id]/like` | Toggle like |
+| PATCH | `/api/cars/[id]/status` | Update auction status (owner/admin) |
 | GET/POST | `/api/bids` | List / place bids |
 | GET/POST | `/api/messages` | Fetch / send messages |
 | GET/PATCH | `/api/messages/notifications` | Read notifications / mark read |
 | POST | `/api/upload` | Upload images to Cloudinary |
 | GET | `/api/admin/stats` | Platform statistics |
 | GET | `/api/admin/cars/[id]` | Admin car detail with bid stats |
+| GET | `/api/auth/verify-email` | Verify email token from link |
+| GET | `/api/mitid/start` | Start MitID OIDC flow |
+| GET | `/api/mitid/callback` | MitID OIDC callback — sets `mitIdVerified` |
+| GET | `/api/cron/auction-status` | Update ended auction statuses (cron, secret-protected) |
+
+## Auction Status Logic
+
+The cron endpoint (`/api/cron/auction-status`) runs on ended auctions and applies these rules:
+
+| Condition | Status set |
+|---|---|
+| Still running | `active` (untouched) |
+| Ended, no bids | `cancelled` |
+| Ended, bids exist but highest < reserve | `reserve_not_met` |
+| Ended, bids exist and reserve met (or no reserve) | `completed` |
+
+Trigger it on a schedule (e.g. Vercel Cron):
+
+```json
+// vercel.json
+{
+  "crons": [{ "path": "/api/cron/auction-status", "schedule": "*/5 * * * *" }]
+}
+```
 
 ## Scripts
 
@@ -156,5 +201,5 @@ User ──< Car ──< Bid
               ──< Message
               ──< Like
 User ──< Notification
-User ──< Rating
+User ── VerificationToken
 ```

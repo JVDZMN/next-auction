@@ -14,8 +14,28 @@ export const CarCreateSchema = z.object({
   startingPrice: z.union([z.string(), z.number()]),
   reservePrice: z.union([z.string(), z.number()]).optional().nullable(),
   auctionEndDate: z.string(),
+  auctionStartDate: z.string().optional().nullable(),
   zipcode: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
+  vin: z.string().optional().nullable(),
+  inspectionReportUrl: z.string().optional().nullable(),
+  serviceHistoryUrls: z.array(z.string()).optional(),
+  bidIncrement: z.union([z.string(), z.number()]).optional().nullable(),
+  isDraft: z.boolean().optional(),
+});
+
+export const ProxyBidSchema = z.object({
+  carId: z.string().min(1),
+  maxAmount: z.number().positive(),
+});
+
+export const SavedSearchSchema = z.object({
+  label: z.string().optional(),
+  brand: z.string().optional(),
+  maxPrice: z.number().positive().optional(),
+  minYear: z.number().int().optional(),
+  fuel: z.string().optional(),
+  notifyNewListing: z.boolean().optional(),
 });
 
 export const BidCreateSchema = z.object({

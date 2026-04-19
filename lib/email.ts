@@ -97,6 +97,90 @@ export async function sendVerificationEmail({
   })
 }
 
+export async function sendAuctionWonEmail({
+  to,
+  winnerName,
+  carTitle,
+  finalPrice,
+  carId,
+}: {
+  to: string
+  winnerName: string
+  carTitle: string
+  finalPrice: number
+  carId: string
+}) {
+  return sendEmail({
+    to,
+    subject: `Congratulations! You won the auction for ${carTitle}`,
+    html: `
+      <h2>You won the auction!</h2>
+      <p>Hi ${winnerName},</p>
+      <p>Your bid of <strong>${finalPrice.toLocaleString()} kr</strong> was the winning bid for <strong>${carTitle}</strong>.</p>
+      <p>The seller will be in touch to arrange payment and collection.</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+        View Listing
+      </a>
+    `,
+  })
+}
+
+export async function sendAuctionClosedSellerEmail({
+  to,
+  sellerName,
+  carTitle,
+  carId,
+  outcome,
+  finalPrice,
+  winnerName,
+}: {
+  to: string
+  sellerName: string
+  carTitle: string
+  carId: string
+  outcome: 'completed' | 'cancelled' | 'reserve_not_met'
+  finalPrice?: number
+  winnerName?: string
+}) {
+  const subjectMap = {
+    completed: `Your auction for ${carTitle} has a winner!`,
+    cancelled: `Your auction for ${carTitle} ended with no bids`,
+    reserve_not_met: `Your auction for ${carTitle} ended — reserve not met`,
+  }
+
+  const bodyMap = {
+    completed: `
+      <h2>Your auction has sold!</h2>
+      <p>Hi ${sellerName},</p>
+      <p><strong>${winnerName}</strong> won <strong>${carTitle}</strong> with a bid of <strong>${finalPrice?.toLocaleString()} kr</strong>.</p>
+      <p>Please contact the buyer to arrange payment and collection.</p>
+    `,
+    cancelled: `
+      <h2>Auction ended with no bids</h2>
+      <p>Hi ${sellerName},</p>
+      <p>Your auction for <strong>${carTitle}</strong> ended without receiving any bids.</p>
+      <p>You can relist the car at any time.</p>
+    `,
+    reserve_not_met: `
+      <h2>Reserve price not met</h2>
+      <p>Hi ${sellerName},</p>
+      <p>Your auction for <strong>${carTitle}</strong> ended. The highest bid was <strong>${finalPrice?.toLocaleString()} kr</strong>, which did not meet your reserve price.</p>
+      <p>You may contact the highest bidder directly or relist the car.</p>
+    `,
+  }
+
+  return sendEmail({
+    to,
+    subject: subjectMap[outcome],
+    html: `
+      ${bodyMap[outcome]}
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+        View Listing
+      </a>
+    `,
+  })
+}
+
 export async function sendMessageNotification({
   to,
   senderName,
