@@ -43,6 +43,25 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
 
   const isOwner = session?.user?.id === car.owner.id;
   const auctionEnded = new Date(car.auctionEndDate) < new Date();
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancelAuction = async () => {
+    if (!confirm('Are you sure you want to cancel this auction? This cannot be undone.')) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/cars/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      if (!res.ok) throw new Error('Failed to cancel auction');
+      await fetchCar();
+    } catch {
+      alert('Failed to cancel auction. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <PageLayout>
@@ -158,6 +177,15 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
                   className="px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
                 >
                   Edit Listing
+                </button>
+              )}
+              {isOwner && car.status === 'active' && (
+                <button
+                  onClick={handleCancelAuction}
+                  disabled={cancelling}
+                  className="px-6 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel Auction'}
                 </button>
               )}
             </div>
