@@ -1,6 +1,7 @@
 'use client'
 
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
+import { ChatMessageSchema } from '@/lib/zod'
 
 type ChatMessage = {
   senderId: string
@@ -148,23 +149,35 @@ export function MessagesModal({
             <form
               onSubmit={e => {
                 e.preventDefault()
-                const content = chatInput.trim()
-                if (!content) return
+                const result = ChatMessageSchema.safeParse({ content: chatInput.trim() })
+                if (!result.success) return
                 setChatInput('')
-                onSendMessage(content)
+                onSendMessage(result.data.content)
               }}
-              className="flex gap-2"
+              className="flex flex-col gap-1"
             >
-              <input
-                type="text"
-                className="w-full border rounded px-2 py-1 mb-2"
-                placeholder="Type a message..."
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-              />
-              <button type="submit" className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700">
-                Send
-              </button>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className={`w-full border rounded px-2 py-1 ${chatInput.length > 2000 ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  placeholder="Type a message..."
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  maxLength={2001}
+                />
+                <button
+                  type="submit"
+                  disabled={!chatInput.trim() || chatInput.length > 2000}
+                  className="bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Send
+                </button>
+              </div>
+              {chatInput.length > 1800 && (
+                <p className={`text-xs text-right ${chatInput.length > 2000 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {chatInput.length}/2000
+                </p>
+              )}
             </form>
           </div>
         )}

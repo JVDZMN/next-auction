@@ -24,3 +24,14 @@ export const BidCreateSchema = z.object({
     message: 'Amount must be greater than 0',
   }),
 });
+
+export const MessageCreateSchema = z.object({
+  carId: z.string().min(1, 'Car ID is required'),
+  receiverId: z.string().min(1, 'Receiver is required'),
+  content: z.string().min(1, 'Message cannot be empty').max(2000, 'Message cannot exceed 2000 characters'),
+  replyToMessageId: z.string().optional(),
+});
+
+export const ChatMessageSchema = z.object({
+  content: z.string().min(1, 'Message cannot be empty').max(2000, 'Message cannot exceed 2000 characters'),
+});

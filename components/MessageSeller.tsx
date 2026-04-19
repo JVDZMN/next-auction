@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useSession } from 'next-auth/react';
+import { MessageCreateSchema } from '@/lib/zod';
 
 interface MessageSellerProps {
   carId: string;
@@ -20,7 +21,11 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
   if (session?.user?.id === ownerId) return null;
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    const result = MessageCreateSchema.safeParse({ carId, receiverId: ownerId, content: input });
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -28,7 +33,7 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ carId, receiverId: ownerId, content: input }),
+        body: JSON.stringify(result.data),
       });
       const data = await res.json();
       if (data.message) {
@@ -68,17 +73,23 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
             {error && <div className="text-red-600 mb-2">{error}</div>}
             {success && <div className="text-green-600 mb-2">Message sent!</div>}
             <textarea
-              className="w-full border rounded px-2 py-1 mb-4"
+              className={`w-full border rounded px-2 py-1 mb-1 ${input.length > 2000 ? 'border-red-400' : ''}`}
               rows={4}
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Type your message..."
               disabled={loading}
+              maxLength={2001}
             />
+            {input.length > 1800 && (
+              <p className={`text-xs text-right mb-3 ${input.length > 2000 ? 'text-red-500' : 'text-gray-400'}`}>
+                {input.length}/2000
+              </p>
+            )}
             <button
               onClick={sendMessage}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || input.length > 2000}
             >
               <PaperAirplaneIcon className="h-5 w-5 inline" /> Send
             </button>
