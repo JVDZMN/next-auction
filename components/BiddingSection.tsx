@@ -238,7 +238,7 @@ export function BiddingSection({
       {session && isAuctionActive && !isOwner && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-black mb-1">Set Proxy Bid</h3>
-          <p className="text-sm text-gray-500 mb-4">We'll automatically bid for you up to your maximum.</p>
+          <p className="text-sm text-gray-500 mb-4">We&apos;ll automatically bid for you up to your maximum.</p>
           {proxyError && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{proxyError}</div>}
           {proxySuccess && <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">{proxySuccess}</div>}
           <form onSubmit={handleProxySubmit} className="flex gap-2">
