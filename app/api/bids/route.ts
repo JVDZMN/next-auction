@@ -137,10 +137,7 @@ export async function POST(request: NextRequest) {
 
     if (competingProxy) {
       const increment = car.bidIncrement ?? 1
-      const proxyAmount = Math.min(
-        amount! + increment,
-        competingProxy.maxAmount,
-      )
+      const proxyAmount = Math.min(amount! + increment, competingProxy.maxAmount)
       try {
         await prisma.$transaction(async (tx) => {
           const freshCar = await tx.car.findUnique({ where: { id: carId! } })
@@ -227,7 +224,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     if (error instanceof BidError) {
-      // Expected business-rule rejection — log as warn, not error
       logger.bid.rejected({
         userId: userId ?? 'unknown',
         carId: carId ?? 'unknown',
@@ -237,7 +233,6 @@ export async function POST(request: NextRequest) {
       })
       return NextResponse.json({ error: error.message }, { status: error.httpStatus })
     }
-    // Unexpected failure — captured to Sentry via logger.error inside serverError
     logger.bid.failed(error, { userId, carId, amount })
     return serverError('Failed to place bid', error)
   }

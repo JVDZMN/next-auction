@@ -35,13 +35,10 @@ export async function updateAuctionStatuses() {
     let newStatus: 'completed' | 'cancelled' | 'reserve_not_met'
 
     if (!highestBid) {
-      // No bids at all → cancelled
       newStatus = 'cancelled'
     } else if (car.reservePrice && highestBid.amount < car.reservePrice) {
-      // Bids exist but reserve not reached
       newStatus = 'reserve_not_met'
     } else {
-      // Bids exist and reserve met (or no reserve set)
       newStatus = 'completed'
     }
 
@@ -55,7 +52,6 @@ export async function updateAuctionStatuses() {
       },
     })
 
-    // Send notifications (fire-and-forget — don't block cron on email errors)
     if (newStatus === 'completed' && highestBid) {
       void sendAuctionWonEmail({
         to: highestBid.bidder.email!,
@@ -108,7 +104,6 @@ async function notifyNearClose() {
   const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000)
   const in23h = new Date(Date.now() + 23 * 60 * 60 * 1000)
 
-  // Cars ending in the next 23–24 h window (so we notify once per cron cycle)
   const closingSoon = await prisma.car.findMany({
     where: {
       status: 'active',
