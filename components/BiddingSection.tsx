@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Prisma } from '@prisma/client'
 
@@ -41,20 +41,21 @@ export function BiddingSection({
 
   const isAuctionActive = status === 'active' && new Date(auctionEndDate) > new Date()
   const isOwner = session?.user?.email && ownerId === session.user.id
+  const isAdmin = session?.user?.role === 'Admin'
+  const canSeeBidHistory = Boolean(isOwner || isAdmin)
 
   useEffect(() => {
+    if (!canSeeBidHistory) return
     fetchBids()
-    // Poll for new bids every 5 seconds
     const interval = setInterval(fetchBids, 5000)
     return () => clearInterval(interval)
-  }, [carId])
+  }, [carId, canSeeBidHistory])
 
-  const fetchBids = async () => {
+  const fetchBids = useCallback(async () => {
     try {
       const response = await fetch(`/api/bids?carId=${carId}`)
       if (response.ok) {
         const data = await response.json()
-        // Expecting { bids: BidWithBidder[] }
         setBids(data.bids || [])
       }
     } catch (err) {
@@ -62,7 +63,7 @@ export function BiddingSection({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [carId])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -302,8 +303,8 @@ export function BiddingSection({
         </div>
       )}
 
-      {/* Bid History */}
-      <div className="bg-white border border-gray-200 text-gray-900 rounded-lg p-6">
+      {/* Bid History — visible to owner and admin only */}
+      {canSeeBidHistory && <div className="bg-white border border-gray-200 text-gray-900 rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Bid History</h3>
         {isLoading ? (
           <p className="text-gray-500 text-center py-4">Loading bids...</p>
@@ -328,14 +329,14 @@ export function BiddingSection({
                     )}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {bid.bidder.name || 'Anonymous'} • {formatDate(bid.createdAt.toISOString().slice(0, 16))}
+                    {bid.bidder.name || 'Anonymous'} • {formatDate(bid.createdAt as unknown as string)}
                   </p>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

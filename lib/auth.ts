@@ -8,7 +8,7 @@ import type { SessionStrategy } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import type { Session, User } from 'next-auth';
 import type { Adapter } from 'next-auth/adapters';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
