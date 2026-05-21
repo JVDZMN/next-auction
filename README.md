@@ -1,6 +1,8 @@
 # Next Auction
 
-A full-stack car auction platform built with Next.js 15, Prisma, and PostgreSQL.
+[![CI](https://github.com/JVDZMN/next-auction/actions/workflows/ci.yml/badge.svg)](https://github.com/JVDZMN/next-auction/actions/workflows/ci.yml)
+
+A full-stack car auction platform built with Next.js 15, Prisma, and PostgreSQL. Users can list cars for auction, bid in real time, and track results — with the full auction lifecycle handled automatically.
 
 ## Architecture
 
@@ -120,20 +122,84 @@ graph TD
 
 ---
 
+## Technical Highlights
+
+### Concurrent bid safety
+Two users submitting the same bid amount at the same millisecond is the classic auction race condition. The solution uses two layers of defence:
+
+1. **Serializable isolation** — `prisma.$transaction(..., { isolationLevel: 'Serializable' })` tells Postgres to abort any transaction whose result would differ if the reads were re-executed. If two transactions read the same `currentPrice` concurrently, Postgres aborts one of them with a `P2034` serialization failure, which the service converts to a retryable `409`.
+2. **Optimistic lock** — `car.updateMany({ where: { id, currentPrice: snapshot } })` acts as a second check: if the price moved between the read and the write, `count === 0` and the bid is rejected immediately without waiting for Postgres to detect the conflict.
+
+Both layers are covered by integration tests that fire 20 concurrent bids and assert exactly one commits.
+
+### Fire-and-forget side effects
+Post-bid work (outbid emails, in-app notifications, socket events) runs in a `void (async () => { ... })()` block after the transaction commits. The bid response is returned immediately without waiting for emails to send. Failures in this block are caught, logged to Sentry, and do not affect the bid result. This keeps p99 bid latency low even when Resend is slow.
+
+### MotorAPI proxy
+The Danish vehicle registry (MotorAPI.dk) requires an API token that must not be exposed to the browser. `/api/motorapi` proxies the request server-side, maps the raw response fields (fuel type, gear type, dates, engine volume in cc → litres) to the form's field names, and returns only what the form needs. The browser never sees the token.
+
+### Env-var validation at startup
+`lib/env.ts` is imported in `instrumentation.ts` (Next.js server startup hook). If a required variable is missing the server refuses to start with a clear error listing exactly which variables are absent, rather than crashing at runtime on the first request that needs them.
+
+---
+
+## Security
+
+| Concern | Approach |
+|---|---|
+| Authentication | NextAuth.js — session cookie (httpOnly, sameSite=lax) |
+| Authorisation | Every mutating route checks `requireAuth()` or `requireAdmin()` before touching the DB |
+| Input validation | Zod schemas on all POST/PATCH bodies; Prisma parameterised queries prevent SQL injection |
+| Rate limiting | 5 bids / 10 s and 10 messages / 60 s per user (sliding window) |
+| Owner self-bid | Validated in `bid-validation.ts` — returns 403 before the transaction opens |
+| API token exposure | MotorAPI token never leaves the server; proxied via `/api/motorapi` |
+| Env vars at startup | Missing required variables throw at boot, not at request time |
+| Error detail leakage | `serverError()` logs the full error server-side but returns only a generic message to the client |
+
+---
+
+## Deployment
+
+The app is designed for **Vercel** (zero-config for Next.js App Router). Use a managed Postgres provider such as Neon, Supabase, or Railway for the database.
+
+### Steps
+
+1. Push to GitHub and import the repo in Vercel.
+2. Set all environment variables listed in `.env.example` in the Vercel dashboard.
+3. Run the initial migration against your production database:
+   ```bash
+   DATABASE_URL=<prod-url> npx prisma migrate deploy
+   ```
+4. Add a Vercel Cron job to keep auction statuses up to date:
+   ```json
+   // vercel.json
+   {
+     "crons": [{ "path": "/api/cron/auction-status", "schedule": "*/5 * * * *" }]
+   }
+   ```
+
+---
+
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 22+
-- PostgreSQL
+- Docker (for the local dev database) or a PostgreSQL 15+ instance
 
 ### Setup
 
 ```bash
-npm install
-cp .env.example .env
-# Fill in the values in .env
+# 1. Start the local dev database (Postgres on port 5434)
+docker compose up -d
 
+# 2. Install dependencies
+npm install
+
+# 3. Copy and fill in environment variables
+cp .env.example .env
+
+# 4. Run migrations and start the dev server
 npx prisma migrate dev
 npm run dev
 ```
