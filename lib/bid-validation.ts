@@ -39,7 +39,7 @@ export function validateBid(input: BidValidationInput): BidValidationResult {
   }
 
   if (input.ownerId === input.bidderId) {
-    return { valid: false, error: 'You cannot bid on your own car', httpStatus: 400 }
+    return { valid: false, error: 'You cannot bid on your own car', httpStatus: 403 }
   }
 
   return { valid: true }

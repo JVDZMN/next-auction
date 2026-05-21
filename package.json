@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "docker compose -f docker-compose.test.yml up -d --wait && TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/next_auction_test vitest run --config vitest.integration.config.ts; docker compose -f docker-compose.test.yml down -v",
     "lint": "eslint",
     "studio": "prisma studio --url \"postgresql://postgres:postgres@localhost:5434/next_auction_db\""
   },

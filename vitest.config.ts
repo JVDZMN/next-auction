@@ -5,9 +5,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    exclude: ['**/*.integration.test.ts', 'node_modules/**', '.next/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
+      exclude: ['**/*.integration.test.ts'],
     },
   },
   resolve: {

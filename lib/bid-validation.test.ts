@@ -95,7 +95,7 @@ describe('validateBid', () => {
       expect(result.valid).toBe(false)
       if (!result.valid) {
         expect(result.error).toBe('You cannot bid on your own car')
-        expect(result.httpStatus).toBe(400)
+        expect(result.httpStatus).toBe(403)
       }
     })
 

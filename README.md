@@ -64,7 +64,7 @@ graph TD
 | Error tracking | Sentry |
 | Payments | Stripe (integrated) |
 | Styling | Tailwind CSS |
-| Testing | Vitest |
+| Testing | Vitest (unit) + Vitest + Docker (integration) |
 
 ## Features
 
@@ -211,6 +211,13 @@ next-auction/
 │   ├── MessageSeller.tsx
 │   └── PageLayout.tsx
 ├── lib/
+│   ├── services/
+│   │   ├── bid-service.ts                    # placeBid — transaction, proxy bid, anti-sniping
+│   │   ├── bid-service.test.ts               # Unit tests (mocked)
+│   │   └── bid-service.integration.test.ts   # Integration tests (real Postgres)
+│   ├── test/
+│   │   ├── db.ts            # Test DB client + ensureMigrated / resetDb / seed helpers
+│   │   └── setup.ts         # Dummy env vars for test runs
 │   ├── bid-validation.ts
 │   ├── bid-error.ts
 │   ├── rate-limit.ts
@@ -218,6 +225,7 @@ next-auction/
 │   ├── email.ts
 │   ├── auth.ts
 │   ├── prisma.ts
+│   ├── env.ts               # Startup env-var validation
 │   ├── car-brands.ts        # getAllBrands / getModelsByBrand / getSubModelsByBrandModel
 │   ├── api.ts               # serverError helper
 │   └── zod.ts               # Input validation schemas
@@ -324,12 +332,43 @@ User ── VerificationToken
 
 ---
 
+## Testing
+
+### Unit tests
+
+```bash
+npm test              # Run all unit tests (~500 ms, no DB required)
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+### Integration tests
+
+Require Docker. The script starts a throwaway Postgres container, runs migrations, executes the tests, then tears everything down:
+
+```bash
+npm run test:integration
+```
+
+What the integration tests prove:
+
+- Serializable transaction isolation prevents two concurrent bids both winning
+- Under a 20-bid storm, exactly one bid commits and the rest get clean 400/409 errors
+- `winnerBidId` on the car always points to the single committed bid
+- Invalid bids (expired auction, owner self-bid, non-existent car, amount too low) are rejected with the correct HTTP status and leave the database unchanged
+- Anti-sniping extension fires only when a bid lands inside the configured window
+
+The test database runs on port **5433** (dev DB is on 5434) using an in-memory `tmpfs` mount for maximum speed.
+
+---
+
 ## Scripts
 
 ```bash
-npm run dev           # Start dev server
-npm test              # Run unit tests (Vitest)
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
-npm run lint          # ESLint
+npm run dev                # Start dev server
+npm test                   # Unit tests (Vitest, no DB)
+npm run test:watch         # Unit tests in watch mode
+npm run test:coverage      # Coverage report
+npm run test:integration   # Integration tests (starts/stops Docker automatically)
+npm run lint               # ESLint
 ```

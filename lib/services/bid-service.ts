@@ -1,4 +1,5 @@
-import { Prisma } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client'
 import { prisma, bidderSelect } from '@/lib/prisma'
 import { validateBid } from '@/lib/bid-validation'
 import { BidError } from '@/lib/bid-error'
@@ -10,14 +11,20 @@ export interface PlaceBidInput {
   userId: string
   carId: string
   amount: number
+  // Allows integration tests to inject a test-database client without mocking
+  _db?: PrismaClient
+  // Skip fire-and-forget side effects (emails, notifications) in integration tests
+  _disableSideEffects?: boolean
 }
 
-export async function placeBid({ userId, carId, amount }: PlaceBidInput) {
+export async function placeBid({ userId, carId, amount, _db, _disableSideEffects }: PlaceBidInput) {
+  const client = _db ?? prisma
   // ------------------------------------------------------------------
   // Atomic transaction: read car, validate, optimistic-lock update, write bid
   // Serializable isolation prevents two concurrent bids both winning.
   // ------------------------------------------------------------------
-  const { bid, car } = await prisma.$transaction(
+  // P2034 = Postgres serialization failure — surface as a retryable 409
+  const { bid, car } = await client.$transaction(
     async (tx) => {
       const car = await tx.car.findUnique({
         where: { id: carId },
@@ -78,12 +85,17 @@ export async function placeBid({ userId, carId, amount }: PlaceBidInput) {
       return { bid, car }
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  )
+  ).catch((err) => {
+    if (err instanceof PrismaClientKnownRequestError && err.code === 'P2034') {
+      throw new BidError('Another bid was placed just before yours. Please try again.', 409)
+    }
+    throw err
+  })
 
   // ------------------------------------------------------------------
   // Proxy bidding: auto-counter if a competing proxy bid exists
   // ------------------------------------------------------------------
-  const competingProxy = await prisma.proxyBid.findFirst({
+  const competingProxy = await client.proxyBid.findFirst({
     where: {
       carId,
       isActive: true,
@@ -97,7 +109,7 @@ export async function placeBid({ userId, carId, amount }: PlaceBidInput) {
     const increment = car.bidIncrement ?? 1
     const proxyAmount = Math.min(amount + increment, competingProxy.maxAmount)
     try {
-      await prisma.$transaction(async (tx) => {
+      await client.$transaction(async (tx) => {
         const freshCar = await tx.car.findUnique({ where: { id: carId } })
         if (!freshCar || freshCar.currentPrice >= competingProxy.maxAmount) return
 
@@ -126,6 +138,7 @@ export async function placeBid({ userId, carId, amount }: PlaceBidInput) {
   // Post-bid side-effects: emails, notifications, socket events
   // Fire-and-forget — the bid response is returned without waiting.
   // ------------------------------------------------------------------
+  if (_disableSideEffects) return bid
   void (async () => {
     try {
       const carTitle = `${car.brand} ${car.model}`
@@ -139,7 +152,7 @@ export async function placeBid({ userId, carId, amount }: PlaceBidInput) {
         })
       }
 
-      const previousBids = await prisma.bid.findMany({
+      const previousBids = await client.bid.findMany({
         where: { carId, bidderId: { not: userId } },
         distinct: ['bidderId'],
         select: { bidderId: true, bidder: { select: { email: true } } },
@@ -156,7 +169,7 @@ export async function placeBid({ userId, carId, amount }: PlaceBidInput) {
         })),
       ]
 
-      await prisma.notification.createMany({
+      await client.notification.createMany({
         data: targets.map((t) => ({ userId: t.userId, type: t.type, message: t.message, carId })),
       })
 
