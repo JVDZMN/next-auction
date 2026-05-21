@@ -1,51 +1,549 @@
 {
   "country": "Denmark",
   "vehicle_type": "passenger_cars",
-  "notes": "Expanded and alphabetized auction-oriented brand/model list for Denmark (2026 update). Includes ICE, hybrid, and EV variants.",
+  "notes": "Expanded, alphabetized, and hierarchical auction-oriented brand/model list for Denmark. Models include body style and performance sub-models where applicable.",
   "brands": [
-    { "brand": "Abarth", "models": ["595", "600e", "695"] },
-    { "brand": "Aiways", "models": ["U5", "U6"] },
-    { "brand": "Alfa Romeo", "models": ["Giulia", "Giulietta", "MiTo", "Stelvio", "Tonale"] },
-    { "brand": "Alpine", "models": ["A110", "A290"] },
-    { "brand": "Aston Martin", "models": ["DB12", "DBX", "Vantage", "Vanquish"] },
-    { "brand": "Audi", "models": ["A1", "A3", "A4", "A4 Avant", "A5", "A6", "A6 Avant", "A7", "A8", "e-tron", "e-tron GT", "Q2", "Q3", "Q4 e-tron", "Q5", "Q6 e-tron", "Q7", "Q8 e-tron"] },
-    { "brand": "Bentley", "models": ["Bentayga", "Continental GT", "Flying Spur"] },
-    { "brand": "BMW", "models": ["1 Series", "2 Series", "3 Series", "3 Series Touring", "4 Series", "5 Series", "5 Series Touring", "i3", "i4", "i5", "i7", "iX1", "iX2", "iX3", "X1", "X2", "X3", "X4", "X5", "X6", "X7"] },
-    { "brand": "BYD", "models": ["Atto 3", "Dolphin", "Han", "Seal", "Tang"] },
-    { "brand": "Chevrolet", "models": ["Bolt EV", "Camaro", "Corvette", "Cruze", "Malibu", "Spark"] },
-    { "brand": "Citroën", "models": ["Berlingo", "C1", "C2", "C3", "C3 Aircross", "C4", "C4 X", "C5 Aircross", "C5 X", "e-C3", "ë-Berlingo", "ë-C4"] },
-    { "brand": "Cupra", "models": ["Born", "Formentor", "Leon", "Leon Sportstourer", "Tavascan", "Terramar"] },
-    { "brand": "Dacia", "models": ["Duster", "Jogger", "Logan", "Sandero", "Spring"] },
-    { "brand": "DS Automobiles", "models": ["DS 3", "DS 3 E-Tense", "DS 4", "DS 7", "DS 9"] },
-    { "brand": "Fiat", "models": ["500", "500e", "600e", "Bravo", "Doblo", "Freemont", "Grande Punto", "Panda", "Punto", "Tipo"] },
-    { "brand": "Ford", "models": ["Explorer EV", "Fiesta", "Focus", "Focus Wagon", "Galaxy", "Ka", "Kuga", "Mondeo", "Mondeo Wagon", "Mustang", "Mustang Mach-E", "Puma", "S-Max"] },
-    { "brand": "Honda", "models": ["Accord", "Civic", "CR-V", "e", "e:Ny1", "HR-V", "Jazz"] },
-    { "brand": "Hyundai", "models": ["Bayon", "i10", "i20", "i30", "i30 Wagon", "Ioniq", "Ioniq 5", "Ioniq 6", "Kona", "Kona Electric", "Santa Fe", "Tucson"] },
-    { "brand": "Jeep", "models": ["Avenger", "Cherokee", "Compass", "Grand Cherokee", "Renegade", "Wrangler"] },
-    { "brand": "Kia", "models": ["Ceed", "Ceed SW", "EV3", "EV6", "EV9", "Niro", "Niro EV", "Picanto", "Rio", "Sorento", "Sportage", "Stonic", "XCeed"] },
-    { "brand": "Lamborghini", "models": ["Revuelto", "Urus"] },
-    { "brand": "Land Rover", "models": ["Defender", "Discovery", "Discovery Sport", "Range Rover", "Range Rover Evoque", "Range Rover Sport", "Range Rover Velar"] },
-    { "brand": "Mazda", "models": ["CX-3", "CX-30", "CX-5", "CX-60", "CX-80", "Mazda2", "Mazda3", "Mazda6", "MX-30", "MX-5"] },
-    { "brand": "Mercedes-Benz", "models": ["A-Class", "B-Class", "C-Class", "C-Class Estate", "CLA", "E-Class", "E-Class Estate", "EQA", "EQB", "EQC", "EQE", "EQE SUV", "EQS", "EQS SUV", "G-Class", "GLA", "GLB", "GLC", "GLS"] },
-    { "brand": "MG", "models": ["Cyberster", "HS", "Marvel R", "MG3", "MG4", "MG5", "ZS EV"] },
-    { "brand": "Mini", "models": ["Aceman", "Clubman", "Cooper", "Cooper S", "Countryman", "Electric", "One"] },
-    { "brand": "Mitsubishi", "models": ["ASX", "Colt", "Eclipse Cross", "Outlander", "Outlander PHEV", "Space Star"] },
-    { "brand": "NIO", "models": ["EL6", "EL7", "ET5", "ET5 Touring", "ET7"] },
-    { "brand": "Nissan", "models": ["Ariya", "Juke", "Leaf", "Micra", "Note", "Primera", "Pulsar", "Qashqai", "X-Trail"] },
-    { "brand": "Opel", "models": ["Adam", "Astra", "Astra Sports Tourer", "Corsa", "Corsa-e", "Crossland", "Grandland", "Insignia", "Insignia Sports Tourer", "Karl", "Mokka", "Mokka-e"] },
-    { "brand": "Peugeot", "models": ["107", "108", "2008", "206", "207", "208", "3008", "308", "308 SW", "407", "408", "5008", "508", "508 SW", "e-2008", "e-208"] },
-    { "brand": "Polestar", "models": ["Polestar 1", "Polestar 2", "Polestar 3", "Polestar 4"] },
-    { "brand": "Porsche", "models": ["911", "Cayenne", "Macan", "Panamera", "Taycan"] },
-    { "brand": "Renault", "models": ["Arkana", "Austral", "Captur", "Clio", "Kadjar", "Laguna", "Megane", "Megane E-Tech", "Megane Estate", "Rafale", "Renault 5 E-Tech", "Scenic E-Tech", "Talisman", "Twingo", "Zoe"] },
-    { "brand": "Seat", "models": ["Arona", "Ateca", "Ibiza", "Leon", "Leon ST", "Tarraco"] },
-    { "brand": "Skoda", "models": ["Citigo", "Enyaq iV", "Fabia", "Kamiq", "Karoq", "Kodiaq", "Octavia", "Octavia Combi", "Scala", "Superb", "Superb Combi", "Elroq"] },
-    { "brand": "Smart", "models": ["#1", "#3", "#5", "EQ Fortwo", "Forfour", "Fortwo"] },
-    { "brand": "Subaru", "models": ["Forester", "Impreza", "Outback", "Solterra", "XV"] },
-    { "brand": "Suzuki", "models": ["Alto", "Baleno", "Ignis", "Jimny", "S-Cross", "Splash", "Swift", "SX4", "Vitara"] },
-    { "brand": "Tesla", "models": ["Model 3", "Model S", "Model X", "Model Y"] },
-    { "brand": "Toyota", "models": ["Aygo", "Aygo X", "bZ4X", "Camry", "C-HR", "Corolla", "Corolla Touring Sports", "Prius", "RAV4", "Urban Cruiser", "Yaris", "Yaris Cross"] },
-    { "brand": "Volkswagen", "models": ["Arteon", "Golf", "Golf Variant", "ID.3", "ID.4", "ID.5", "ID.7", "ID.Buzz", "Passat", "Passat Variant", "Polo", "Sharan", "T-Cross", "Tiguan", "Touareg", "Touran", "T-Roc", "Up"] },
-    { "brand": "Volvo", "models": ["C40 Recharge", "EX30", "EX40", "EX90", "S60", "S90", "V40", "V60", "V90", "XC40", "XC60", "XC90"] },
-    { "brand": "XPeng", "models": ["G3", "G6", "G9", "P7"] }
+    {
+      "brand": "Abarth",
+      "models": [
+        { "model": "595", "sub_models": ["Turismo", "Competizione", "Esseesse"] },
+        { "model": "600e", "sub_models": ["Turismo", "Scorpionissima"] },
+        { "model": "695", "sub_models": ["Esseesse", "Competizione"] }
+      ]
+    },
+    {
+      "brand": "Aiways",
+      "models": [
+        { "model": "U5", "sub_models": [] },
+        { "model": "U6", "sub_models": [] }
+      ]
+    },
+    {
+      "brand": "Alfa Romeo",
+      "models": [
+        { "model": "Giulia", "sub_models": ["Veloce", "Quadrifoglio"] },
+        { "model": "Giulietta", "sub_models": [] },
+        { "model": "MiTo", "sub_models": [] },
+        { "model": "Stelvio", "sub_models": ["Veloce", "Quadrifoglio"] },
+        { "model": "Tonale", "sub_models": ["Ti", "Veloce", "PHEV"] }
+      ]
+    },
+    {
+      "brand": "Alpine",
+      "models": [
+        { "model": "A110", "sub_models": ["Pure", "Legende", "S", "GT", "R"] },
+        { "model": "A290", "sub_models": ["GT", "GTS"] }
+      ]
+    },
+    {
+      "brand": "Aston Martin",
+      "models": [
+        { "model": "DB12", "sub_models": ["Coupe", "Volante"] },
+        { "model": "DBX", "sub_models": ["V8", "707"] },
+        { "model": "Vantage", "sub_models": ["Coupe", "Roadster", "F1 Edition"] },
+        { "model": "Vanquish", "sub_models": [] }
+      ]
+    },
+    {
+      "brand": "Audi",
+      "models": [
+        { "model": "A1", "sub_models": ["Sportback", "allstreet", "citycarver"] },
+        { "model": "A3", "sub_models": ["Sportback", "Sedan", "S3", "RS3"] },
+        { "model": "A4", "sub_models": ["Limousine", "Avant", "Allroad", "S4", "RS4"] },
+        { "model": "A5", "sub_models": ["Sportback", "Coupe", "Cabriolet", "Sedan", "Avant", "S5", "RS5"] },
+        { "model": "A6", "sub_models": ["Limousine", "Avant", "Allroad", "S6", "RS6"] },
+        { "model": "A7", "sub_models": ["Sportback", "S7", "RS7"] },
+        { "model": "A8", "sub_models": ["Normal TFSIe", "L (Long)", "S8"] },
+        { "model": "e-tron", "sub_models": ["SUV", "Sportback", "S"] },
+        { "model": "e-tron GT", "sub_models": ["quattro", "RS", "RS performance"] },
+        { "model": "Q2", "sub_models": ["SQ2"] },
+        { "model": "Q3", "sub_models": ["SUV", "Sportback", "RS Q3"] },
+        { "model": "Q4 e-tron", "sub_models": ["SUV", "Sportback"] },
+        { "model": "Q5", "sub_models": ["SUV", "Sportback", "SQ5", "TFSIe"] },
+        { "model": "Q6 e-tron", "sub_models": ["SUV", "Sportback", "SQ6"] },
+        { "model": "Q7", "sub_models": ["SQ7", "TFSIe"] },
+        { "model": "Q8 e-tron", "sub_models": ["SUV", "Sportback", "SQ8"] }
+      ]
+    },
+    {
+      "brand": "Bentley",
+      "models": [
+        { "model": "Bentayga", "sub_models": ["V8", "Azure", "S", "Speed", "EWB"] },
+        { "model": "Continental GT", "sub_models": ["V8", "Azure", "S", "Speed", "Convertible"] },
+        { "model": "Flying Spur", "sub_models": ["V8", "Hybrid", "Azure", "S", "Speed"] }
+      ]
+    },
+    {
+      "brand": "BMW",
+      "models": [
+        { "model": "1 Series", "sub_models": ["3-door", "5-door", "M135i", "M140i"] },
+        { "model": "2 Series", "sub_models": ["Coupe", "Gran Coupe", "Active Tourer", "Gran Tourer", "M2"] },
+        { "model": "3 Series", "sub_models": ["Sedan", "Touring", "Gran Turismo", "M3"] },
+        { "model": "4 Series", "sub_models": ["Coupe", "Gran Coupe", "Convertible", "M4"] },
+        { "model": "5 Series", "sub_models": ["Sedan", "Touring", "Gran Turismo", "M5"] },
+        { "model": "6 Series", "sub_models": ["Coupe", "Gran Coupe", "Convertible", "Gran Turismo"] },
+        { "model": "7 Series", "sub_models": ["Sedan", "i7"] },
+        { "model": "8 Series", "sub_models": ["Coupe", "Gran Coupe", "Convertible", "M8"] },
+        { "model": "i3", "sub_models": ["Hatch", "i3s", "REX"] },
+        { "model": "i4", "sub_models": ["eDrive35", "eDrive40", "xDrive40", "M50"] },
+        { "model": "i5", "sub_models": ["Sedan", "Touring", "eDrive40", "M60"] },
+        { "model": "iX1", "sub_models": ["eDrive20", "xDrive30"] },
+        { "model": "iX2", "sub_models": ["eDrive20", "xDrive30"] },
+        { "model": "iX3", "sub_models": ["Inspiring", "Impressive"] },
+        { "model": "X1", "sub_models": ["sDrive", "xDrive", "Plug-in Hybrid"] },
+        { "model": "X2", "sub_models": ["sDrive", "xDrive", "M35i"] },
+        { "model": "X3", "sub_models": ["sDrive", "xDrive", "Plug-in Hybrid", "M", "M Competition"] },
+        { "model": "X4", "sub_models": ["xDrive", "M", "M Competition"] },
+        { "model": "X5", "sub_models": ["xDrive", "Plug-in Hybrid", "M", "M Competition"] },
+        { "model": "X6", "sub_models": ["xDrive", "M", "M Competition"] },
+        { "model": "X7", "sub_models": ["xDrive", "M60i"] },
+        { "model": "iX", "sub_models": ["xDrive40", "xDrive50", "M60"] }
+      ]
+    },
+    {
+      "brand": "BYD",
+      "models": [
+        { "model": "Atto 3", "sub_models": ["Comfort", "Design"] },
+        { "model": "Dolphin", "sub_models": ["Comfort", "Design"] },
+        { "model": "Han", "sub_models": ["Executive"] },
+        { "model": "Seal", "sub_models": ["Design", "Excellence AWD", "U (SUV)"] },
+        { "model": "Tang", "sub_models": ["Flagship"] }
+      ]
+    },
+    {
+      "brand": "Chevrolet",
+      "models": [
+        { "model": "Bolt EV", "sub_models": [] },
+        { "model": "Camaro", "sub_models": ["Coupe", "Convertible", "SS", "ZL1"] },
+        { "model": "Corvette", "sub_models": ["Stingray", "Z06", "E-Ray"] },
+        { "model": "Cruze", "sub_models": ["Sedan", "Hatchback", "Station Wagon"] },
+        { "model": "Malibu", "sub_models": [] },
+        { "model": "Spark", "sub_models": [] }
+      ]
+    },
+    {
+      "brand": "Citroën",
+      "models": [
+        { "model": "Berlingo", "sub_models": ["Multispace", "M", "XL", "ë-Berlingo"] },
+        { "model": "C1", "sub_models": ["3-door", "5-door", "Airscape"] },
+        { "model": "C2", "sub_models": ["VTR", "VTS"] },
+        { "model": "C3", "sub_models": ["Hatchback", "Aircross", "Pluriel", "e-C3"] },
+        { "model": "C4", "sub_models": ["Hatchback", "Cactus", "Aircross", "Picasso", "Grand Picasso", "X", "ë-C4"] },
+        { "model": "C5", "sub_models": ["Sedan", "Break", "Tourer", "Aircross", "X"] }
+      ]
+    },
+    {
+      "brand": "Cupra",
+      "models": [
+        { "model": "Born", "sub_models": ["Standard", "e-Boost", "VZ"] },
+        { "model": "Formentor", "sub_models": ["TSI", "e-Hybrid", "VZ", "VZ5"] },
+        { "model": "Leon", "sub_models": ["5-door", "Sportstourer", "e-Hybrid", "VZ"] },
+        { "model": "Tavascan", "sub_models": ["Endurance", "VZ"] },
+        { "model": "Terramar", "sub_models": ["Mild Hybrid", "Plug-in Hybrid", "VZ"] }
+      ]
+    },
+    {
+      "brand": "Dacia",
+      "models": [
+        { "model": "Duster", "sub_models": ["Essential", "Expression", "Journey", "Extreme"] },
+        { "model": "Jogger", "sub_models": ["Essential", "Expression", "Extreme", "Hybrid"] },
+        { "model": "Logan", "sub_models": ["Sedan", "MCV (Station Wagon)"] },
+        { "model": "Sandero", "sub_models": ["Standard", "Stepway"] },
+        { "model": "Spring", "sub_models": ["Essential", "Extreme"] }
+      ]
+    },
+    {
+      "brand": "DS Automobiles",
+      "models": [
+        { "model": "DS 3", "sub_models": ["Crossback", "E-Tense"] },
+        { "model": "DS 4", "sub_models": ["Crossback", "E-Tense"] },
+        { "model": "DS 7", "sub_models": ["Crossback", "E-Tense 4x4"] },
+        { "model": "DS 9", "sub_models": ["E-Tense"] }
+      ]
+    },
+    {
+      "brand": "Fiat",
+      "models": [
+        { "model": "500", "sub_models": ["Hatchback", "C (Cabrio)", "L", "X", "500e", "3+1"] },
+        { "model": "600", "sub_models": ["600e Hybrid", "600e Electric"] },
+        { "model": "Bravo", "sub_models": [] },
+        { "model": "Doblo", "sub_models": ["Combi", "e-Doblo"] },
+        { "model": "Freemont", "sub_models": ["AWD"] },
+        { "model": "Panda", "sub_models": ["Standard", "4x4", "Cross"] },
+        { "model": "Punto", "sub_models": ["Grande Punto", "Punto Evo"] },
+        { "model": "Tipo", "sub_models": ["Hatchback", "Sedan", "Station Wagon", "Cross"] }
+      ]
+    },
+    {
+      "brand": "Ford",
+      "models": [
+        { "model": "Explorer", "sub_models": ["PHEV (US Origin)", "Explorer EV (Electric)"] },
+        { "model": "Fiesta", "sub_models": ["3-door", "5-door", "Active", "ST", "ST-Line"] },
+        { "model": "Focus", "sub_models": ["Hatchback", "Station Wagon", "Active", "ST", "ST-Line"] },
+        { "model": "Galaxy", "sub_models": [] },
+        { "model": "Ka", "sub_models": ["Ka+", "Active"] },
+        { "model": "Kuga", "sub_models": ["Trend", "Titanium", "ST-Line", "Vignale", "PHEV"] },
+        { "model": "Mondeo", "sub_models": ["Sedan", "Hatchback", "Station Wagon", "Hybrid"] },
+        { "model": "Mustang", "sub_models": ["Fastback", "Convertible", "GT", "Mach 1", "Dark Horse"] },
+        { "model": "Mustang Mach-E", "sub_models": ["RWD", "AWD", "GT", "Rally"] },
+        { "model": "Puma", "sub_models": ["Titanium", "ST-Line", "ST"] },
+        { "model": "S-Max", "sub_models": ["Hybrid"] }
+      ]
+    },
+    {
+      "brand": "Honda",
+      "models": [
+        { "model": "Accord", "sub_models": ["Sedan", "Tourer"] },
+        { "model": "Civic", "sub_models": ["Hatchback", "Sedan", "Tourer", "Type R", "e:HEV"] },
+        { "model": "CR-V", "sub_models": ["e:HEV", "e:PHEV"] },
+        { "model": "e", "sub_models": ["Standard", "Advance"] },
+        { "model": "e:Ny1", "sub_models": ["Elegance", "Advance"] },
+        { "model": "HR-V", "sub_models": ["e:HEV"] },
+        { "model": "Jazz", "sub_models": ["Standard", "Crosstar", "e:HEV"] }
+      ]
+    },
+    {
+      "brand": "Hyundai",
+      "models": [
+        { "model": "Bayon", "sub_models": [] },
+        { "model": "i10", "sub_models": ["Standard", "N Line"] },
+        { "model": "i20", "sub_models": ["Standard", "Active", "N Line", "i20 N"] },
+        { "model": "i30", "sub_models": ["Hatchback", "Fastback", "Wagon", "N Line", "i30 N"] },
+        { "model": "Ioniq", "sub_models": ["Hybrid", "Plug-in Hybrid", "Electric"] },
+        { "model": "Ioniq 5", "sub_models": ["Standard Range", "Long Range", "N AWD"] },
+        { "model": "Ioniq 6", "sub_models": ["RWD", "AWD"] },
+        { "model": "Kona", "sub_models": ["Standard", "Hybrid", "Electric", "N Line", "Kona N"] },
+        { "model": "Santa Fe", "sub_models": ["Hybrid", "Plug-in Hybrid"] },
+        { "model": "Tucson", "sub_models": ["Mild Hybrid", "Hybrid", "Plug-in Hybrid", "N Line"] }
+      ]
+    },
+    {
+      "brand": "Jeep",
+      "models": [
+        { "model": "Avenger", "sub_models": ["Petrol", "e-Hybrid", "Electric"] },
+        { "model": "Cherokee", "sub_models": [] },
+        { "model": "Compass", "sub_models": ["e-Hybrid", "4xe (PHEV)"] },
+        { "model": "Grand Cherokee", "sub_models": ["4xe (PHEV)"] },
+        { "model": "Renegade", "sub_models": ["e-Hybrid", "4xe (PHEV)"] },
+        { "model": "Wrangler", "sub_models": ["Sahara", "Rubicon", "4xe (PHEV)"] }
+      ]
+    },
+    {
+      "brand": "Kia",
+      "models": [
+        { "model": "Ceed", "sub_models": ["5-door", "Sportswagon (SW)", "PHEV SW", "GT-Line", "GT"] },
+        { "model": "EV3", "sub_models": ["Standard Range", "Long Range", "GT-Line"] },
+        { "model": "EV6", "sub_models": ["Standard Range", "Long Range", "GT-Line", "GT AWD"] },
+        { "model": "EV9", "sub_models": ["RWD", "AWD Launch Edition", "GT-Line"] },
+        { "model": "Niro", "sub_models": ["Hybrid", "Plug-in Hybrid", "Niro EV (e-Niro)"] },
+        { "model": "Picanto", "sub_models": ["Standard", "X-Line", "GT-Line"] },
+        { "model": "Rio", "sub_models": [] },
+        { "model": "Sorento", "sub_models": ["Hybrid", "Plug-in Hybrid"] },
+        { "model": "Sportage", "sub_models": ["Mild Hybrid", "Hybrid", "Plug-in Hybrid", "GT-Line"] },
+        { "model": "Stonic", "sub_models": ["GT-Line"] },
+        { "model": "XCeed", "sub_models": ["Standard", "Plug-in Hybrid", "GT-Line"] }
+      ]
+    },
+    {
+      "brand": "Lamborghini",
+      "models": [
+        { "model": "Revuelto", "sub_models": [] },
+        { "model": "Urus", "sub_models": ["S", "Performante", "SE (PHEV)"] }
+      ]
+    },
+    {
+      "brand": "Land Rover",
+      "models": [
+        { "model": "Defender", "sub_models": ["90", "110", "130", "Hard Top", "PHEV"] },
+        { "model": "Discovery", "sub_models": ["Standard", "Commercial"] },
+        { "model": "Discovery Sport", "sub_models": ["PHEV (P300e)"] },
+        { "model": "Range Rover", "sub_models": ["SWB", "LWB", "Sport", "Evoque", "Velar", "PHEV"] }
+      ]
+    },
+    {
+      "brand": "Mazda",
+      "models": [
+        { "model": "CX-3", "sub_models": [] },
+        { "model": "CX-30", "sub_models": [] },
+        { "model": "CX-5", "sub_models": [] },
+        { "model": "CX-60", "sub_models": ["PHEV", "Diesel"] },
+        { "model": "CX-80", "sub_models": ["PHEV", "Diesel"] },
+        { "model": "Mazda2", "sub_models": ["Standard", "Hybrid (Yaris-based)"] },
+        { "model": "Mazda3", "sub_models": ["Hatchback", "Sedan"] },
+        { "model": "Mazda6", "sub_models": ["Sedan", "Vision / Station Wagon"] },
+        { "model": "MX-30", "sub_models": ["Electric", "R-EV (Rotary PHEV)"] },
+        { "model": "MX-5", "sub_models": ["Roadster (Soft top)", "RF (Retractable Fastback)"] }
+      ]
+    },
+    {
+      "brand": "Mercedes-Benz",
+      "models": [
+        { "model": "A-Class", "sub_models": ["Hatchback", "Sedan", "Compact Sedan", "e (PHEV)", "AMG 35", "AMG 45 S"] },
+        { "model": "B-Class", "sub_models": ["Sports Tourer", "e (PHEV)"] },
+        { "model": "C-Class", "sub_models": ["Sedan", "Estate", "All-Terrain", "Coupe", "Cabriolet", "de/e (PHEV)", "AMG 43", "AMG 63 S"] },
+        { "model": "CLA", "sub_models": ["Coupe", "Shooting Brake", "e (PHEV)", "AMG 35", "AMG 45 S"] },
+        { "model": "E-Class", "sub_models": ["Sedan", "Estate", "All-Terrain", "Coupe", "Cabriolet", "de/e (PHEV)", "AMG 53", "AMG 63 S"] },
+        { "model": "G-Class", "sub_models": ["G 400d", "G 500", "AMG G 63", "G 580 EQ (Electric)"] },
+        { "model": "GLA", "sub_models": ["Standard", "e (PHEV)", "AMG 35", "AMG 45"] },
+        { "model": "GLB", "sub_models": ["Standard", "AMG 35"] },
+        { "model": "GLC", "sub_models": ["SUV", "Coupe", "de/e (PHEV)", "AMG 43", "AMG 63 S"] },
+        { "model": "GLE", "sub_models": ["SUV", "Coupe", "de/e (PHEV)", "AMG 53", "AMG 63 S"] },
+        { "model": "GLS", "sub_models": ["Standard", "Maybach", "AMG 63"] },
+        { "model": "EQA", "sub_models": ["250", "250+", "300 4MATIC", "350 4MATIC"] },
+        { "model": "EQB", "sub_models": ["250+", "300 4MATIC", "350 4MATIC"] },
+        { "model": "EQC", "sub_models": ["400 4MATIC"] },
+        { "model": "EQE", "sub_models": ["Sedan", "SUV", "350+", "500 4MATIC", "AMG 43", "AMG 53"] },
+        { "model": "EQS", "sub_models": ["Sedan", "SUV", "Maybach SUV", "450+", "580 4MATIC", "AMG 53"] }
+      ]
+    },
+    {
+      "brand": "MG",
+      "models": [
+        { "model": "Cyberster", "sub_models": ["Trophy RWD", "GT AWD"] },
+        { "model": "HS", "sub_models": ["Petrol", "EHS (Plug-in Hybrid)"] },
+        { "model": "Marvel R", "sub_models": ["Luxury RWD", "Performance AWD"] },
+        { "model": "MG3", "sub_models": ["Hybrid+"] },
+        { "model": "MG4", "sub_models": ["Standard", "Luxury", "Extended Range", "XPOWER"] },
+        { "model": "MG5", "sub_models": ["Comfort", "Luxury"] },
+        { "model": "ZS EV", "sub_models": ["Comfort", "Luxury", "Standard Range", "Long Range"] }
+      ]
+    },
+    {
+      "brand": "Mini",
+      "models": [
+        { "model": "Cooper", "sub_models": ["3-door", "5-door", "Cabrio", "Cooper E (EV)", "Cooper SE (EV)", "John Cooper Works (JCW)"] },
+        { "model": "Aceman", "sub_models": ["E", "SE"] },
+        { "model": "Clubman", "sub_models": ["Cooper", "Cooper S", "JCW"] },
+        { "model": "Countryman", "sub_models": ["Cooper C", "Cooper S All4", "PHEV", "JCW", "Electric E", "Electric SE All4"] }
+      ]
+    },
+    {
+      "brand": "Mitsubishi",
+      "models": [
+        { "model": "ASX", "sub_models": ["Mild Hybrid", "Hybrid", "Plug-in Hybrid"] },
+        { "model": "Colt", "sub_models": ["Petrol", "Hybrid"] },
+        { "model": "Eclipse Cross", "sub_models": ["PHEV"] },
+        { "model": "Outlander", "sub_models": ["Standard", "PHEV"] },
+        { "model": "Space Star", "sub_models": ["Instyle", "Intense"] }
+      ]
+    },
+    {
+      "brand": "NIO",
+      "models": [
+        { "model": "EL6", "sub_models": ["75kWh", "100kWh"] },
+        { "model": "EL7", "sub_models": ["75kWh", "100kWh"] },
+        { "model": "ET5", "sub_models": ["Sedan", "Touring", "75kWh", "100kWh"] },
+        { "model": "ET7", "sub_models": ["75kWh", "100kWh"] }
+      ]
+    },
+    {
+      "brand": "Nissan",
+      "models": [
+        { "model": "Ariya", "sub_models": ["63kWh", "87kWh", "e-4ORCE AWD", "Nismo"] },
+        { "model": "Juke", "sub_models": ["DIG-T", "Hybrid"] },
+        { "model": "Leaf", "sub_models": ["39kWh", "59kWh (e+)"] },
+        { "model": "Micra", "sub_models": ["IG-T"] },
+        { "model": "Note", "sub_models": [] },
+        { "model": "Primera", "sub_models": ["Sedan", "Hatchback", "Estate"] },
+        { "model": "Pulsar", "sub_models": [] },
+        { "model": "Qashqai", "sub_models": ["Mild Hybrid", "e-POWER"] },
+        { "model": "X-Trail", "sub_models": ["Mild Hybrid", "e-POWER", "e-4ORCE AWD"] }
+      ]
+    },
+    {
+      "brand": "Opel",
+      "models": [
+        { "model": "Adam", "sub_models": ["Standard", "Rocks", "S"] },
+        { "model": "Astra", "sub_models": ["5-door", "Sports Tourer", "Plug-in Hybrid", "Astra-e (Electric)", "GSe"] },
+        { "model": "Corsa", "sub_models": ["Standard", "Corsa-e (Electric)"] },
+        { "model": "Crossland", "sub_models": ["Crossland X"] },
+        { "model": "Grandland", "sub_models": ["Grandland X", "Plug-in Hybrid", "GSe"] },
+        { "model": "Insignia", "sub_models": ["Grand Sport (Sedan)", "Sports Tourer", "Country Tourer", "OPC", "GSi"] },
+        { "model": "Karl", "sub_models": ["Standard", "Rocks"] },
+        { "model": "Mokka", "sub_models": ["Mokka X", "Mokka-e (Electric)"] }
+      ]
+    },
+    {
+      "brand": "Peugeot",
+      "models": [
+        { "model": "107", "sub_models": ["3-door", "5-door"] },
+        { "model": "108", "sub_models": ["3-door", "5-door", "TOP! Cabrio"] },
+        { "model": "206", "sub_models": ["Hatchback", "CC (Cabriolet)", "SW (Station Wagon)", "Plus"] },
+        { "model": "207", "sub_models": ["Hatchback", "CC", "SW", "RC"] },
+        { "model": "208", "sub_models": ["Standard", "GT", "e-208 (Electric)"] },
+        { "model": "308", "sub_models": ["Hatchback", "SW (Station Wagon)", "CC", "Plug-in Hybrid", "e-308", "GTI"] },
+        { "model": "407", "sub_models": ["Sedan", "SW", "Coupe"] },
+        { "model": "408", "sub_models": ["Fastback", "Plug-in Hybrid", "e-408"] },
+        { "model": "508", "sub_models": ["Sedan", "SW", "Plug-in Hybrid", "PSE (Peugeot Sport Engineered)"] },
+        { "model": "2008", "sub_models": ["Standard", "e-2008 (Electric)"] },
+        { "model": "3008", "sub_models": ["Standard", "Hybrid", "Plug-in Hybrid", "e-3008"] },
+        { "model": "5008", "sub_models": ["Standard", "Hybrid", "e-5008"] }
+      ]
+    },
+    {
+      "brand": "Polestar",
+      "models": [
+        { "model": "Polestar 1", "sub_models": [] },
+        { "model": "Polestar 2", "sub_models": ["Standard Range Single Motor", "Long Range Single Motor", "Long Range Dual Motor", "Performance Pack"] },
+        { "model": "Polestar 3", "sub_models": ["Long Range Single Motor", "Long Range Dual Motor", "Performance Pack"] },
+        { "model": "Polestar 4", "sub_models": ["Long Range Single Motor", "Long Range Dual Motor"] }
+      ]
+    },
+    {
+      "brand": "Porsche",
+      "models": [
+        { "model": "911", "sub_models": ["Carrera", "Targa", "Turbo", "GT3", "GT3 RS", "Dakar"] },
+        { "model": "Cayenne", "sub_models": ["SUV", "Coupe", "E-Hybrid", "S", "GTS", "Turbo E-Hybrid"] },
+        { "model": "Macan", "sub_models": ["Petrol T/S/GTS", "Electric 4/Turbo"] },
+        { "model": "Panamera", "sub_models": ["Limousine", "Executive", "Sport Turismo", "E-Hybrid", "Turbo"] },
+        { "model": "Taycan", "sub_models": ["Sports Sedan", "Sport Turismo", "Cross Turismo", "4S", "GTS", "Turbo", "Turbo S", "Turbo GT"] }
+      ]
+    },
+    {
+      "brand": "Renault",
+      "models": [
+        { "model": "Arkana", "sub_models": ["Mild Hybrid", "E-Tech Full Hybrid"] },
+        { "model": "Austral", "sub_models": ["Mild Hybrid", "E-Tech Full Hybrid"] },
+        { "model": "Captur", "sub_models": ["Mild Hybrid", "E-Tech Full Hybrid", "Plug-in Hybrid"] },
+        { "model": "Clio", "sub_models": ["3-door", "5-door", "Estate (Tourer)", "E-Tech Full Hybrid", "R.S."] },
+        { "model": "Kadjar", "sub_models": [] },
+        { "model": "Laguna", "sub_models": ["Hatchback", "Grandtour (Estate)", "Coupe"] },
+        { "model": "Megane", "sub_models": ["Hatchback", "Estate", "Sedan", "Coupe-Cabriolet", "R.S.", "Plug-in Hybrid", "Megane E-Tech (Electric)"] },
+        { "model": "Rafale", "sub_models": ["E-Tech Full Hybrid", "E-Tech 4x4 300hp"] },
+        { "model": "Renault 5 E-Tech", "sub_models": ["Evolution", "Techno", "Iconic Cinq"] },
+        { "model": "Scenic E-Tech", "sub_models": ["Comfort Range", "Long Range"] },
+        { "model": "Talisman", "sub_models": ["Sedan", "Estate / Grandtour"] },
+        { "model": "Twingo", "sub_models": ["Standard", "Electric"] },
+        { "model": "Zoe", "sub_models": ["R115", "R135"] }
+      ]
+    },
+    {
+      "brand": "Seat",
+      "models": [
+        { "model": "Arona", "sub_models": ["Style", "FR", "Xperience"] },
+        { "model": "Ateca", "sub_models": ["Style", "FR", "Xperience"] },
+        { "model": "Ibiza", "sub_models": ["3-door", "5-door", "ST (Station Wagon)", "FR", "Cupra"] },
+        { "model": "Leon", "sub_models": ["5-door", "ST (Station Wagon)", "FR", "Cupra", "e-Hybrid"] },
+        { "model": "Tarraco", "sub_models": ["FR", "e-Hybrid"] }
+      ]
+    },
+    {
+      "brand": "Skoda",
+      "models": [
+        { "model": "Citigo", "sub_models": ["3-door", "5-door", "Citigo e iV (Electric)"] },
+        { "model": "Elroq", "sub_models": ["50", "60", "85", "85x AWD"] },
+        { "model": "Enyaq iV", "sub_models": ["SUV", "Coupe", "60", "85", "85x AWD", "RS"] },
+        { "model": "Fabia", "sub_models": ["Hatchback", "Combi (Estate)", "Monte Carlo"] },
+        { "model": "Kamiq", "sub_models": ["Standard", "Monte Carlo"] },
+        { "model": "Karoq", "sub_models": ["Sportline"] },
+        { "model": "Kodiaq", "sub_models": ["Sportline", "Sportline PHEV", "RS"] },
+        { "model": "Octavia", "sub_models": ["Hatchback", "Combi", "Scout", "iV (PHEV)", "RS"] },
+        { "model": "Scala", "sub_models": ["Standard", "Monte Carlo"] },
+        { "model": "Superb", "sub_models": ["Hatchback", "Combi", "iV (PHEV)", "L&K (Laurin & Klement)"] }
+      ]
+    },
+    {
+      "brand": "Smart",
+      "models": [
+        { "model": "#1", "sub_models": ["Pro", "Pro+", "Premium", "Pulse AWD", "Brabus"] },
+        { "model": "#3", "sub_models": ["Pro", "Pro+", "Premium", "Pulse AWD", "Brabus"] },
+        { "model": "#5", "sub_models": ["Premium", "Brabus"] },
+        { "model": "Fortwo", "sub_models": ["Coupe", "Cabrio", "ED / EQ Electric"] },
+        { "model": "Forfour", "sub_models": ["Standard", "ED / EQ Electric"] }
+      ]
+    },
+    {
+      "brand": "Subaru",
+      "models": [
+        { "model": "Forester", "sub_models": ["e-BOXER Mild Hybrid"] },
+        { "model": "Impreza", "sub_models": ["Hatchback", "e-BOXER"] },
+        { "model": "Outback", "sub_models": ["Field", "Touring"] },
+        { "model": "Solterra", "sub_models": ["Limited AWD", "Touring AWD"] },
+        { "model": "XV", "sub_models": ["Standard", "e-BOXER"] }
+      ]
+    },
+    {
+      "brand": "Suzuki",
+      "models": [
+        { "model": "Alto", "sub_models": [] },
+        { "model": "Baleno", "sub_models": [] },
+        { "model": "Ignis", "sub_models": ["Mild Hybrid", "AllGrip (4WD)"] },
+        { "model": "Jimny", "sub_models": ["Sierra", "Commercial (Varebil)"] },
+        { "model": "S-Cross", "sub_models": ["Mild Hybrid", "Full Hybrid", "AllGrip"] },
+        { "model": "Splash", "sub_models": [] },
+        { "model": "Swift", "sub_models": ["Standard Mild Hybrid", "Sport", "AllGrip"] },
+        { "model": "SX4", "sub_models": ["Classic", "S-Cross"] },
+        { "model": "Vitara", "sub_models": ["Mild Hybrid", "Full Hybrid", "AllGrip"] }
+      ]
+    },
+    {
+      "brand": "Tesla",
+      "models": [
+        { "model": "Model 3", "sub_models": ["Standard Range RWD", "Long Range AWD", "Performance / Ludicrous AWD"] },
+        { "model": "Model S", "sub_models": ["Long Range AWD", "Plaid AWD"] },
+        { "model": "Model X", "sub_models": ["Long Range AWD", "Plaid AWD"] },
+        { "model": "Model Y", "sub_models": ["Standard Range RWD", "Long Range RWD", "Long Range AWD", "Performance AWD"] }
+      ]
+    },
+    {
+      "brand": "Toyota",
+      "models": [
+        { "model": "Aygo", "sub_models": ["3-door", "5-door", "X (Cross)"] },
+        { "model": "bZ4X", "sub_models": ["FWD Active", "AWD Elegant", "AWD Executive"] },
+        { "model": "Camry", "sub_models": ["Hybrid"] },
+        { "model": "C-HR", "sub_models": ["1.8 Hybrid", "2.0 Hybrid", "Plug-in Hybrid", "GR Sport"] },
+        { "model": "Corolla", "sub_models": ["Hatchback", "Sedan", "Touring Sports (Wagon)", "Cross (SUV)", "GR Sport"] },
+        { "model": "Prius", "sub_models": ["Hybrid", "Plug-in Hybrid (PHEV)"] },
+        { "model": "RAV4", "sub_models": ["Hybrid FWD/AWD", "Plug-in Hybrid AWD", "GR Sport"] },
+        { "model": "Urban Cruiser", "sub_models": [] },
+        { "model": "Yaris", "sub_models": ["3-door", "5-door", "Hybrid", "Cross (SUV)", "GR Sport", "GR Yaris (AWD Performance)"] }
+      ]
+    },
+    {
+      "brand": "Volkswagen",
+      "models": [
+        { "model": "Arteon", "sub_models": ["Fastback", "Shooting Brake", "eHybrid (PHEV)", "R AWD"] },
+        { "model": "Golf", "sub_models": ["Hatchback", "Variant (Station Wagon)", "Alltrack", "GTE (PHEV)", "GTI", "GTD", "R AWD"] },
+        { "model": "ID.3", "sub_models": ["Pure", "Pro", "Pro S", "GTX"] },
+        { "model": "ID.4", "sub_models": ["Pure", "Pro", "4MOTION", "GTX"] },
+        { "model": "ID.5", "sub_models": ["Pro", "GTX"] },
+        { "model": "ID.7", "sub_models": ["Pro", "Pro S", "Tourer (Wagon)", "GTX"] },
+        { "model": "ID.Buzz", "sub_models": ["Pro (Normal wheelbase)", "LWB (Long)", "Cargo", "GTX"] },
+        { "model": "Passat", "sub_models": ["Sedan", "Variant (Station Wagon)", "Alltrack", "GTE (eHybrid)"] },
+        { "model": "Polo", "sub_models": ["3-door", "5-door", "GTI"] },
+        { "model": "Sharan", "sub_models": [] },
+        { "model": "T-Cross", "sub_models": [] },
+        { "model": "T-Roc", "sub_models": ["Standard SUV", "Cabriolet", "R AWD"] },
+        { "model": "Tiguan", "sub_models": ["Standard", "Allspace (7-seat)", "eHybrid (PHEV)", "R AWD"] },
+        { "model": "Touareg", "sub_models": ["V6 TDI", "eHybrid", "R eHybrid"] },
+        { "model": "Touran", "sub_models": [] },
+        { "model": "Up", "sub_models": ["3-door", "5-door", "e-Up! (Electric)", "GTI"] }
+      ]
+    },
+    {
+      "brand": "Volvo",
+      "models": [
+        { "model": "EX30", "sub_models": ["Core RWD", "Plus RWD", "Ultra Twin Motor AWD"] },
+        { "model": "EX40", "sub_models": ["Single Motor RWD", "Twin Motor AWD"] },
+        { "model": "EX90", "sub_models": ["Single Motor RWD", "Twin Motor AWD", "Performance AWD"] },
+        { "model": "S60", "sub_models": ["Mild Hybrid (B-series)", "T6 Recharge (PHEV)", "T8 Recharge", "Polestar Engineered"] },
+        { "model": "S90", "sub_models": ["Mild Hybrid", "T8 Recharge (PHEV)"] },
+        { "model": "V40", "sub_models": ["Standard", "Cross Country"] },
+        { "model": "V60", "sub_models": ["Mild Hybrid (B-series)", "Cross Country", "T6 Recharge (PHEV)", "T8 Recharge", "Polestar Engineered"] },
+        { "model": "V90", "sub_models": ["Mild Hybrid", "Cross Country", "T8 Recharge (PHEV)"] },
+        { "model": "XC40", "sub_models": ["Mild Hybrid (B-series)", "T4/T5 Recharge (PHEV)", "Recharge Pure Electric (Legacy name)"] },
+        { "model": "XC60", "sub_models": ["Mild Hybrid", "T6 Recharge (PHEV)", "T8 Recharge", "Polestar Engineered"] },
+        { "model": "XC90", "sub_models": ["Mild Hybrid", "T8 Recharge (PHEV)"] }
+      ]
+    },
+    {
+      "brand": "XPeng",
+      "models": [
+        { "model": "G3", "sub_models": ["G3i"] },
+        { "model": "G6", "sub_models": ["Standard Range RWD", "Long Range RWD", "AWD Performance"] },
+        { "model": "G9", "sub_models": ["Standard Range RWD", "Long Range RWD", "AWD Performance"] },
+        { "model": "P7", "sub_models": ["Long Range RWD", "AWD Performance", "Wing Edition"] }
+      ]
+    }
   ]
 }

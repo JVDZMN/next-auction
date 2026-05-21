@@ -4,27 +4,77 @@ import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { CarImageUpload } from '@/components/CarImageUpload'
-import { getAllBrands, getModelsByBrand } from '@/lib/car-brands'
+import { getAllBrands, getModelsByBrand, getSubModelsByBrandModel } from '@/lib/car-brands'
+
+interface VehicleLookupResult {
+  make: string | null
+  model: string | null
+  year: number | null
+  fuelType: string | null
+  hp: number | null
+  transmission: string | null
+  firstRegistration: string | null
+  lastInspection: string | null
+  nextInspection: string | null
+  km: number | null
+  vin: string | null
+  licensePlate: string | null
+  bodyType: string | null
+  category: string | null
+  variant: string | null
+  engineSize: number | null
+  seats: number | null
+  weight: number | null
+  use: string | null
+  // Extra info fields (not stored in DB)
+  color: string | null
+  doors: number | null
+  maxTowingWeight: number | null
+  status: string | null
+  coupling: boolean | null
+}
 
 export default function CreateCarPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [availableSubModels, setAvailableSubModels] = useState<string[]>([])
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+
+  // Vehicle lookup state
+  const [lookupQuery, setLookupQuery] = useState('')
+  const [lookupLoading, setLookupLoading] = useState(false)
+  const [lookupError, setLookupError] = useState<string | null>(null)
+  const [lookupSuccess, setLookupSuccess] = useState(false)
+  const [extraInfo, setExtraInfo] = useState<Partial<VehicleLookupResult> | null>(null)
 
   const brands = getAllBrands()
 
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
+    subModel: '',
+    variant: '',
+    bodyType: '',
+    category: '',
+    engineSize: '',
+    seats: '',
+    weight: '',
+    licensePlate: '',
+    use: '',
     description: '',
     specs: '',
     condition: 'excellent',
     km: '',
+    lastInspectionKm: '',
     year: '',
     power: '',
     fuel: 'Benzin',
+    gearType: '',
+    firstRegistration: '',
+    lastInspection: '',
+    nextInspection: '',
     startingPrice: '',
     reservePrice: '',
     auctionEndDate: '',
@@ -40,17 +90,118 @@ export default function CreateCarPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-
-    // When brand changes, update available models and reset model selection
     if (name === 'brand') {
-      const models = getModelsByBrand(value)
-      setAvailableModels(models)
-      setFormData(prev => ({ ...prev, model: '' }))
+      setAvailableModels(getModelsByBrand(value))
+      setAvailableSubModels([])
+      setFormData(prev => ({ ...prev, brand: value, model: '', subModel: '' }))
+    } else if (name === 'model') {
+      setAvailableSubModels(getSubModelsByBrandModel(formData.brand, value))
+      setFormData(prev => ({ ...prev, model: value, subModel: '' }))
+    } else if (name === 'firstRegistration') {
+      const extractedYear = value ? String(new Date(value).getFullYear()) : ''
+      setFormData(prev => ({ ...prev, firstRegistration: value, year: extractedYear || prev.year }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handleMotorApiLookup = async () => {
+    const query = lookupQuery.trim()
+    if (!query) return
+    setLookupLoading(true)
+    setLookupError(null)
+    setLookupSuccess(false)
+    setExtraInfo(null)
+
+    try {
+      const res = await fetch(`/api/motorapi?search=${encodeURIComponent(query)}`)
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Køretøj ikke fundet')
+      }
+      const v: VehicleLookupResult = await res.json()
+
+      // Brand: case-insensitive match against known brands
+      const matchedBrand = brands.find(b => b.toLowerCase() === (v.make ?? '').toLowerCase()) ?? ''
+
+      // Model + submodel: load models for matched brand, try to split "A3 Sportback" → model + submodel
+      let newModels: string[] = []
+      let matchedModel = ''
+      let matchedSubModel = ''
+      let newSubModels: string[] = []
+
+      if (matchedBrand) {
+        newModels = getModelsByBrand(matchedBrand)
+        const apiModelStr = (v.model ?? '').trim()
+
+        // Try exact match first
+        const exact = newModels.find(m => m.toLowerCase() === apiModelStr.toLowerCase())
+        if (exact) {
+          matchedModel = exact
+          newSubModels = getSubModelsByBrandModel(matchedBrand, exact)
+        } else {
+          // Try "Model Submodel" split (e.g. "A3 Sportback")
+          for (const m of newModels) {
+            if (apiModelStr.toLowerCase().startsWith(m.toLowerCase() + ' ')) {
+              const remainder = apiModelStr.slice(m.length).trim()
+              const subs = getSubModelsByBrandModel(matchedBrand, m)
+              const foundSub = subs.find(s => s.toLowerCase() === remainder.toLowerCase())
+              if (foundSub) {
+                matchedModel = m
+                matchedSubModel = foundSub
+                newSubModels = subs
+                break
+              }
+            }
+          }
+          // Fallback: inject API model as custom option
+          if (!matchedModel && apiModelStr) {
+            newModels = [apiModelStr, ...newModels]
+            matchedModel = apiModelStr
+          }
+        }
+      }
+      setAvailableModels(newModels)
+      setAvailableSubModels(newSubModels)
+
+      setFormData(prev => ({
+        ...prev,
+        ...(matchedBrand && { brand: matchedBrand }),
+        ...(matchedModel && { model: matchedModel }),
+        ...(matchedSubModel && { subModel: matchedSubModel }),
+        ...(v.year && v.year > 0 && { year: String(v.year) }),
+        ...(v.fuelType && { fuel: v.fuelType }),
+        ...(v.hp != null && { power: String(v.hp) }),
+        ...(v.vin && { vin: v.vin }),
+        ...(v.transmission && { gearType: v.transmission }),
+        ...(v.firstRegistration && { firstRegistration: v.firstRegistration }),
+        ...(v.lastInspection && { lastInspection: v.lastInspection }),
+        ...(v.nextInspection && { nextInspection: v.nextInspection }),
+        ...(v.km != null && { lastInspectionKm: String(v.km) }),
+        ...(v.bodyType && { bodyType: v.bodyType }),
+        ...(v.category && { category: v.category }),
+        ...(v.licensePlate && { licensePlate: v.licensePlate }),
+        ...(v.engineSize != null && { engineSize: String(v.engineSize) }),
+        ...(v.seats != null && { seats: String(v.seats) }),
+        ...(v.weight != null && { weight: String(v.weight) }),
+        ...(v.use && { use: v.use }),
+        ...(v.variant && { variant: v.variant }),
+      }))
+
+      // Store remaining extra info for display only (not stored in DB)
+      setExtraInfo({
+        color: v.color,
+        doors: v.doors,
+        maxTowingWeight: v.maxTowingWeight,
+        status: v.status,
+        coupling: v.coupling,
+      })
+
+      setLookupSuccess(true)
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : 'Fejl ved opslag')
+    } finally {
+      setLookupLoading(false)
     }
   }
 
@@ -67,6 +218,7 @@ export default function CreateCarPage() {
           ...formData,
           images: uploadedImages,
           km: parseInt(formData.km),
+          lastInspectionKm: formData.lastInspectionKm ? parseInt(formData.lastInspectionKm) : null,
           year: parseInt(formData.year),
           power: parseInt(formData.power),
           startingPrice: parseFloat(formData.startingPrice),
@@ -78,6 +230,19 @@ export default function CreateCarPage() {
           serviceHistoryUrls,
           bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : null,
           isDraft,
+          gearType: formData.gearType || null,
+          subModel: formData.subModel || null,
+          variant: formData.variant || null,
+          bodyType: formData.bodyType || null,
+          category: formData.category || null,
+          licensePlate: formData.licensePlate || null,
+          use: formData.use || null,
+          engineSize: formData.engineSize ? parseFloat(formData.engineSize) : null,
+          seats: formData.seats ? parseInt(formData.seats) : null,
+          weight: formData.weight ? parseInt(formData.weight) : null,
+          firstRegistration: formData.firstRegistration ? new Date(formData.firstRegistration).toISOString() : null,
+          lastInspection: formData.lastInspection ? new Date(formData.lastInspection).toISOString() : null,
+          nextInspection: formData.nextInspection ? new Date(formData.nextInspection).toISOString() : null,
         }),
       })
 
@@ -98,14 +263,70 @@ export default function CreateCarPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <main className="max-w-3xl mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold mb-4">List Your Car for Auction</h1>
-          
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
               {error}
+            </div>
+          )}
+
+          {/* Vehicle lookup */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm font-medium text-blue-900 mb-1">
+              Hent køretøjsoplysninger automatisk
+            </p>
+            <p className="text-xs text-blue-700 mb-3">
+              Indtast registreringsnummer (f.eks. AB12345) eller stelnummer (VIN)
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={lookupQuery}
+                onChange={e => {
+                  setLookupQuery(e.target.value.toUpperCase())
+                  setLookupError(null)
+                  setLookupSuccess(false)
+                }}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleMotorApiLookup())}
+                placeholder="EL57808 eller VIN..."
+                className="flex-1 px-3 py-2 text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white uppercase"
+              />
+              <button
+                type="button"
+                onClick={handleMotorApiLookup}
+                disabled={lookupLoading || !lookupQuery.trim()}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {lookupLoading ? 'Henter...' : 'Hent oplysninger'}
+              </button>
+            </div>
+            {lookupError && (
+              <p className="mt-2 text-xs text-red-600">{lookupError}</p>
+            )}
+            {lookupSuccess && (
+              <p className="mt-2 text-xs text-green-700 font-medium">
+                ✓ Oplysninger hentet — du kan stadig redigere felterne nedenfor
+              </p>
+            )}
+          </div>
+
+          {/* Extra info panel (non-DB fields shown as read-only after lookup) */}
+          {extraInfo && (
+            <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                Yderligere oplysninger fra opslaget
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-700">
+                {extraInfo.color && <div><span className="font-medium">Farve:</span> {extraInfo.color}</div>}
+                {extraInfo.doors != null && <div><span className="font-medium">Døre:</span> {extraInfo.doors}</div>}
+                {extraInfo.maxTowingWeight != null && <div><span className="font-medium">Max trailer:</span> {extraInfo.maxTowingWeight} kg</div>}
+                {extraInfo.status && <div><span className="font-medium">Status:</span> {extraInfo.status}</div>}
+                {extraInfo.coupling != null && <div><span className="font-medium">Trækkrog:</span> {extraInfo.coupling ? 'Ja' : 'Nej'}</div>}
+              </div>
             </div>
           )}
 
@@ -161,9 +382,7 @@ export default function CreateCarPage() {
                 >
                   <option value="">Select a brand</option>
                   {brands.map((brand) => (
-                    <option key={brand} value={brand}>
-                      {brand}
-                    </option>
+                    <option key={brand} value={brand}>{brand}</option>
                   ))}
                 </select>
               </div>
@@ -183,12 +402,30 @@ export default function CreateCarPage() {
                 >
                   <option value="">Select a model</option>
                   {availableModels.map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
+                    <option key={model} value={model}>{model}</option>
                   ))}
                 </select>
               </div>
+
+              {availableSubModels.length > 0 && (
+                <div>
+                  <label htmlFor="subModel" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sub-model (optional)
+                  </label>
+                  <select
+                    id="subModel"
+                    name="subModel"
+                    value={formData.subModel}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value="">Not specified</option>
+                    {availableSubModels.map((sub) => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div>
@@ -227,7 +464,7 @@ export default function CreateCarPage() {
 
               <div>
                 <label htmlFor="km" className="block text-sm font-medium text-gray-700 mb-1">
-                  KM
+                  Current KM
                 </label>
                 <input
                   id="km"
@@ -263,7 +500,7 @@ export default function CreateCarPage() {
                 <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
                   Condition
                 </label>
-                <select 
+                <select
                   id="condition"
                   name="condition"
                   required
@@ -284,7 +521,7 @@ export default function CreateCarPage() {
                 <label htmlFor="fuel" className="block text-sm font-medium text-gray-700 mb-1">
                   Fuel Type
                 </label>
-                <select 
+                <select
                   id="fuel"
                   name="fuel"
                   required
@@ -300,6 +537,141 @@ export default function CreateCarPage() {
                 </select>
               </div>
 
+              <div>
+                <label htmlFor="gearType" className="block text-sm font-medium text-gray-700 mb-1">
+                  Gear Type
+                </label>
+                <select
+                  id="gearType"
+                  name="gearType"
+                  value={formData.gearType}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                >
+                  <option value="">Not specified</option>
+                  <option value="Manual">Manual</option>
+                  <option value="Automatic">Automatic</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="bodyType" className="block text-sm font-medium text-gray-700 mb-1">
+                  Body Type (optional)
+                </label>
+                <input
+                  id="bodyType"
+                  name="bodyType"
+                  type="text"
+                  value={formData.bodyType}
+                  onChange={handleChange}
+                  placeholder="Hatchback"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                  Category (optional)
+                </label>
+                <input
+                  id="category"
+                  name="category"
+                  type="text"
+                  value={formData.category}
+                  onChange={handleChange}
+                  placeholder="Personbil"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="variant" className="block text-sm font-medium text-gray-700 mb-1">
+                  Variant (optional)
+                </label>
+                <input
+                  id="variant"
+                  name="variant"
+                  type="text"
+                  value={formData.variant}
+                  onChange={handleChange}
+                  placeholder="1.4 TSI AUT."
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="engineSize" className="block text-sm font-medium text-gray-700 mb-1">
+                  Engine Size (L, optional)
+                </label>
+                <input
+                  id="engineSize"
+                  name="engineSize"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.engineSize}
+                  onChange={handleChange}
+                  placeholder="1.6"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="seats" className="block text-sm font-medium text-gray-700 mb-1">
+                  Seats (optional)
+                </label>
+                <input
+                  id="seats"
+                  name="seats"
+                  type="number"
+                  min="1"
+                  value={formData.seats}
+                  onChange={handleChange}
+                  placeholder="5"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (kg, optional)
+                </label>
+                <input
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  min="0"
+                  value={formData.weight}
+                  onChange={handleChange}
+                  placeholder="1240"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="licensePlate" className="block text-sm font-medium text-gray-700 mb-1">
+                  License Plate (optional)
+                </label>
+                <input
+                  id="licensePlate"
+                  name="licensePlate"
+                  type="text"
+                  value={formData.licensePlate}
+                  onChange={handleChange}
+                  placeholder="AB12345"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="use" className="block text-sm font-medium text-gray-700 mb-1">
+                  Use (optional)
+                </label>
+                <input
+                  id="use"
+                  name="use"
+                  type="text"
+                  value={formData.use}
+                  onChange={handleChange}
+                  placeholder="Privat personkørsel"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
@@ -355,7 +727,6 @@ export default function CreateCarPage() {
               </div>
             </div>
 
-            {/* Advanced auction options */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="auctionStartDate" className="block text-sm font-medium text-gray-700 mb-1">
@@ -389,11 +760,10 @@ export default function CreateCarPage() {
               </div>
             </div>
 
-            {/* Vehicle documentation */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-1">
-                  VIN (optional)
+                  VIN / Stelnummer (optional)
                 </label>
                 <input
                   id="vin"
@@ -406,6 +776,63 @@ export default function CreateCarPage() {
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 />
               </div>
+              <div>
+                <label htmlFor="firstRegistration" className="block text-sm font-medium text-gray-700 mb-1">
+                  First Registration (optional)
+                </label>
+                <input
+                  id="firstRegistration"
+                  name="firstRegistration"
+                  type="date"
+                  value={formData.firstRegistration}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastInspection" className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Inspection Date (optional)
+                </label>
+                <input
+                  id="lastInspection"
+                  name="lastInspection"
+                  type="date"
+                  value={formData.lastInspection}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastInspectionKm" className="block text-sm font-medium text-gray-700 mb-1">
+                  KM at Last Inspection (optional)
+                </label>
+                <input
+                  id="lastInspectionKm"
+                  name="lastInspectionKm"
+                  type="number"
+                  min="0"
+                  value={formData.lastInspectionKm}
+                  onChange={handleChange}
+                  placeholder="175000"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+              <div>
+                <label htmlFor="nextInspection" className="block text-sm font-medium text-gray-700 mb-1">
+                  Next Inspection Date (optional)
+                </label>
+                <input
+                  id="nextInspection"
+                  name="nextInspection"
+                  type="date"
+                  value={formData.nextInspection}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-1 gap-4">
               <div>
                 <label htmlFor="inspectionReportUrl" className="block text-sm font-medium text-gray-700 mb-1">
                   Inspection Report URL (optional)

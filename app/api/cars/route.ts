@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     const { CarCreateSchema } = await import('@/lib/zod');
     const parseResult = CarCreateSchema.safeParse(body);
     if (!parseResult.success) {
-      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid input', details: parseResult.error.issues }, { status: 400 });
     }
     const data = parseResult.data;
     // Validate auction end date is in the future
@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
         specs: data.specs || null,
         condition: data.condition,
         km: Number(data.km),
+        lastInspectionKm: data.lastInspectionKm != null ? Number(data.lastInspectionKm) : null,
         year: Number(data.year),
         power: Number(data.power),
         fuel: data.fuel as import('@prisma/client').FuelType,
@@ -118,6 +119,19 @@ export async function POST(request: NextRequest) {
         status: isDraft ? 'active' : 'active',
         isDraft,
         vin: data.vin || null,
+        subModel: data.subModel || null,
+        variant: data.variant || null,
+        bodyType: data.bodyType || null,
+        category: data.category || null,
+        gearType: (data.gearType as import('@prisma/client').GearType) || null,
+        engineSize: data.engineSize != null ? Number(data.engineSize) : null,
+        seats: data.seats != null ? Number(data.seats) : null,
+        weight: data.weight != null ? Number(data.weight) : null,
+        licensePlate: data.licensePlate || null,
+        use: data.use || null,
+        firstRegistration: data.firstRegistration ? new Date(data.firstRegistration) : null,
+        lastInspection: data.lastInspection ? new Date(data.lastInspection) : null,
+        nextInspection: data.nextInspection ? new Date(data.nextInspection) : null,
         inspectionReportUrl: data.inspectionReportUrl || null,
         serviceHistoryUrls: data.serviceHistoryUrls || [],
         bidIncrement: data.bidIncrement != null ? Number(data.bidIncrement) : null,

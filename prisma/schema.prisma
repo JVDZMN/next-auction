@@ -104,16 +104,27 @@ model Car {
   ownerId             String
   brand               String
   model               String
+  subModel            String?
+  variant             String?
+  bodyType            String?
+  category            String?
   description         String        @db.Text
   specs               String?       @db.Text
   condition           String
   km                  Int
+  lastInspectionKm    Int?
   year                Int
   power               Int
   fuel                FuelType?
   gearType            GearType?
-  nextInspection      DateTime?
+  engineSize          Float?
+  seats               Int?
+  weight              Int?
+  licensePlate        String?
+  use                 String?
+  firstRegistration   DateTime?
   lastInspection      DateTime?
+  nextInspection      DateTime?
   zipcode             String?
   city                String?
   images              String[]
