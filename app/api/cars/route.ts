@@ -42,37 +42,87 @@ async function notifySavedSearches(car: { id: string; brand: string; model: stri
 
 export async function GET(request: NextRequest) {
   try {
-    const allowedStatuses: CarStatus[] = [
-      'active',
-      'completed',
-      'cancelled',
-      'reserve_not_met',
-    ];
-    const { searchParams } = new URL(request.url);
-    const status = (searchParams.get('status') || 'active') as CarStatus;
+    const allowedStatuses: CarStatus[] = ['active', 'completed', 'cancelled', 'reserve_not_met']
+    const { searchParams } = new URL(request.url)
+    const status = (searchParams.get('status') || 'active') as CarStatus
 
     if (!allowedStatuses.includes(status)) {
-      return NextResponse.json({ error: `Invalid status. Allowed: ${allowedStatuses.join(', ')}` }, { status: 400 });
+      return NextResponse.json({ error: `Invalid status. Allowed: ${allowedStatuses.join(', ')}` }, { status: 400 })
     }
 
-    // Only allow normal users to see 'active' cars. All other statuses require admin.
     if (status !== 'active') {
       const session = await requireAdmin()
       if (!session) {
-        return NextResponse.json({ error: 'Admin access required to view this status' }, { status: 403 });
+        return NextResponse.json({ error: 'Admin access required to view this status' }, { status: 403 })
       }
     }
 
-    const cars = await prisma.car.findMany({
-      where: { status, isDraft: false },
-      include: {
-        owner: { select: ownerSelect },
-        bids: latestBidInclude,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const brand     = searchParams.get('brand')    || undefined
+    const model     = searchParams.get('model')    || undefined
+    const city      = searchParams.get('city')     || undefined
+    const fuel      = searchParams.get('fuel')     || undefined
+    const bodyType  = searchParams.get('bodyType') || undefined
+    const minPrice  = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined
+    const maxPrice  = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined
+    const minYear   = searchParams.get('minYear')  ? Number(searchParams.get('minYear'))  : undefined
+    const maxYear   = searchParams.get('maxYear')  ? Number(searchParams.get('maxYear'))  : undefined
+    const likedOnly = searchParams.get('liked') === 'true'
+    const page      = Math.max(1, Number(searchParams.get('page')     || 1))
+    const pageSize  = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || 12)))
+    const sortBy    = searchParams.get('sortBy') || 'newest'
 
-    return NextResponse.json(cars);
+    let likedByUserId: string | undefined
+    if (likedOnly) {
+      const session = await requireAuth()
+      if (!session) return NextResponse.json({ error: 'Login required to view liked cars' }, { status: 401 })
+      likedByUserId = session.user.id
+    }
+
+    const orderBy =
+      sortBy === 'priceAsc'   ? { currentPrice: 'asc'         as const } :
+      sortBy === 'priceDesc'  ? { currentPrice: 'desc'        as const } :
+      sortBy === 'endingSoon' ? { auctionEndDate: 'asc'       as const } :
+                                { createdAt: 'desc'           as const }
+
+    const where = {
+      status,
+      isDraft: false,
+      ...(brand    && { brand }),
+      ...(model    && { model:    { contains: model,    mode: 'insensitive' as const } }),
+      ...(city     && { city:     { contains: city,     mode: 'insensitive' as const } }),
+      ...(fuel     && { fuel:     fuel as import('@prisma/client').FuelType }),
+      ...(bodyType && { bodyType: { contains: bodyType, mode: 'insensitive' as const } }),
+      ...((minPrice !== undefined || maxPrice !== undefined) && {
+        currentPrice: {
+          ...(minPrice !== undefined && { gte: minPrice }),
+          ...(maxPrice !== undefined && { lte: maxPrice }),
+        },
+      }),
+      ...((minYear !== undefined || maxYear !== undefined) && {
+        year: {
+          ...(minYear !== undefined && { gte: minYear }),
+          ...(maxYear !== undefined && { lte: maxYear }),
+        },
+      }),
+      ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
+    }
+
+    const [total, cars] = await prisma.$transaction([
+      prisma.car.count({ where }),
+      prisma.car.findMany({
+        where,
+        include: {
+          owner: { select: ownerSelect },
+          bids: latestBidInclude,
+          _count: { select: { bids: true } },
+        },
+        orderBy,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ])
+
+    return NextResponse.json({ cars, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
   } catch (error) {
     return serverError('Failed to fetch cars', error)
   }

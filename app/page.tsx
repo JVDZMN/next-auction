@@ -13,23 +13,23 @@ async function getActiveCars(userId: string) {
       year: true,
       brand: true,
       model: true,
+      subModel: true,
       images: true,
       condition: true,
+      fuel: true,
+      km: true,
+      city: true,
+      bodyType: true,
       currentPrice: true,
       auctionEndDate: true,
       owner: { select: { name: true } },
-      bids: { orderBy: { createdAt: 'desc' }, take: 1 },
-      _count: { select: { bids: true, likedBy: true } },
+      _count: { select: { bids: true } },
       likedBy: { where: { userId }, select: { userId: true } },
     },
     orderBy: { createdAt: 'desc' },
     take: 12,
   })
-  return cars.map((car) => ({
-    ...car,
-    likeCount: car._count.likedBy,
-    isLiked: car.likedBy.length > 0,
-  }))
+  return cars.map(car => ({ ...car, isLiked: car.likedBy.length > 0 }))
 }
 
 
@@ -91,8 +91,26 @@ export default async function Home() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cars.map((car) => (
-              <CarCard key={car.id} car={car} />
+            {cars.map(car => (
+              <CarCard
+                key={car.id}
+                id={car.id}
+                year={car.year}
+                brand={car.brand}
+                model={car.model}
+                subModel={car.subModel}
+                images={car.images}
+                condition={car.condition}
+                fuel={car.fuel}
+                km={car.km}
+                city={car.city}
+                bodyType={car.bodyType}
+                currentPrice={car.currentPrice}
+                auctionEndDate={car.auctionEndDate}
+                bidCount={car._count.bids}
+                isLiked={car.isLiked}
+                owner={car.owner}
+              />
             ))}
           </div>
         )}

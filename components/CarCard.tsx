@@ -1,113 +1,101 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { LikeButton } from '@/components/LikeButton'
 
-type Car = {
+type CarCardProps = {
   id: string
   year: number
   brand: string
   model: string
+  subModel?: string | null
   images: string[]
   condition: string
+  fuel?: string | null
+  km?: number
+  city?: string | null
+  bodyType?: string | null
   currentPrice: number
-  auctionEndDate: Date
-  likeCount: number
-  isLiked: boolean
+  auctionEndDate: string | Date
+  bidCount: number
+  isLiked?: boolean
   owner: { name: string | null }
-  _count: { bids: number }
 }
 
-function getTimeRemaining(endDate: Date) {
-  const diff = endDate.getTime() - new Date().getTime()
-  if (diff <= 0) return 'Ended'
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-  if (days > 0) return `${days}d ${hours}h`
-  if (hours > 0) return `${hours}h ${mins}m`
-  return `${mins}m`
+function getTimeRemaining(endDate: string | Date): { label: string; urgent: boolean } {
+  const diff = new Date(endDate).getTime() - Date.now()
+  if (diff <= 0) return { label: 'Ended', urgent: false }
+  const days  = Math.floor(diff / 86400000)
+  const hours = Math.floor((diff % 86400000) / 3600000)
+  const mins  = Math.floor((diff % 3600000) / 60000)
+  if (days  > 0)  return { label: `${days}d ${hours}h`,  urgent: days < 1 }
+  if (hours > 0)  return { label: `${hours}h ${mins}m`,  urgent: true }
+  return { label: `${mins}m`, urgent: true }
 }
 
-export function CarCard({ car }: { car: Car }) {
-  const timeLabel = getTimeRemaining(car.auctionEndDate)
-  const ended = timeLabel === 'Ended'
-  const diff = car.auctionEndDate.getTime() - new Date().getTime()
-  const urgent = diff > 0 && diff < 1000 * 60 * 60 * 24
+export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, owner }: CarCardProps) {
+  const { label, urgent } = getTimeRemaining(auctionEndDate)
 
   return (
-    <Link
-      href={`/cars/${car.id}`}
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow overflow-hidden"
-    >
-      <div className="relative h-48 bg-gray-200">
-        {car.images?.[0] ? (
+    <Link href={`/cars/${id}`} className="group bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all overflow-hidden block">
+      <div className="relative aspect-4/3 bg-gray-100">
+        {images?.[0] ? (
           <Image
-            src={car.images[0]}
-            alt={`${car.year} ${car.brand} ${car.model}`}
+            src={images[0]}
+            alt={`${year} ${brand} ${model}`}
             fill
-            className="object-cover"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            No image
-          </div>
+          <div className="flex items-center justify-center h-full text-gray-400 text-sm">No image</div>
         )}
 
-        {/* Top-left: time remaining */}
-        <div
-          className={`absolute top-3 left-3 flex items-center gap-1 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold ${ended || urgent ? 'text-red-500' : 'text-gray-700'}`}
-        >
-          <svg
-            className="w-3 h-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+        {/* Time badge */}
+        <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-white/90 rounded-full text-xs font-semibold ${urgent ? 'text-red-600' : 'text-gray-700'}`}>
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          {timeLabel}
+          {label}
         </div>
 
-        {/* Top-right: like button */}
-        <div className="absolute top-3 right-3">
-          <LikeButton
-            carId={car.id}
-            initialLiked={car.isLiked}
-          />
+        {/* Like button */}
+        <div className="absolute top-2 right-2" onClick={e => e.preventDefault()}>
+          <LikeButton carId={id} initialLiked={isLiked} />
         </div>
+
+        {/* Fuel / body type badges */}
+        {(fuel || bodyType) && (
+          <div className="absolute bottom-2 left-2 flex gap-1">
+            {fuel    && <span className="px-1.5 py-0.5 bg-white/90 text-gray-700 text-xs rounded">{fuel}</span>}
+            {bodyType && <span className="px-1.5 py-0.5 bg-white/90 text-gray-700 text-xs rounded">{bodyType}</span>}
+          </div>
+        )}
       </div>
 
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-1">
-          <h3 className="text-lg font-bold line-clamp-1">
-            {car.brand} {car.model} {car.year}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-1 mb-1">
+          <h3 className="font-bold text-gray-900 leading-tight line-clamp-1">
+            {year} {brand} {model}{subModel ? ` ${subModel}` : ''}
           </h3>
-          <span className="ml-2 shrink-0 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-            {car.condition}
-          </span>
+          <span className="shrink-0 text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded capitalize">{condition}</span>
         </div>
-        <p className="text-sm text-gray-600 mb-4">
-          By {car.owner.name}
-        </p>
-        <div className="border-t pt-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600">Current Bid</span>
-            <span className="text-xl font-bold text-blue-600">
-              ${car.currentPrice.toLocaleString()}
-            </span>
+
+        {(km != null || city) && (
+          <p className="text-xs text-gray-500 mb-2">
+            {km != null ? `${km.toLocaleString('da-DK')} km` : ''}
+            {km != null && city ? ' · ' : ''}
+            {city ?? ''}
+          </p>
+        )}
+
+        <div className="flex items-end justify-between border-t pt-3 mt-2">
+          <div>
+            <p className="text-xs text-gray-500">Current bid</p>
+            <p className="text-lg font-bold text-blue-600">{currentPrice.toLocaleString('da-DK')} kr</p>
           </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>{car._count.bids} bids</span>
-          </div>
+          <p className="text-xs text-gray-500">{bidCount} {bidCount === 1 ? 'bid' : 'bids'}</p>
         </div>
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-          View & Bid
-        </button>
       </div>
     </Link>
   )

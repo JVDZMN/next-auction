@@ -26,9 +26,14 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
 
   useEffect(() => {
     fetchCar()
-    // Track view (fire-and-forget)
     fetch(`/api/cars/${id}/view`, { method: 'POST' }).catch(() => {})
   }, [id])
+
+  useEffect(() => {
+    if (!car || car.status !== 'active') return
+    const interval = setInterval(fetchCar, 15000)
+    return () => clearInterval(interval)
+  }, [car?.status])
 
   const fetchCar = async () => {
     try {
