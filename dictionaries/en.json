@@ -1,0 +1,213 @@
+{
+  "locale": "en",
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "browse": "Browse",
+    "sell": "Sell",
+    "dashboard": "My Account",
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "switchLang": "Dansk"
+  },
+  "home": {
+    "hero": {
+      "title": "Buy Your Dream Car",
+      "subtitle": "Real-time bidding · Verified sellers · Secure transactions",
+      "browse": "Browse Auctions",
+      "sell": "Start Selling"
+    },
+    "activeAuctions": "Active Auctions",
+    "viewAll": "View all",
+    "noAuctions": "No active auctions at the moment.",
+    "checkBack": "Check back soon for new listings!",
+    "features": {
+      "title": "Why Choose Next Auction?",
+      "realtime": {
+        "title": "Real-Time Bidding",
+        "body": "Place bids instantly with live updates and notifications"
+      },
+      "verified": {
+        "title": "Verified Sellers",
+        "body": "All sellers are verified with a full rating system"
+      },
+      "secure": {
+        "title": "Secure Payments",
+        "body": "Powered by Stripe for safe and guaranteed transactions"
+      }
+    }
+  },
+  "cars": {
+    "filter": {
+      "title": "Filters",
+      "clear": "Clear all",
+      "brand": "Brand",
+      "model": "Model",
+      "allBrands": "All brands",
+      "allModels": "All models",
+      "anyModel": "Any model",
+      "location": "Location",
+      "cityPlaceholder": "City",
+      "fuel": "Fuel type",
+      "allFuels": "All fuels",
+      "bodyType": "Body type",
+      "bodyTypePlaceholder": "e.g. Hatchback",
+      "year": "Year",
+      "yearFrom": "From",
+      "yearTo": "To",
+      "km": "Mileage (km)",
+      "kmMin": "Min",
+      "kmMax": "Max",
+      "syn": "Inspection (Syn)",
+      "synAll": "All",
+      "synValid": "Syn valid",
+      "synExpired": "Syn expired",
+      "price": "Price (kr)",
+      "liked": "Liked cars only",
+      "sort": {
+        "label": "Sort by",
+        "newest": "Newest first",
+        "endingSoon": "Ending soon",
+        "priceAsc": "Price: low to high",
+        "priceDesc": "Price: high to low"
+      }
+    },
+    "card": {
+      "currentBid": "Current bid",
+      "bids": "bids",
+      "bid": "bid",
+      "noImage": "No image"
+    },
+    "detail": {
+      "listedBy": "Listed by",
+      "verifiedSeller": "Verified Seller",
+      "views": "views",
+      "view": "view",
+      "currentPrice": "Current price",
+      "year": "Year",
+      "km": "Mileage",
+      "power": "Power",
+      "condition": "Condition",
+      "fuel": "Fuel",
+      "startingPrice": "Starting price",
+      "auctionEnds": "Auction ends",
+      "nextInspection": "Next Syn",
+      "lastInspection": "Last Syn",
+      "bidIncrement": "Bid increment",
+      "draft": "This listing is a draft and not visible to other buyers.",
+      "documentation": "Vehicle Documentation",
+      "vin": "VIN",
+      "inspectionReport": "Inspection Report",
+      "viewReport": "View Report",
+      "serviceHistory": "Service History",
+      "document": "Document",
+      "description": "Description",
+      "additionalNotes": "Additional Notes",
+      "editListing": "Edit Listing",
+      "duplicateDraft": "Duplicate as Draft",
+      "duplicating": "Duplicating...",
+      "cancelAuction": "Cancel Auction",
+      "cancelling": "Cancelling...",
+      "cancelConfirm": "Are you sure you want to cancel this auction? This cannot be undone.",
+      "relistAuction": "Relist Auction",
+      "relistNewDate": "New auction end date:",
+      "confirmRelist": "Confirm Relist",
+      "relisting": "Relisting...",
+      "notifyClose": "Email me when this auction is closing soon",
+      "acceptBid": "Accept Highest Bid",
+      "accepting": "Processing...",
+      "acceptConfirm": "Accept the highest bid and close this auction as sold?",
+      "acceptBanner": {
+        "title": "Reserve not met",
+        "body": "The highest bid was {price}. You can accept it and close the auction as sold."
+      }
+    }
+  },
+  "bidding": {
+    "currentBid": "Current Bid",
+    "placeBid": "Place Your Bid",
+    "yourBidLabel": "Your Bid (kr)",
+    "minimumBid": "Minimum next bid",
+    "increment": "increment",
+    "submit": "Place Bid",
+    "placing": "Placing Bid...",
+    "success": "Bid placed successfully!",
+    "signInRequired": "Please sign in to place a bid",
+    "ownerCannotBid": "You cannot bid on your own listing",
+    "auctionEnded": "Auction has ended",
+    "reserveMet": "Reserve met",
+    "reserveNotMet": "Reserve not yet met",
+    "legalDialog": {
+      "title": "Confirm Your Bid",
+      "body": "This bid is legally binding under Danish Købeloven. By confirming, you agree to purchase the vehicle at this price if you win the auction.",
+      "confirm": "Confirm Bid",
+      "cancel": "Cancel"
+    },
+    "antiSnipe": {
+      "title": "Auction Extended",
+      "body": "A bid was placed in the final minutes. The auction end time has been extended."
+    },
+    "proxyBid": {
+      "title": "Set Proxy Bid",
+      "description": "We'll automatically bid for you up to your maximum amount.",
+      "placeholder": "Max amount",
+      "submit": "Set Max",
+      "submitting": "Saving...",
+      "success": "Proxy bid set — we'll bid for you up to {amount}"
+    },
+    "status": {
+      "completed": "Auction Closed — Sold",
+      "completedBody": "This auction has ended and a winner has been selected.",
+      "reserveNotMet": "Auction Closed — Reserve Not Met",
+      "reserveNotMetBody": "The auction ended but the reserve price was not reached.",
+      "cancelled": "Auction Cancelled",
+      "cancelledBody": "This auction was cancelled."
+    },
+    "history": {
+      "title": "Bid History",
+      "loading": "Loading bids...",
+      "empty": "No bids yet. Be the first to bid!",
+      "leading": "Leading Bid"
+    }
+  },
+  "vehicle": {
+    "fuel": {
+      "Benzin": "Petrol",
+      "Diesel": "Diesel",
+      "HybridBenzin": "Hybrid Petrol",
+      "HybridDiesel": "Hybrid Diesel",
+      "PluginHybrid": "Plug-in Hybrid",
+      "Electric": "Electric (EV)"
+    },
+    "gear": {
+      "Manual": "Manual",
+      "Automatic": "Automatic"
+    },
+    "condition": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?"
+  }
+}

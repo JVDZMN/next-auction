@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { LikeButton } from '@/components/LikeButton'
+import { useLocale } from '@/lib/i18n/context'
 
 type CarCardProps = {
   id: string
@@ -35,10 +36,11 @@ function getTimeRemaining(endDate: string | Date): { label: string; urgent: bool
 }
 
 export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, owner }: CarCardProps) {
+  const locale = useLocale()
   const { label, urgent } = getTimeRemaining(auctionEndDate)
 
   return (
-    <Link href={`/cars/${id}`} className="group bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all overflow-hidden block">
+    <Link href={`/${locale}/cars/${id}`} className="group bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all overflow-hidden block">
       <div className="relative aspect-4/3 bg-gray-100">
         {images?.[0] ? (
           <Image

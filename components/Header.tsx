@@ -9,6 +9,8 @@ import { MessagesModal } from '@/components/MessagesModal'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useUserChatSocket } from '@/lib/useUserChatSocket'
 import { useNotificationSocket } from '@/lib/useNotificationSocket'
+import { useLocale } from '@/lib/i18n/context'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 
 type ChatMessage = {
@@ -25,6 +27,7 @@ type ChatUser = {
 
 export function Header() {
   const { data: session, status } = useSession()
+  const locale = useLocale()
   const isAdmin = session?.user?.role === 'Admin'
   const [showNotifModal, setShowNotifModal] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -138,14 +141,16 @@ export function Header() {
   return (
     <header className="w-full bg-white border-b shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2">
-        <Link href="/" className="text-2xl font-bold text-blue-600">Next Auction</Link>
+        <Link href={`/${locale}`} className="text-2xl font-bold text-blue-600">Next Auction</Link>
         <nav className="hidden sm:flex gap-6 items-center">
-          <Link href="/cars" className="hover:text-blue-600">Browse Cars</Link>          <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} className="hover:text-blue-600">Dashboard</Link>
+          <Link href={`/${locale}/cars`} className="hover:text-blue-600">Browse Cars</Link>
+          <Link href={isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`} className="hover:text-blue-600">Dashboard</Link>
           {isAdmin && (
-            <Link href="/admin/dashboard" className="text-purple-600 font-semibold">👑 Admin</Link>
+            <Link href={`/${locale}/admin/dashboard`} className="text-purple-600 font-semibold">👑 Admin</Link>
           )}
         </nav>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           {session && (
             <button
               className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none"
@@ -203,7 +208,7 @@ export function Header() {
               {showUserMenu && (
                 <div className="absolute right-0 mt-1 w-56 bg-white border rounded-md shadow-lg z-50">
                   <Link
-                    href={isAdmin ? '/admin/dashboard' : '/dashboard'}
+                    href={isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowUserMenu(false)}
                   >

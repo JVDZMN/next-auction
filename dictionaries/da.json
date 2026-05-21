@@ -1,0 +1,213 @@
+{
+  "locale": "da",
+  "common": {
+    "loading": "Indlæser...",
+    "error": "Der opstod en fejl",
+    "back": "Tilbage",
+    "cancel": "Annuller",
+    "save": "Gem",
+    "edit": "Rediger",
+    "confirm": "Bekræft",
+    "close": "Luk",
+    "yes": "Ja",
+    "no": "Nej"
+  },
+  "nav": {
+    "browse": "Se biler",
+    "sell": "Sælg",
+    "dashboard": "Min konto",
+    "admin": "Admin",
+    "signIn": "Log ind",
+    "signOut": "Log ud",
+    "switchLang": "English"
+  },
+  "home": {
+    "hero": {
+      "title": "Find din næste bil",
+      "subtitle": "Realtidsauktioner · Verificerede sælgere · Sikre betalinger",
+      "browse": "Se auktioner",
+      "sell": "Sæt til salg"
+    },
+    "activeAuctions": "Aktive auktioner",
+    "viewAll": "Se alle",
+    "noAuctions": "Ingen aktive auktioner i øjeblikket.",
+    "checkBack": "Kig tilbage snart for nye opslag!",
+    "features": {
+      "title": "Hvorfor vælge Next Auction?",
+      "realtime": {
+        "title": "Realtidsbud",
+        "body": "Afgiv bud øjeblikkeligt med live opdateringer og notifikationer"
+      },
+      "verified": {
+        "title": "Verificerede sælgere",
+        "body": "Alle sælgere er verificerede med fuldt bedømmelsessystem"
+      },
+      "secure": {
+        "title": "Sikre betalinger",
+        "body": "Drevet af Stripe for sikre og garanterede transaktioner"
+      }
+    }
+  },
+  "cars": {
+    "filter": {
+      "title": "Filtre",
+      "clear": "Ryd alle",
+      "brand": "Mærke",
+      "model": "Model",
+      "allBrands": "Alle mærker",
+      "allModels": "Alle modeller",
+      "anyModel": "Alle modeller",
+      "location": "Placering",
+      "cityPlaceholder": "By",
+      "fuel": "Brændstof",
+      "allFuels": "Alle",
+      "bodyType": "Karrosseri",
+      "bodyTypePlaceholder": "f.eks. Hatchback",
+      "year": "Årgang",
+      "yearFrom": "Fra",
+      "yearTo": "Til",
+      "km": "Kilometerstand",
+      "kmMin": "Min",
+      "kmMax": "Max",
+      "syn": "Syn",
+      "synAll": "Alle",
+      "synValid": "Syn gyldig",
+      "synExpired": "Syn udløbet",
+      "price": "Pris (kr)",
+      "liked": "Kun gemte biler",
+      "sort": {
+        "label": "Sorter efter",
+        "newest": "Nyeste først",
+        "endingSoon": "Udløber snart",
+        "priceAsc": "Pris: lav til høj",
+        "priceDesc": "Pris: høj til lav"
+      }
+    },
+    "card": {
+      "currentBid": "Aktuel pris",
+      "bids": "bud",
+      "bid": "bud",
+      "noImage": "Ingen billeder"
+    },
+    "detail": {
+      "listedBy": "Opslået af",
+      "verifiedSeller": "Verificeret sælger",
+      "views": "visninger",
+      "view": "visning",
+      "currentPrice": "Aktuel pris",
+      "year": "Årgang",
+      "km": "Kilometerstand",
+      "power": "Effekt",
+      "condition": "Stand",
+      "fuel": "Brændstof",
+      "startingPrice": "Startpris",
+      "auctionEnds": "Auktion slutter",
+      "nextInspection": "Næste syn",
+      "lastInspection": "Seneste syn",
+      "bidIncrement": "Budinkrement",
+      "draft": "Dette opslag er et udkast og ikke synligt for andre købere.",
+      "documentation": "Køretøjsdokumentation",
+      "vin": "Stelnummer",
+      "inspectionReport": "Synsrapport",
+      "viewReport": "Se rapport",
+      "serviceHistory": "Servicehistorik",
+      "document": "Dokument",
+      "description": "Beskrivelse",
+      "additionalNotes": "Yderligere noter",
+      "editListing": "Rediger opslag",
+      "duplicateDraft": "Kopiér som udkast",
+      "duplicating": "Kopierer...",
+      "cancelAuction": "Annullér auktion",
+      "cancelling": "Annullerer...",
+      "cancelConfirm": "Er du sikker på, at du vil annullere denne auktion? Dette kan ikke fortrydes.",
+      "relistAuction": "Genopslå auktion",
+      "relistNewDate": "Ny slutdato for auktion:",
+      "confirmRelist": "Bekræft genopslag",
+      "relisting": "Genopslår...",
+      "notifyClose": "Send mig en e-mail, når auktionen er ved at udløbe",
+      "acceptBid": "Acceptér højeste bud",
+      "accepting": "Behandler...",
+      "acceptConfirm": "Acceptér det højeste bud og luk auktionen som solgt?",
+      "acceptBanner": {
+        "title": "Reservepris ikke nået",
+        "body": "Det højeste bud var {price}. Du kan acceptere det og lukke auktionen som solgt."
+      }
+    }
+  },
+  "bidding": {
+    "currentBid": "Aktuel pris",
+    "placeBid": "Afgiv bud",
+    "yourBidLabel": "Dit bud (kr)",
+    "minimumBid": "Mindste næste bud",
+    "increment": "inkrement",
+    "submit": "Afgiv bud",
+    "placing": "Afgiver bud...",
+    "success": "Bud afgivet!",
+    "signInRequired": "Log ind for at afgive bud",
+    "ownerCannotBid": "Du kan ikke byde på dit eget opslag",
+    "auctionEnded": "Auktionen er afsluttet",
+    "reserveMet": "Reservepris nået",
+    "reserveNotMet": "Reservepris ikke nået endnu",
+    "legalDialog": {
+      "title": "Bekræft dit bud",
+      "body": "Dette bud er juridisk bindende i henhold til dansk Købelov. Ved at bekræfte accepterer du at købe køretøjet til denne pris, hvis du vinder auktionen.",
+      "confirm": "Bekræft bud",
+      "cancel": "Annuller"
+    },
+    "antiSnipe": {
+      "title": "Auktionen er forlænget",
+      "body": "Et bud blev afgivet i de sidste minutter. Auktionens sluttid er blevet forlænget."
+    },
+    "proxyBid": {
+      "title": "Angiv automatisk maksimumsbudget",
+      "description": "Vi byder automatisk for dig op til dit maksimum.",
+      "placeholder": "Maksimalt beløb",
+      "submit": "Angiv maks.",
+      "submitting": "Gemmer...",
+      "success": "Automatisk bud oprettet — vi byder for dig op til {amount}"
+    },
+    "status": {
+      "completed": "Auktion afsluttet — Solgt",
+      "completedBody": "Denne auktion er afsluttet og en vinder er fundet.",
+      "reserveNotMet": "Auktion afsluttet — Reservepris ikke nået",
+      "reserveNotMetBody": "Auktionen er afsluttet, men reserveprisen blev ikke nået.",
+      "cancelled": "Auktion annulleret",
+      "cancelledBody": "Denne auktion blev annulleret."
+    },
+    "history": {
+      "title": "Budhistorik",
+      "loading": "Indlæser bud...",
+      "empty": "Ingen bud endnu. Vær den første!",
+      "leading": "Højeste bud"
+    }
+  },
+  "vehicle": {
+    "fuel": {
+      "Benzin": "Benzin",
+      "Diesel": "Diesel",
+      "HybridBenzin": "Hybrid benzin",
+      "HybridDiesel": "Hybrid diesel",
+      "PluginHybrid": "Plug-in hybrid",
+      "Electric": "El (EV)"
+    },
+    "gear": {
+      "Manual": "Manuel",
+      "Automatic": "Automatisk"
+    },
+    "condition": {
+      "excellent": "Perfekt",
+      "good": "God",
+      "fair": "Rimelig",
+      "poor": "Dårlig"
+    }
+  },
+  "auth": {
+    "signIn": "Log ind",
+    "signUp": "Opret konto",
+    "email": "E-mail",
+    "password": "Adgangskode",
+    "forgotPassword": "Glemt adgangskode?",
+    "noAccount": "Har du ikke en konto?",
+    "haveAccount": "Har du allerede en konto?"
+  }
+}

@@ -66,6 +66,9 @@ export async function GET(request: NextRequest) {
     const maxPrice  = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined
     const minYear   = searchParams.get('minYear')  ? Number(searchParams.get('minYear'))  : undefined
     const maxYear   = searchParams.get('maxYear')  ? Number(searchParams.get('maxYear'))  : undefined
+    const minKm     = searchParams.get('minKm')    ? Number(searchParams.get('minKm'))    : undefined
+    const maxKm     = searchParams.get('maxKm')    ? Number(searchParams.get('maxKm'))    : undefined
+    const synStatus = searchParams.get('synStatus') || undefined // 'valid' | 'expired'
     const likedOnly = searchParams.get('liked') === 'true'
     const page      = Math.max(1, Number(searchParams.get('page')     || 1))
     const pageSize  = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || 12)))
@@ -104,6 +107,14 @@ export async function GET(request: NextRequest) {
           ...(maxYear !== undefined && { lte: maxYear }),
         },
       }),
+      ...((minKm !== undefined || maxKm !== undefined) && {
+        km: {
+          ...(minKm !== undefined && { gte: minKm }),
+          ...(maxKm !== undefined && { lte: maxKm }),
+        },
+      }),
+      ...(synStatus === 'valid'   && { nextInspection: { gt: new Date() } }),
+      ...(synStatus === 'expired' && { nextInspection: { lte: new Date() } }),
       ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
     }
 

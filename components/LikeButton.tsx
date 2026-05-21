@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useLocale } from '@/lib/i18n/context'
 
 interface LikeButtonProps {
   carId: string
@@ -12,6 +13,7 @@ interface LikeButtonProps {
 export function LikeButton({ carId, initialLiked }: LikeButtonProps) {
   const { data: session } = useSession()
   const router = useRouter()
+  const locale = useLocale()
   const [liked, setLiked] = useState(initialLiked)
   const [loading, setLoading] = useState(false)
 
@@ -20,7 +22,7 @@ export function LikeButton({ carId, initialLiked }: LikeButtonProps) {
     e.stopPropagation()
 
     if (!session) {
-      router.push('/auth/signin')
+      router.push(`/${locale}/auth/signin`)
       return
     }
 
