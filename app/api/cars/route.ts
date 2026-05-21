@@ -135,6 +135,8 @@ export async function POST(request: NextRequest) {
         inspectionReportUrl: data.inspectionReportUrl || null,
         serviceHistoryUrls: data.serviceHistoryUrls || [],
         bidIncrement: data.bidIncrement != null ? Number(data.bidIncrement) : null,
+        streetName: data.streetName || null,
+        houseNumber: data.houseNumber || null,
         zipcode: data.zipcode || null,
         city: data.city || null,
       },

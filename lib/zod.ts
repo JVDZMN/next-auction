@@ -29,6 +29,8 @@ export const CarCreateSchema = z.object({
   reservePrice: z.union([z.string(), z.number()]).optional().nullable(),
   auctionEndDate: z.string(),
   auctionStartDate: z.string().optional().nullable(),
+  streetName: z.string().optional().nullable(),
+  houseNumber: z.string().optional().nullable(),
   zipcode: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   vin: z.string().optional().nullable(),

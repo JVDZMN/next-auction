@@ -125,6 +125,8 @@ model Car {
   firstRegistration   DateTime?
   lastInspection      DateTime?
   nextInspection      DateTime?
+  streetName          String?
+  houseNumber         String?
   zipcode             String?
   city                String?
   images              String[]
