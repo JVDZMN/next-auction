@@ -1,75 +1,108 @@
 /**
- * Sliding-window in-memory rate limiter.
+ * Rate limiter with Redis (Upstash) in production and in-memory fallback
+ * for local development when UPSTASH_REDIS_REST_URL is not configured.
  *
- * Each key tracks an array of request timestamps.  On every call we
- * discard timestamps older than `windowMs`, then accept or reject based
- * on how many remain.
+ * Production: uses Upstash sliding-window — works correctly across multiple
+ * serverless instances and survives cold starts.
  *
- * Trade-off: state is per-process, so this does not work across multiple
- * server instances.  To scale horizontally, replace `store` with an
- * Upstash Redis client and use the same interface.
+ * Development / no-Redis: falls back to an in-memory Map (per-process only).
+ * Set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN in .env to use Redis.
  */
 
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
 export interface RateLimitConfig {
-  /** Maximum number of requests allowed within the window. */
   limit: number
-  /** Rolling time window in milliseconds. */
   windowMs: number
 }
 
 export interface RateLimitResult {
   allowed: boolean
-  /** How many requests the caller may still make in the current window. */
   remaining: number
-  /** Unix ms timestamp at which the oldest slot in the window expires. */
   resetAt: number
 }
 
-// Exported so tests can clear it between cases.
-export const store = new Map<string, number[]>()
+// ---------------------------------------------------------------------------
+// Redis-backed limiter (production)
+// ---------------------------------------------------------------------------
 
-// Periodically remove keys that have no recent activity to prevent unbounded
-// memory growth on long-running servers.
-const CLEANUP_INTERVAL_MS = 60_000
-/* c8 ignore next 10 */
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const cutoff = Date.now() - CLEANUP_INTERVAL_MS
-    for (const [key, timestamps] of store) {
-      if (timestamps.every((t) => t < cutoff)) {
-        store.delete(key)
-      }
-    }
-  }, CLEANUP_INTERVAL_MS).unref?.()  // .unref() prevents the timer from keeping a Node process alive
+function makeRedisLimiter(config: RateLimitConfig) {
+  const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  })
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(config.limit, `${config.windowMs}ms`),
+    prefix: 'rl',
+  })
 }
 
-export function rateLimit(key: string, config: RateLimitConfig): RateLimitResult {
+// Cache limiter instances so we don't recreate on every request
+const redisLimiters = new Map<string, Ratelimit>()
+
+async function redisRateLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
+  const cacheKey = `${config.limit}:${config.windowMs}`
+  if (!redisLimiters.has(cacheKey)) {
+    redisLimiters.set(cacheKey, makeRedisLimiter(config))
+  }
+  const limiter = redisLimiters.get(cacheKey)!
+  const { success, remaining, reset } = await limiter.limit(key)
+  return { allowed: success, remaining, resetAt: reset }
+}
+
+// ---------------------------------------------------------------------------
+// In-memory fallback (development)
+// ---------------------------------------------------------------------------
+
+// Exported for tests to clear between cases
+export const store = new Map<string, number[]>()
+
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const cutoff = Date.now() - 60_000
+    for (const [key, timestamps] of store) {
+      if (timestamps.every((t) => t < cutoff)) store.delete(key)
+    }
+  }, 60_000).unref?.()
+}
+
+function memoryRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
   const now = Date.now()
   const windowStart = now - config.windowMs
-
   const timestamps = (store.get(key) ?? []).filter((t) => t > windowStart)
-
-  const resetAt =
-    timestamps.length > 0
-      ? timestamps[0] + config.windowMs  // oldest slot expires first
-      : now + config.windowMs
+  const resetAt = timestamps.length > 0 ? timestamps[0] + config.windowMs : now + config.windowMs
 
   if (timestamps.length >= config.limit) {
     store.set(key, timestamps)
     return { allowed: false, remaining: 0, resetAt }
   }
-
   timestamps.push(now)
   store.set(key, timestamps)
-
   return { allowed: true, remaining: config.limit - timestamps.length, resetAt }
 }
 
-/**
- * Build standard rate-limit response headers.
- * Attach these to both allowed AND rejected responses so clients can
- * implement back-off without waiting for a 429.
- */
+// ---------------------------------------------------------------------------
+// Unified export
+// ---------------------------------------------------------------------------
+
+const useRedis =
+  typeof process.env.UPSTASH_REDIS_REST_URL === 'string' &&
+  process.env.UPSTASH_REDIS_REST_URL.length > 0
+
+export async function rateLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
+  if (useRedis) {
+    try {
+      return await redisRateLimit(key, config)
+    } catch {
+      // Redis unavailable — degrade gracefully to in-memory
+      return memoryRateLimit(key, config)
+    }
+  }
+  return memoryRateLimit(key, config)
+}
+
 export function rateLimitHeaders(
   result: RateLimitResult,
   config: RateLimitConfig,

@@ -327,9 +327,9 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
             >
               Back
             </button>
-            {isOwner && (
+            {isOwner && car.bids.length === 0 && (
               <button
-                onClick={() => alert('Edit functionality coming soon')}
+                onClick={() => router.push(`/cars/${car.id}/edit`)}
                 className="px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
               >
                 Edit Listing

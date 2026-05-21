@@ -5,6 +5,20 @@ import { useRouter } from 'next/navigation'
 import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import type { Car } from '@/types/car'
 
+interface AdminCar extends Omit<Car, 'bids'> {
+  bids: Array<{
+    id: string
+    amount: number
+    createdAt: string
+    bidder: {
+      id?: string
+      name: string | null
+      email?: string
+      _count?: { bids: number; cars: number }
+    }
+  }>
+}
+
 interface BidStats {
   totalBids: number
   uniqueBidders: number
@@ -16,7 +30,7 @@ interface BidStats {
 export default function AdminCarDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { id } = use(params)
-  const [data, setData] = useState<{ car: Car; bidStats: BidStats } | null>(null)
+  const [data, setData] = useState<{ car: AdminCar; bidStats: BidStats } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

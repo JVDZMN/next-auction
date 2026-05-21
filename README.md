@@ -2,6 +2,54 @@
 
 A full-stack car auction platform built with Next.js 15, Prisma, and PostgreSQL.
 
+## Architecture
+
+```mermaid
+graph TD
+    Browser["Browser"]
+
+    subgraph nextjs["Next.js 15"]
+        direction TB
+        Pages["Pages\n/  /cars  /cars/[id]  /cars/create\n/dashboard  /admin  /auth"]
+        API["API Routes\n/api/cars · /api/bids · /api/messages\n/api/upload · /api/admin · /api/cron\n/api/auth · /api/mitid · /api/motorapi"]
+        WS["Socket.io\npages/api/socketio"]
+    end
+
+    subgraph data["Data Layer"]
+        Prisma["Prisma ORM"]
+        DB[("PostgreSQL")]
+    end
+
+    subgraph external["External Services"]
+        Cloudinary["Cloudinary\nImage Storage"]
+        Resend["Resend\nTransactional Email"]
+        MotorDK["MotorAPI.dk\nVehicle Registry"]
+        DAWA["DAWA API\nDanish Addresses"]
+        GoogleOAuth["Google OAuth"]
+        MitID["MitID · Criipto\nIdentity Verification"]
+        Sentry["Sentry\nError Tracking"]
+        Stripe["Stripe\nPayments"]
+    end
+
+    Browser -- "HTTP" --> Pages
+    Browser -- "HTTP" --> API
+    Browser -- "WebSocket" --> WS
+    Browser -- "address autocomplete" --> DAWA
+
+    Pages --> API
+    API --> Prisma
+    Prisma --> DB
+
+    API -- "store images" --> Cloudinary
+    API -- "bid / outbid / alert emails" --> Resend
+    API -- "plate & VIN lookup (proxied)" --> MotorDK
+    API -- "sign in" --> GoogleOAuth
+    API -- "identity verification" --> MitID
+    API -- "unhandled errors" --> Sentry
+    API -- "payments" --> Stripe
+    WS -- "new bid · outbid · notification" --> Browser
+```
+
 ## Tech Stack
 
 | Layer | Technology |

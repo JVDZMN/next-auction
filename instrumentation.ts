@@ -1,5 +1,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Validate required env vars at server startup — fails loudly before any request is served
+    await import('./lib/env')
     await import('./sentry.server.config')
   }
   if (process.env.NEXT_RUNTIME === 'edge') {

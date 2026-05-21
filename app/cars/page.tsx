@@ -125,10 +125,123 @@ export default function CarsPage() {
   }
 
   const hasFilters = brand || model || city || fuel || bodyType || minPrice || maxPrice || minYear || maxYear || likedOnly
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const filterContent = (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold text-gray-900">Filters</span>
+        {hasFilters && (
+          <button onClick={clearFilters} className="text-xs text-blue-600 hover:underline">Clear all</button>
+        )}
+      </div>
+
+      {session && (
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={likedOnly}
+            onChange={e => { setLikedOnly(e.target.checked); setPage(1) }}
+            className="rounded text-blue-600"
+          />
+          <span className="text-sm text-gray-700">Liked cars only</span>
+        </label>
+      )}
+
+      <div>
+        <label className={labelCls}>Brand</label>
+        <select value={brand} onChange={handleBrandChange} className={inputCls}>
+          <option value="">All brands</option>
+          {brands.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </div>
+
+      <div>
+        <label className={labelCls}>Model</label>
+        {availableModels.length > 0 ? (
+          <select value={model} onChange={handleFilterChange(setModel)} className={inputCls}>
+            <option value="">All models</option>
+            {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        ) : (
+          <input type="text" value={model} onChange={handleFilterChange(setModel)} placeholder="Any model" className={inputCls} />
+        )}
+      </div>
+
+      <div>
+        <label className={labelCls}>Location</label>
+        <input type="text" value={city} onChange={handleFilterChange(setCity)} placeholder="City" className={inputCls} />
+      </div>
+
+      <div>
+        <label className={labelCls}>Fuel type</label>
+        <select value={fuel} onChange={handleFilterChange(setFuel)} className={inputCls}>
+          <option value="">All fuels</option>
+          {FUEL_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+        </select>
+      </div>
+
+      <div>
+        <label className={labelCls}>Body type</label>
+        <input type="text" value={bodyType} onChange={handleFilterChange(setBodyType)} placeholder="e.g. Hatchback" className={inputCls} />
+      </div>
+
+      <div>
+        <label className={labelCls}>Year</label>
+        <div className="flex gap-2">
+          <input type="number" value={minYear} onChange={handleFilterChange(setMinYear)} placeholder="From" className={inputCls} />
+          <input type="number" value={maxYear} onChange={handleFilterChange(setMaxYear)} placeholder="To"   className={inputCls} />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelCls}>Price (kr)</label>
+        <div className="flex gap-2">
+          <input type="number" value={minPrice} onChange={handleFilterChange(setMinPrice)} placeholder="Min" className={inputCls} />
+          <input type="number" value={maxPrice} onChange={handleFilterChange(setMaxPrice)} placeholder="Max" className={inputCls} />
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+
+      {/* Mobile filter drawer */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-white shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="font-semibold text-gray-900">Filters</span>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                aria-label="Close filters"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4">
+              {filterContent}
+            </div>
+            <div className="p-4 border-t">
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="w-full py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700"
+              >
+                Show {data?.total ?? ''} results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Top bar */}
@@ -139,91 +252,33 @@ export default function CarsPage() {
               <p className="text-sm text-gray-500 mt-0.5">{data.total.toLocaleString('da-DK')} listings</p>
             )}
           </div>
-          <select
-            value={sortBy}
-            onChange={e => { setSortBy(e.target.value); setPage(1) }}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-          >
-            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <div className="flex items-center gap-2">
+            {/* Mobile filter button */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="md:hidden flex items-center gap-1.5 px-3 py-2 text-sm font-medium border border-gray-300 rounded-lg bg-white hover:bg-gray-50"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 10h10M11 16h2" />
+              </svg>
+              Filters
+              {hasFilters && <span className="w-2 h-2 rounded-full bg-blue-600" />}
+            </button>
+            <select
+              value={sortBy}
+              onChange={e => { setSortBy(e.target.value); setPage(1) }}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+            >
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
         </div>
 
         <div className="flex gap-6">
-          {/* Filters sidebar */}
+          {/* Filters sidebar — desktop only */}
           <aside className="hidden md:block w-56 shrink-0">
-            <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4 sticky top-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900">Filters</span>
-                {hasFilters && (
-                  <button onClick={clearFilters} className="text-xs text-blue-600 hover:underline">Clear all</button>
-                )}
-              </div>
-
-              {session && (
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={likedOnly}
-                    onChange={e => { setLikedOnly(e.target.checked); setPage(1) }}
-                    className="rounded text-blue-600"
-                  />
-                  <span className="text-sm text-gray-700">Liked cars only</span>
-                </label>
-              )}
-
-              <div>
-                <label className={labelCls}>Brand</label>
-                <select value={brand} onChange={handleBrandChange} className={inputCls}>
-                  <option value="">All brands</option>
-                  {brands.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className={labelCls}>Model</label>
-                {availableModels.length > 0 ? (
-                  <select value={model} onChange={handleFilterChange(setModel)} className={inputCls}>
-                    <option value="">All models</option>
-                    {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                ) : (
-                  <input type="text" value={model} onChange={handleFilterChange(setModel)} placeholder="Any model" className={inputCls} />
-                )}
-              </div>
-
-              <div>
-                <label className={labelCls}>Location</label>
-                <input type="text" value={city} onChange={handleFilterChange(setCity)} placeholder="City" className={inputCls} />
-              </div>
-
-              <div>
-                <label className={labelCls}>Fuel type</label>
-                <select value={fuel} onChange={handleFilterChange(setFuel)} className={inputCls}>
-                  <option value="">All fuels</option>
-                  {FUEL_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className={labelCls}>Body type</label>
-                <input type="text" value={bodyType} onChange={handleFilterChange(setBodyType)} placeholder="e.g. Hatchback" className={inputCls} />
-              </div>
-
-              <div>
-                <label className={labelCls}>Year</label>
-                <div className="flex gap-2">
-                  <input type="number" value={minYear} onChange={handleFilterChange(setMinYear)} placeholder="From" className={inputCls} />
-                  <input type="number" value={maxYear} onChange={handleFilterChange(setMaxYear)} placeholder="To"   className={inputCls} />
-                </div>
-              </div>
-
-              <div>
-                <label className={labelCls}>Price (kr)</label>
-                <div className="flex gap-2">
-                  <input type="number" value={minPrice} onChange={handleFilterChange(setMinPrice)} placeholder="Min" className={inputCls} />
-                  <input type="number" value={maxPrice} onChange={handleFilterChange(setMaxPrice)} placeholder="Max" className={inputCls} />
-                </div>
-              </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sticky top-4">
+              {filterContent}
             </div>
           </aside>
 

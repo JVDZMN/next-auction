@@ -24,10 +24,6 @@ enum GearType {
   Automatic
 }
 
-enum Geartype {
-  Manual
-  Automatic
-}
 
 enum FuelType {
   Benzin

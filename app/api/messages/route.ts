@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const rl = rateLimit(`msg:${session.user.id}`, MSG_RATE_LIMIT)
+    const rl = await rateLimit(`msg:${session.user.id}`, MSG_RATE_LIMIT)
     if (!rl.allowed) {
       return NextResponse.json(
         { error: 'Too many messages. Please slow down.' },
