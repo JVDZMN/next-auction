@@ -1,7 +1,7 @@
 "use client";
 import { useSocket } from '@/lib/useSocket';
 // Removed HeroUI Modal import
-import { ArrowUturnLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 
 // File was truncated. Re-adding a minimal valid AuctionMessages component to fix build error.
@@ -69,7 +69,7 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
       const data = await res.json();
       if (data.messages) setMessages(data.messages);
       else setError(data.error || 'Failed to load messages');
-    } catch (err) {
+    } catch {
       setError('Failed to load messages');
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
       } else {
         setError(data.error || 'Failed to send message');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to send message');
     } finally {
       setLoading(false);

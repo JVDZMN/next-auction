@@ -53,7 +53,8 @@ export const authOptions = {
         if (!user.emailVerified) {
           throw new Error('Please verify your email before signing in. Check your inbox.');
         }
-        const { password, ...rest } = user;
+        // Destructure password out so it is excluded from the returned object; void suppresses unused-var lint
+        const { password, ...rest } = user; void password;
         const { emailVerified: _, ...sanitizedUser } = rest;
         void _;
         return sanitizedUser;

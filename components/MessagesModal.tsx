@@ -95,6 +95,7 @@ export function MessagesModal({
                 {messageUsers.map(user => (
                   <li key={user.id} className="py-2 flex items-center gap-3">
                     {user.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={user.image} alt={user.name} className="h-8 w-8 rounded-full" />
                     ) : (
                       <ChatBubbleLeftRightIcon className="h-8 w-8 text-blue-400" />

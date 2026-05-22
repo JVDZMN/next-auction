@@ -38,7 +38,7 @@ export function CarImageUpload({ uploadedImages, onChange, onError }: CarImageUp
 
       const urls = await Promise.all(uploadPromises)
       onChange([...uploadedImages, ...urls])
-    } catch (err) {
+    } catch {
       onError('Failed to upload images. Please try again.')
     } finally {
       setIsUploading(false)
@@ -71,11 +71,12 @@ export function CarImageUpload({ uploadedImages, onChange, onError }: CarImageUp
         {uploadedImages.length > 0 && (
           <div className="grid grid-cols-4 gap-2">
             {uploadedImages.map((url, index) => (
-              <div key={index} className="relative group">
+              <div key={index} className="relative group h-24">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={url}
                   alt={`Car ${index + 1}`}
-                  className="w-full h-24 object-cover rounded border"
+                  className="w-full h-full object-cover rounded border"
                 />
                 <button
                   type="button"

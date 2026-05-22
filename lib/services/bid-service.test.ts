@@ -9,7 +9,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { BidError } from '@/lib/bid-error'
 
 // ---------------------------------------------------------------------------
 // Hoist mock functions so they are available inside vi.mock factories
@@ -105,6 +104,9 @@ beforeEach(() => {
   mockNotificationCreateMany.mockResolvedValue({})
 })
 
+// Explicit transaction callback type so we avoid the banned `Function` type
+type TxFn = (tx: ReturnType<typeof makeTx>) => Promise<unknown>
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -114,7 +116,7 @@ describe('placeBid — optimistic lock', () => {
     const car = makeCar(10_000)
     const bid = makeBid('bid-1', 12_000)
 
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: TxFn) => {
       return fn(makeTx(car, 1, bid))
     })
 
@@ -127,7 +129,7 @@ describe('placeBid — optimistic lock', () => {
     const car = makeCar(10_000)
     const bid = makeBid('bid-x', 12_000)
 
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: TxFn) => {
       return fn(makeTx(car, 0, bid))
     })
 
@@ -146,7 +148,7 @@ describe('placeBid — optimistic lock', () => {
     const bidB = makeBid('bid-B', 12_000)
     let callCount = 0
 
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: TxFn) => {
       const isFirst = callCount++ === 0
       const bid = isFirst ? bidA : bidB
       return fn(makeTx(car, isFirst ? 1 : 0, bid))
@@ -169,7 +171,7 @@ describe('placeBid — optimistic lock', () => {
   })
 
   it('does not place a bid if the car is not found', async () => {
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: TxFn) => {
       const tx = {
         car: { findUnique: vi.fn().mockResolvedValue(null) },
         bid: { create: vi.fn() },
@@ -188,7 +190,7 @@ describe('placeBid — optimistic lock', () => {
   it('does not place a bid if the auction has ended', async () => {
     const expiredCar = { ...makeCar(), auctionEndDate: new Date(Date.now() - 1000) }
 
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: TxFn) => {
       const tx = {
         car: { findUnique: vi.fn().mockResolvedValue(expiredCar), updateMany: vi.fn(), update: vi.fn() },
         bid: { create: vi.fn() },

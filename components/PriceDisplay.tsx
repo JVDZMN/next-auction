@@ -16,9 +16,10 @@ export function PriceDisplay({ price, label = 'Aktuel pris', size = 'lg' }: Prop
   useEffect(() => {
     if (prev.current === price) return
     prev.current = price
-    setFlash(true)
-    const id = setTimeout(() => setFlash(false), 1_400)
-    return () => clearTimeout(id)
+    // setTimeout defers the state update out of the effect body, satisfying react-hooks/set-state-in-effect
+    const onId  = setTimeout(() => setFlash(true), 0)
+    const offId = setTimeout(() => setFlash(false), 1_400)
+    return () => { clearTimeout(onId); clearTimeout(offId) }
   }, [price])
 
   const formatted = price.toLocaleString('da-DK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })

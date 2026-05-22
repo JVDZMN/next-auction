@@ -37,7 +37,7 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
         const data = await res.json();
         if (data.messages) setMessages(data.messages);
         else setError(data.error || 'Failed to fetch messages');
-      } catch (e) {
+      } catch {
         setError('Failed to fetch messages');
       } finally {
         setLoading(false);
@@ -85,7 +85,7 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
       });
       setInput('');
       setReplyTo(null);
-    } catch (e) {
+    } catch {
       setError('Failed to send message');
     } finally {
       setLoading(false);
