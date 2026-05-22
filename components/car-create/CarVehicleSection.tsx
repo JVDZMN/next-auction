@@ -1,5 +1,8 @@
 'use client'
 
+import { MotionSelect } from './MotionSelect'
+import { MotionTextarea } from './MotionTextarea'
+
 type ChangeHandler = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
 
 interface Props {
@@ -16,57 +19,51 @@ interface Props {
 }
 
 export function CarVehicleSection({ formData, onChange, availableModels, availableSubModels, allBrands }: Props) {
+  const onSelect   = onChange as React.ChangeEventHandler<HTMLSelectElement>
+  const onTextarea = onChange as React.ChangeEventHandler<HTMLTextAreaElement>
+
   return (
     <>
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-          <select
-            id="brand" name="brand" required
-            value={formData.brand} onChange={onChange}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-          >
+          <MotionSelect id="brand" name="brand" required value={formData.brand} onChange={onSelect}>
             <option value="">Select a brand</option>
             {allBrands.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
+          </MotionSelect>
         </div>
 
         <div>
           <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-          <select
+          <MotionSelect
             id="model" name="model" required
-            value={formData.model} onChange={onChange}
+            value={formData.model} onChange={onSelect}
             disabled={!formData.brand}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="disabled:bg-gray-100 disabled:cursor-not-allowed"
           >
             <option value="">Select a model</option>
             {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+          </MotionSelect>
         </div>
 
         {availableSubModels.length > 0 && (
           <div>
             <label htmlFor="subModel" className="block text-sm font-medium text-gray-700 mb-1">Sub-model (optional)</label>
-            <select
-              id="subModel" name="subModel"
-              value={formData.subModel} onChange={onChange}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-            >
+            <MotionSelect id="subModel" name="subModel" value={formData.subModel} onChange={onSelect}>
               <option value="">Not specified</option>
               {availableSubModels.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            </MotionSelect>
           </div>
         )}
       </div>
 
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-        <textarea
+        <MotionTextarea
           id="description" name="description"
-          value={formData.description} onChange={onChange}
+          value={formData.description} onChange={onTextarea}
           rows={3}
           placeholder="Describe your car's features, history, and condition..."
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
         />
       </div>
     </>

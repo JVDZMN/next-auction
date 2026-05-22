@@ -1,6 +1,7 @@
 'use client'
 
 import { DawaAddressInput } from '@/components/DawaAddressInput'
+import { MotionInput } from './MotionInput'
 
 type ChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => void
 
@@ -36,34 +37,34 @@ export function CarAddressSection({ formData, onChange, onAddressSelect }: Props
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="md:col-span-2">
           <label htmlFor="streetName" className="block text-sm font-medium text-gray-700 mb-1">Street Name</label>
-          <input
+          <MotionInput
             id="streetName" name="streetName" type="text"
-            value={formData.streetName} onChange={onChange} placeholder="Vesterbrogade"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            value={formData.streetName} onChange={onChange}
+            placeholder="Vesterbrogade"
           />
         </div>
         <div>
           <label htmlFor="houseNumber" className="block text-sm font-medium text-gray-700 mb-1">No.</label>
-          <input
+          <MotionInput
             id="houseNumber" name="houseNumber" type="text"
-            value={formData.houseNumber} onChange={onChange} placeholder="12"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            value={formData.houseNumber} onChange={onChange}
+            placeholder="12"
           />
         </div>
         <div>
           <label htmlFor="zipcode" className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-          <input
+          <MotionInput
             id="zipcode" name="zipcode" type="text"
-            value={formData.zipcode} onChange={onChange} placeholder="1234" maxLength={4}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            value={formData.zipcode} onChange={onChange}
+            placeholder="1234" maxLength={4}
           />
         </div>
         <div className="md:col-span-2">
           <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City</label>
-          <input
+          <MotionInput
             id="city" name="city" type="text"
-            value={formData.city} onChange={onChange} placeholder="Copenhagen"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            value={formData.city} onChange={onChange}
+            placeholder="Copenhagen"
           />
         </div>
       </div>

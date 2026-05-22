@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useAnimate } from 'framer-motion'
 import { PageLayout } from '@/components/PageLayout'
 import { CarImageUpload } from '@/components/CarImageUpload'
 import { getAllBrands, getModelsByBrand, getSubModelsByBrandModel } from '@/lib/car-brands'
@@ -20,6 +20,23 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 
+// ── Spring presets ─────────────────────────────────────────────────────────────
+const cardSpring   = { type: 'spring', mass: 0.8, stiffness: 240, damping: 30 } as const
+const sectionSpring = { type: 'spring', mass: 0.6, stiffness: 300, damping: 28 } as const
+const buttonSpring  = { type: 'spring', mass: 0.4, stiffness: 420, damping: 22 } as const
+
+// ── Stagger variants ───────────────────────────────────────────────────────────
+const staggerContainer = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.065, delayChildren: 0.1 } },
+}
+
+const sectionItem = {
+  hidden: { opacity: 0, y: 18, scale: 0.985 },
+  show:   { opacity: 1, y: 0,  scale: 1, transition: sectionSpring },
+}
+
+// ── Initial form state ─────────────────────────────────────────────────────────
 const initialFormData = {
   brand: '', model: '', subModel: '', variant: '', bodyType: '', category: '',
   engineSize: '', seats: '', weight: '', licensePlate: '', use: '',
@@ -35,16 +52,23 @@ export default function CreateCarPage() {
   const router = useRouter()
   const locale = useLocale()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState(initialFormData)
-  const [isDraft, setIsDraft] = useState(false)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [error, setError]               = useState<string | null>(null)
+  const [formData, setFormData]         = useState(initialFormData)
+  const [isDraft, setIsDraft]           = useState(false)
+  const [uploadedImages, setUploadedImages]         = useState<string[]>([])
   const [serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
-  const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [availableModels, setAvailableModels]       = useState<string[]>([])
   const [availableSubModels, setAvailableSubModels] = useState<string[]>([])
 
   const brands = getAllBrands()
 
+  // ── Imperative submit-button shake ─────────────────────────────────────────
+  const [buttonRowRef, animateButtonRow] = useAnimate()
+
+  const shakeButtons = () =>
+    void animateButtonRow(buttonRowRef.current, { x: [0, -8, 8, -6, 6, -2, 0] }, { duration: 0.4 })
+
+  // ── Field handlers ──────────────────────────────────────────────────────────
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     if (name === 'brand') {
@@ -116,23 +140,25 @@ export default function CreateCarPage() {
     }))
   }
 
+  // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
-    // Date validation guard — mirrors CarAuctionSection's real-time check
     if (formData.auctionEndDate) {
       const end   = new Date(formData.auctionEndDate)
       const start = formData.auctionStartDate ? new Date(formData.auctionStartDate) : new Date()
       const ms    = end.getTime() - start.getTime()
       if (ms <= 0) {
         setError('End date must be after the start date.')
+        shakeButtons()
         setIsSubmitting(false)
         return
       }
       if (ms < 24 * 60 * 60 * 1000) {
         setError('Auction must run for at least 24 hours.')
+        shakeButtons()
         setIsSubmitting(false)
         return
       }
@@ -172,82 +198,122 @@ export default function CreateCarPage() {
       router.push(`/${locale}/cars/${car.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
+      shakeButtons()
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <PageLayout maxWidth="max-w-3xl">
-      <Card>
-        <CardHeader>
-          <CardTitle>List Your Car for Auction</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AnimatePresence>
-            {error && (
+      <motion.div
+        initial={{ opacity: 0, y: 28, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0,  scale: 1    }}
+        transition={cardSpring}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>List Your Car for Auction</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  key="global-error"
+                  layout
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                  exit={{    opacity: 0, height: 0,      marginBottom: 0  }}
+                  transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+                  className="overflow-hidden"
+                >
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <VehicleLookupPanel onResult={handleLookupResult} />
+
+            <form onSubmit={handleSubmit} className="mt-4">
               <motion.div
-                key="global-error"
-                initial={{ opacity: 0, y: -16, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0,   scale: 1    }}
-                exit={{    opacity: 0, y: -8,  scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                className="mb-4"
+                className="space-y-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
               >
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <motion.div variants={sectionItem}>
+                  <CarImageUpload uploadedImages={uploadedImages} onChange={setUploadedImages} onError={setError} />
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <CarAddressSection
+                    formData={formData}
+                    onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
+                    onAddressSelect={addr => setFormData(prev => ({ ...prev, ...addr }))}
+                  />
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <CarVehicleSection
+                    formData={formData}
+                    onChange={handleChange}
+                    availableModels={availableModels}
+                    availableSubModels={availableSubModels}
+                    allBrands={brands}
+                  />
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <CarSpecsSection formData={formData} onChange={handleChange} />
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <CarAuctionSection formData={formData} onChange={handleChange} />
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <CarDocsSection
+                    formData={formData}
+                    onChange={handleChange}
+                    onServiceHistoryChange={setServiceHistoryUrls}
+                  />
+                </motion.div>
+
+                <motion.div variants={sectionItem} className="flex items-center gap-2">
+                  <Checkbox id="isDraft" checked={isDraft} onCheckedChange={v => setIsDraft(!!v)} />
+                  <Label htmlFor="isDraft" className="cursor-pointer text-sm">Save as draft (not visible to buyers)</Label>
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <div ref={buttonRowRef} className="flex gap-3 pt-2">
+                    <motion.div
+                      whileHover={{ scale: 1.025 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={buttonSpring}
+                    >
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting
+                          ? <><Spinner className="mr-2 h-4 w-4" />{isDraft ? 'Saving…' : 'Creating…'}</>
+                          : isDraft ? 'Save Draft' : 'Create Auction'}
+                      </Button>
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.025 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={buttonSpring}
+                    >
+                      <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                    </motion.div>
+                  </div>
+                </motion.div>
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          <VehicleLookupPanel onResult={handleLookupResult} />
-
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            <CarImageUpload uploadedImages={uploadedImages} onChange={setUploadedImages} onError={setError} />
-
-            <CarAddressSection
-              formData={formData}
-              onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
-              onAddressSelect={addr => setFormData(prev => ({ ...prev, ...addr }))}
-            />
-
-            <CarVehicleSection
-              formData={formData}
-              onChange={handleChange}
-              availableModels={availableModels}
-              availableSubModels={availableSubModels}
-              allBrands={brands}
-            />
-
-            <CarSpecsSection formData={formData} onChange={handleChange} />
-            <CarAuctionSection formData={formData} onChange={handleChange} />
-            <CarDocsSection
-              formData={formData}
-              onChange={handleChange}
-              onServiceHistoryChange={setServiceHistoryUrls}
-            />
-
-            <div className="flex items-center gap-2">
-              <Checkbox id="isDraft" checked={isDraft} onCheckedChange={v => setIsDraft(!!v)} />
-              <Label htmlFor="isDraft" className="cursor-pointer text-sm">Save as draft (not visible to buyers)</Label>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? <><Spinner className="mr-2 h-4 w-4" />{isDraft ? 'Saving…' : 'Creating…'}</>
-                    : isDraft ? 'Save Draft' : 'Create Auction'}
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-              </motion.div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </PageLayout>
   )
 }
