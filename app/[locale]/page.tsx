@@ -22,7 +22,7 @@ async function getActiveCars(userId: string) {
     orderBy: { createdAt: 'desc' },
     take: 12,
   })
-  return cars.map(car => ({ ...car, isLiked: car.likedBy.length > 0 }))
+  return cars.map((car: (typeof cars)[number]) => ({ ...car, isLiked: car.likedBy.length > 0 }))
 }
 
 export default async function HomePage({

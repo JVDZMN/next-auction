@@ -104,8 +104,17 @@ beforeEach(() => {
   mockNotificationCreateMany.mockResolvedValue({})
 })
 
-// Explicit transaction callback type so we avoid the banned `Function` type
-type TxFn = (tx: ReturnType<typeof makeTx>) => Promise<unknown>
+// Explicit transaction callback type so we avoid the banned `Function` type.
+// car.updateMany and car.update are optional — some test mocks omit them
+// because the bid service throws before those methods are ever reached.
+type TxFn = (tx: {
+  car: {
+    findUnique: ReturnType<typeof vi.fn>
+    updateMany?: ReturnType<typeof vi.fn>
+    update?: ReturnType<typeof vi.fn>
+  }
+  bid: { create: ReturnType<typeof vi.fn> }
+}) => Promise<unknown>
 
 // ---------------------------------------------------------------------------
 // Tests
