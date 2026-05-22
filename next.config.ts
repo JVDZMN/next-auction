@@ -17,8 +17,7 @@ export default withSentryConfig(nextConfig, {
   // Suppress Sentry CLI output during builds unless there is an error.
   silent: !process.env.CI,
 
-  // Remove the Sentry debug logger from the production bundle.
-  disableLogger: true,
+  webpack: { treeshake: { removeDebugLogging: true } },
 
   // Route Sentry requests through the app's own domain so browser
   // ad-blockers cannot intercept them.

@@ -37,11 +37,11 @@ export async function GET() {
     ])
 
     const carsWithNewBids = newBidNotifs
-      .map(n => n.carId)
+      .map((n: (typeof newBidNotifs)[number]) => n.carId)
       .filter((id): id is string => id !== null)
 
     const outbidCarIds = outbidNotifs
-      .map(n => n.carId)
+      .map((n: (typeof outbidNotifs)[number]) => n.carId)
       .filter((id): id is string => id !== null)
 
     return NextResponse.json({

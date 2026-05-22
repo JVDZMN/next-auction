@@ -53,13 +53,14 @@ export async function GET(
     }
 
     // Calculate bid statistics
+    type BidItem = (typeof car.bids)[number]
     const bidStats = {
       totalBids: car.bids.length,
-      uniqueBidders: new Set(car.bids.map(b => b.bidderId)).size,
-      highestBid: car.bids.length > 0 ? Math.max(...car.bids.map(b => b.amount)) : null,
-      lowestBid: car.bids.length > 0 ? Math.min(...car.bids.map(b => b.amount)) : null,
-      averageBid: car.bids.length > 0 
-        ? car.bids.reduce((sum, b) => sum + b.amount, 0) / car.bids.length 
+      uniqueBidders: new Set(car.bids.map((b: BidItem) => b.bidderId)).size,
+      highestBid: car.bids.length > 0 ? Math.max(...car.bids.map((b: BidItem) => b.amount)) : null,
+      lowestBid: car.bids.length > 0 ? Math.min(...car.bids.map((b: BidItem) => b.amount)) : null,
+      averageBid: car.bids.length > 0
+        ? car.bids.reduce((sum: number, b: BidItem) => sum + b.amount, 0) / car.bids.length
         : null,
     }
 
