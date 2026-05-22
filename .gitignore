@@ -45,3 +45,5 @@ next-env.d.ts
 
 # Claude Code
 .claude/
+local_data.sql
+local_data_fixed.sql

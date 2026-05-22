@@ -116,8 +116,23 @@ export const authOptions = {
   },
   session: {
     strategy: 'jwt' as SessionStrategy,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+  useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
+  cookies: {
+    sessionToken: {
+      name: process.env.NEXTAUTH_URL?.startsWith('https://')
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax' as const,
+        path: '/',
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
+      },
+    },
+  },
 };
 
 export async function requireAuth() {
