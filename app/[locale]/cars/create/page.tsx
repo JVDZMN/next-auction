@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { PageLayout } from '@/components/PageLayout'
 import { CarImageUpload } from '@/components/CarImageUpload'
 import { getAllBrands, getModelsByBrand, getSubModelsByBrandModel } from '@/lib/car-brands'
@@ -119,6 +120,24 @@ export default function CreateCarPage() {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
+
+    // Date validation guard — mirrors CarAuctionSection's real-time check
+    if (formData.auctionEndDate) {
+      const end   = new Date(formData.auctionEndDate)
+      const start = formData.auctionStartDate ? new Date(formData.auctionStartDate) : new Date()
+      const ms    = end.getTime() - start.getTime()
+      if (ms <= 0) {
+        setError('End date must be after the start date.')
+        setIsSubmitting(false)
+        return
+      }
+      if (ms < 24 * 60 * 60 * 1000) {
+        setError('Auction must run for at least 24 hours.')
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     try {
       const response = await fetch('/api/cars', {
         method: 'POST',
@@ -165,11 +184,22 @@ export default function CreateCarPage() {
           <CardTitle>List Your Car for Auction</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                key="global-error"
+                initial={{ opacity: 0, y: -16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0,   scale: 1    }}
+                exit={{    opacity: 0, y: -8,  scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                className="mb-4"
+              >
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <VehicleLookupPanel onResult={handleLookupResult} />
 
@@ -204,12 +234,16 @@ export default function CreateCarPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? <><Spinner className="mr-2 h-4 w-4" />{isDraft ? 'Saving…' : 'Creating…'}</>
-                  : isDraft ? 'Save Draft' : 'Create Auction'}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? <><Spinner className="mr-2 h-4 w-4" />{isDraft ? 'Saving…' : 'Creating…'}</>
+                    : isDraft ? 'Save Draft' : 'Create Auction'}
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+              </motion.div>
             </div>
           </form>
         </CardContent>

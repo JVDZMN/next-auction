@@ -84,19 +84,24 @@ export const authOptions = {
           if (!token.id) token.id = dbUser.id;
           token.role = dbUser.role;
           token.mitIdVerified = dbUser.mitIdVerified;
+          token.emailVerified = !!dbUser.emailVerified;
         }
       }
-      // Re-check from DB while not yet verified so the token updates immediately after verification
-      if (token.id && !token.mitIdVerified) {
+      if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { mitIdVerified: true },
+          select: { mitIdVerified: true, emailVerified: true },
         });
         token.mitIdVerified = dbUser?.mitIdVerified ?? false;
+        token.emailVerified = !!dbUser?.emailVerified;
       }
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
+      // Block sessions for users whose email is not yet verified
+      if (!token.emailVerified) {
+        return { ...session, user: undefined as unknown as typeof session.user };
+      }
       if (session?.user) {
         session.user.id = token.id as string;
         session.user.name = token.name as string;
