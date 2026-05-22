@@ -19,6 +19,7 @@ function SignInContent() {
   const searchParams = useSearchParams()
   const locale      = useLocale()
   const callbackUrl = searchParams?.get('callbackUrl') || `/${locale}`
+  const justRegistered = searchParams?.get('registered') === '1'
   const [isLoading, setIsLoading] = useState(false)
   const [error,     setError]     = useState('')
   const [formData,  setFormData]  = useState({ email: '', password: '' })
@@ -31,7 +32,8 @@ function SignInContent() {
       const result = await signIn('credentials', {
         email: formData.email, password: formData.password, redirect: false,
       })
-      if (result?.error) setError('Invalid email or password')
+      if (result?.error === 'CredentialsSignin') setError('Invalid email or password. If you just registered, please verify your email first.')
+      else if (result?.error) setError(result.error)
       else router.push(callbackUrl)
     } catch {
       setError('An error occurred. Please try again.')
@@ -48,6 +50,13 @@ function SignInContent() {
           <CardDescription>Welcome back to Next Auction</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {justRegistered && (
+            <Alert className="border-blue-200 bg-blue-50 text-blue-800">
+              <AlertDescription>
+                Account created! Please check your email and click the verification link before signing in.
+              </AlertDescription>
+            </Alert>
+          )}
           {error && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />

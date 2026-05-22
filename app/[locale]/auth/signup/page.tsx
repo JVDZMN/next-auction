@@ -48,9 +48,7 @@ export default function SignUpPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create account')
 
-      const result = await signIn('credentials', { email: formData.email, password: formData.password, redirect: false })
-      if (result?.error) { setError('Account created, but sign in failed. Please sign in.'); router.push(`/${locale}/auth/signin`) }
-      else router.push(`/${locale}`)
+      router.push(`/${locale}/auth/signin?registered=1`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
