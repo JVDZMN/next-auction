@@ -74,12 +74,15 @@ export async function sendVerificationEmail({
   to,
   token,
   email,
+  locale = 'da',
 }: {
   to: string
   token: string
   email: string
+  locale?: string
 }) {
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`
+  const base = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const url = `${base}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}&locale=${locale}`
   return sendEmail({
     to,
     subject: 'Verify your email – Next Auction',

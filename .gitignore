@@ -47,3 +47,4 @@ next-env.d.ts
 .claude/
 local_data.sql
 local_data_fixed.sql
+local_data.sql~
