@@ -1,101 +1,92 @@
-"use client";
-import { useState } from "react";
-import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { useSession } from 'next-auth/react';
-import { MessageCreateSchema } from '@/lib/zod';
+"use client"
+
+import { useState } from "react"
+import { useSession } from "next-auth/react"
+import { Send } from "lucide-react"
+import { MessageCreateSchema } from "@/lib/zod"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 interface MessageSellerProps {
-  carId: string;
-  ownerId: string;
-  ownerName: string;
+  carId: string
+  ownerId: string
+  ownerName: string
 }
 
 export default function MessageSeller({ carId, ownerId, ownerName }: MessageSellerProps) {
-  const { data: session } = useSession();
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const { data: session } = useSession()
+  const [open, setOpen] = useState(false)
+  const [input, setInput] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
-  if (session?.user?.id === ownerId) return null;
+  if (session?.user?.id === ownerId) return null
+
+  const handleClose = () => { setOpen(false); setInput(""); setError(null); setSuccess(false) }
 
   const sendMessage = async () => {
-    const result = MessageCreateSchema.safeParse({ carId, receiverId: ownerId, content: input });
-    if (!result.success) {
-      setError(result.error.issues[0].message);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
+    const result = MessageCreateSchema.safeParse({ carId, receiverId: ownerId, content: input })
+    if (!result.success) { setError(result.error.issues[0].message); return }
+    setLoading(true); setError(null); setSuccess(false)
     try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(result.data),
-      });
-      const data = await res.json();
-      if (data.message) {
-        setInput("");
-        setSuccess(true);
-      } else {
-        setError(data.error || 'Failed to send message');
-      }
-    } catch (_err) {
-      setError('Failed to send message');
+      })
+      const data = await res.json()
+      if (data.message) { setInput(""); setSuccess(true) }
+      else setError(data.error || "Failed to send message")
+    } catch {
+      setError("Failed to send message")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <>
       <div className="mt-4">
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
-          onClick={() => setOpen(true)}
-        >
-          Message to seller
-        </button>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          <Send className="h-4 w-4 mr-2" /> Message Seller
+        </Button>
       </div>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
-              onClick={() => { setOpen(false); setInput(""); setError(null); setSuccess(false); }}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <h3 className="text-lg font-bold mb-4">Message {ownerName}</h3>
-            {error && <div className="text-red-600 mb-2">{error}</div>}
-            {success && <div className="text-green-600 mb-2">Message sent!</div>}
-            <textarea
-              className={`w-full border rounded px-2 py-1 mb-1 ${input.length > 2000 ? 'border-red-400' : ''}`}
+
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message {ownerName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+            {success && <Alert><AlertDescription>Message sent!</AlertDescription></Alert>}
+            <Textarea
               rows={4}
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder="Type your message…"
               disabled={loading}
               maxLength={2001}
+              className={input.length > 2000 ? "border-destructive" : ""}
             />
             {input.length > 1800 && (
-              <p className={`text-xs text-right mb-3 ${input.length > 2000 ? 'text-red-500' : 'text-gray-400'}`}>
+              <p className={`text-xs text-right ${input.length > 2000 ? "text-destructive" : "text-muted-foreground"}`}>
                 {input.length}/2000
               </p>
             )}
-            <button
-              onClick={sendMessage}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              disabled={loading || !input.trim() || input.length > 2000}
-            >
-              <PaperAirplaneIcon className="h-5 w-5 inline" /> Send
-            </button>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button onClick={sendMessage} disabled={loading || !input.trim() || input.length > 2000}>
+              <Send className="h-4 w-4 mr-2" />
+              {loading ? "Sending…" : "Send"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
-  );
+  )
 }

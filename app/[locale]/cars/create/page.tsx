@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header } from '@/components/Header'
+import { PageLayout } from '@/components/PageLayout'
 import { CarImageUpload } from '@/components/CarImageUpload'
 import { getAllBrands, getModelsByBrand, getSubModelsByBrandModel } from '@/lib/car-brands'
 import { VehicleLookupPanel, VehicleLookupResult } from '@/components/car-create/VehicleLookupPanel'
@@ -12,6 +12,12 @@ import { CarSpecsSection } from '@/components/car-create/CarSpecsSection'
 import { CarAuctionSection } from '@/components/car-create/CarAuctionSection'
 import { CarDocsSection } from '@/components/car-create/CarDocsSection'
 import { useLocale } from '@/lib/i18n/context'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 
 const initialFormData = {
   brand: '', model: '', subModel: '', variant: '', bodyType: '', category: '',
@@ -153,19 +159,21 @@ export default function CreateCarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="max-w-3xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold mb-4">List Your Car for Auction</h1>
-
+    <PageLayout maxWidth="max-w-3xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>List Your Car for Auction</CardTitle>
+        </CardHeader>
+        <CardContent>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{error}</div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           <VehicleLookupPanel onResult={handleLookupResult} />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             <CarImageUpload uploadedImages={uploadedImages} onChange={setUploadedImages} onError={setError} />
 
             <CarAddressSection
@@ -183,9 +191,7 @@ export default function CreateCarPage() {
             />
 
             <CarSpecsSection formData={formData} onChange={handleChange} />
-
             <CarAuctionSection formData={formData} onChange={handleChange} />
-
             <CarDocsSection
               formData={formData}
               onChange={handleChange}
@@ -193,31 +199,21 @@ export default function CreateCarPage() {
             />
 
             <div className="flex items-center gap-2">
-              <input
-                id="isDraft" type="checkbox"
-                checked={isDraft} onChange={e => setIsDraft(e.target.checked)}
-                className="rounded"
-              />
-              <label htmlFor="isDraft" className="text-sm text-gray-700">Save as draft (not visible to buyers)</label>
+              <Checkbox id="isDraft" checked={isDraft} onCheckedChange={v => setIsDraft(!!v)} />
+              <Label htmlFor="isDraft" className="cursor-pointer text-sm">Save as draft (not visible to buyers)</Label>
             </div>
 
             <div className="flex gap-3 pt-2">
-              <button
-                type="submit" disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Creating...' : isDraft ? 'Save Draft' : 'Create Auction'}
-              </button>
-              <button
-                type="button" onClick={() => router.back()}
-                className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? <><Spinner className="mr-2 h-4 w-4" />{isDraft ? 'Saving…' : 'Creating…'}</>
+                  : isDraft ? 'Save Draft' : 'Create Auction'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
             </div>
           </form>
-        </div>
-      </main>
-    </div>
+        </CardContent>
+      </Card>
+    </PageLayout>
   )
 }

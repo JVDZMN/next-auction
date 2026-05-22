@@ -178,7 +178,10 @@
       "title": "Budhistorik",
       "loading": "Indlæser bud...",
       "empty": "Ingen bud endnu. Vær den første!",
-      "leading": "Højeste bud"
+      "leading": "Højeste bud",
+      "bidder": "Budgiver",
+      "amount": "Beløb",
+      "time": "Tidspunkt"
     }
   },
   "vehicle": {

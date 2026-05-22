@@ -96,20 +96,22 @@ export async function GET(request: NextRequest) {
       // Total bids
       prisma.bid.count(),
       
-      // Recent users
+      // All users for management
       prisma.user.findMany({
         select: {
           id: true,
           name: true,
           email: true,
           role: true,
+          sellerVerified: true,
           createdAt: true,
+          _count: { select: { cars: true, bids: true } },
         },
         orderBy: { createdAt: 'desc' },
-        take: 10,
+        take: 100,
       }),
-      
-      // Recent cars
+
+      // All cars for moderation
       prisma.car.findMany({
         select: {
           id: true,
@@ -118,6 +120,7 @@ export async function GET(request: NextRequest) {
           year: true,
           currentPrice: true,
           status: true,
+          isDraft: true,
           createdAt: true,
           owner: {
             select: {
@@ -127,7 +130,7 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: { createdAt: 'desc' },
-        take: 10,
+        take: 100,
       }),
       
       // Top bidders by total bid amount

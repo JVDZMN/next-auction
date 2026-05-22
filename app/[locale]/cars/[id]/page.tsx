@@ -10,17 +10,49 @@ import { AuctionCountdown } from '@/components/AuctionCountdown'
 import MessageSeller from '@/components/MessageSeller'
 import { useSession } from 'next-auth/react'
 import { useLocale } from '@/lib/i18n/context'
+import { useNotifications } from '@/lib/notification-context'
 import type { Car } from '@/types/car'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { BadgeCheck, Eye, Pencil, Copy, XCircle, CalendarClock, CheckCircle2 } from 'lucide-react'
+
+interface BidEntry {
+  id: string
+  amount: number
+  createdAt: string
+  bidder: { id: string; name: string | null; email: string }
+}
+
+const statusVariant: Record<string, string> = {
+  active: 'bg-green-100 text-green-800 border-green-200',
+  completed: 'bg-blue-100 text-blue-800 border-blue-200',
+  reserve_not_met: 'bg-amber-100 text-amber-800 border-amber-200',
+  cancelled: 'bg-red-100 text-red-800 border-red-200',
+}
 
 export default function CarDetailPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const router = useRouter()
   const { data: session } = useSession()
   const locale = useLocale()
+  const { carsWithNewBids, markCarBidsRead } = useNotifications()
   const resolvedParams = params instanceof Promise ? use(params) : params
   const { id } = resolvedParams
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [bidLog, setBidLog] = useState<BidEntry[]>([])
+  const [bidLogLoaded, setBidLogLoaded] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [accepting, setAccepting] = useState(false)
   const [relisting, setRelisting] = useState(false)
@@ -28,6 +60,9 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   const [showRelistForm, setShowRelistForm] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [notifyClose, setNotifyClose] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
+  const [confirmAccept, setConfirmAccept] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCar()
@@ -40,12 +75,27 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     return () => clearInterval(interval)
   }, [car?.status])
 
+  const isOwner = session?.user?.id === car?.owner?.id
+
+  // Load bid log for owner; mark car bids read once loaded
+  useEffect(() => {
+    if (!isOwner || bidLogLoaded) return
+    fetch(`/api/bids?carId=${id}`)
+      .then(r => r.json())
+      .then(data => {
+        setBidLog(data.bids || [])
+        setBidLogLoaded(true)
+        if (carsWithNewBids.includes(id)) markCarBidsRead(id)
+      })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner, id])
+
   const fetchCar = async () => {
     try {
       const response = await fetch(`/api/cars/${id}`)
       if (!response.ok) throw new Error('Failed to fetch car')
-      const data = await response.json()
-      setCar(data)
+      setCar(await response.json())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -56,182 +106,211 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   if (loading) return <LoadingPage />
   if (error || !car) return <ErrorPage message={error || 'Car not found'} />
 
-  const isOwner = session?.user?.id === car.owner.id
-
   const handleCancelAuction = async () => {
-    if (!confirm('Are you sure you want to cancel this auction? This cannot be undone.')) return
-    setCancelling(true)
+    setCancelling(true); setActionError(null)
     try {
       const res = await fetch(`/api/cars/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' }),
       })
       if (!res.ok) throw new Error()
       await fetchCar()
-    } catch {
-      alert('Failed to cancel auction. Please try again.')
-    } finally {
-      setCancelling(false)
-    }
+    } catch { setActionError('Failed to cancel auction. Please try again.') }
+    finally { setCancelling(false); setConfirmCancel(false) }
   }
 
   const handleAcceptHighestBid = async () => {
-    if (!confirm('Accept the highest bid and close this auction as sold?')) return
-    setAccepting(true)
+    setAccepting(true); setActionError(null)
     try {
       const res = await fetch(`/api/cars/${id}/accept-bid`, { method: 'POST' })
       if (!res.ok) throw new Error()
       await fetchCar()
-    } catch {
-      alert('Failed to accept bid. Please try again.')
-    } finally {
-      setAccepting(false)
-    }
+    } catch { setActionError('Failed to accept bid. Please try again.') }
+    finally { setAccepting(false); setConfirmAccept(false) }
   }
 
   const handleRelist = async () => {
     if (!relistDate) return
-    setRelisting(true)
+    setRelisting(true); setActionError(null)
     try {
       const res = await fetch(`/api/cars/${id}/relist`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auctionEndDate: new Date(relistDate).toISOString() }),
       })
       if (!res.ok) throw new Error()
-      setShowRelistForm(false)
-      await fetchCar()
-    } catch {
-      alert('Failed to relist. Please try again.')
-    } finally {
-      setRelisting(false)
-    }
+      setShowRelistForm(false); await fetchCar()
+    } catch { setActionError('Failed to relist. Please try again.') }
+    finally { setRelisting(false) }
   }
 
   const handleDuplicate = async () => {
-    setDuplicating(true)
+    setDuplicating(true); setActionError(null)
     try {
       const res = await fetch(`/api/cars/${id}/duplicate`, { method: 'POST' })
       if (!res.ok) throw new Error()
       const data = await res.json()
       router.push(`/${locale}/cars/${data.id}`)
-    } catch {
-      alert('Failed to duplicate listing. Please try again.')
-    } finally {
-      setDuplicating(false)
-    }
+    } catch { setActionError('Failed to duplicate listing. Please try again.') }
+    finally { setDuplicating(false) }
   }
 
   const handleNotifyToggle = async (checked: boolean) => {
     setNotifyClose(checked)
     await fetch(`/api/cars/${id}/like`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notifyNearClose: checked }),
     }).catch(() => {})
   }
 
   return (
     <PageLayout>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-4 pb-0">
-          <CarImageGallery
-            images={car.images}
-            alt={`${car.year} ${car.brand} ${car.model}`}
-          />
-        </div>
-
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {car.year} {car.brand} {car.model}
-              </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-gray-600">Listed by {car.owner.name}</p>
-                {car.owner.sellerVerified && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                    ✓ Verified Seller
-                  </span>
-                )}
+      <div className="space-y-6">
+        {/* Images + title */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 pb-0">
+            <CarImageGallery images={car.images} alt={`${car.year} ${car.brand} ${car.model}`} />
+          </CardContent>
+          <CardContent className="pt-4 pb-6">
+            <div className="flex justify-between items-start gap-4 flex-wrap">
+              <div>
+                <h1 className="text-3xl font-bold">{car.year} {car.brand} {car.model}</h1>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <p className="text-muted-foreground text-sm">Listed by {car.owner.name}</p>
+                  {car.owner.sellerVerified && (
+                    <Badge variant="secondary" className="gap-1">
+                      <BadgeCheck className="h-3 w-3" /> Verified Seller
+                    </Badge>
+                  )}
+                  {isOwner && (
+                    <Badge variant="outline" className="gap-1">
+                      <Eye className="h-3 w-3" /> {car.views} view{car.views !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
-              {isOwner && (
-                <p className="text-sm text-gray-400 mt-1">{car.views} view{car.views !== 1 ? 's' : ''}</p>
-              )}
+              <div className="text-right">
+                <PriceDisplay price={car.currentPrice} label="Aktuel pris" size="lg" />
+                <Badge variant="outline" className={`mt-1 ${statusVariant[car.status] ?? ''}`}>{car.status}</Badge>
+              </div>
             </div>
-            <div className="text-right">
-              <PriceDisplay price={car.currentPrice} label="Aktuel pris" size="lg" />
-            </div>
-          </div>
-
-          {car.isDraft && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800 text-sm font-medium">
-              This listing is a draft and not visible to other users.
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded">
-            <div><p className="text-sm text-gray-600">Year</p><p className="font-semibold">{car.year}</p></div>
-            <div><p className="text-sm text-gray-600">Kilometers</p><p className="font-semibold">{car.km.toLocaleString()} km</p></div>
-            <div><p className="text-sm text-gray-600">Power</p><p className="font-semibold">{car.power} HP</p></div>
-            <div><p className="text-sm text-gray-600">Condition</p><p className="font-semibold capitalize">{car.condition}</p></div>
-            <div><p className="text-sm text-gray-600">Fuel</p><p className="font-semibold">{car.fuel}</p></div>
-            <div><p className="text-sm text-gray-600">Starting Price</p><p className="font-semibold">{car.startingPrice.toLocaleString('da-DK')} kr</p></div>
-            <div>
-              <p className="text-sm text-gray-600">Auction Ends</p>
-              <p className="font-semibold">{new Date(car.auctionEndDate).toLocaleDateString('da-DK')}</p>
-              {car.status === 'active' && (
-                <AuctionCountdown endDate={car.auctionEndDate} className="mt-1" />
-              )}
-            </div>
-            {car.bidIncrement && (
-              <div><p className="text-sm text-gray-600">Bid Increment</p><p className="font-semibold">{car.bidIncrement.toLocaleString('da-DK')} kr</p></div>
+            {car.isDraft && (
+              <Alert className="mt-4 border-amber-200 bg-amber-50 text-amber-800">
+                <AlertDescription>This listing is a draft and not visible to other users.</AlertDescription>
+              </Alert>
             )}
-          </div>
+          </CardContent>
+        </Card>
 
-          {(car.vin || car.inspectionReportUrl || car.serviceHistoryUrls?.length > 0) && (
-            <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-              <h2 className="text-lg font-bold mb-3">Vehicle Documentation</h2>
-              <div className="space-y-2 text-sm">
-                {car.vin && (
-                  <p><span className="text-gray-500 font-medium">VIN:</span> <span className="font-mono">{car.vin}</span></p>
-                )}
-                {car.inspectionReportUrl && (
-                  <p>
-                    <span className="text-gray-500 font-medium">Inspection Report: </span>
-                    <a href={car.inspectionReportUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Report</a>
-                  </p>
-                )}
-                {car.serviceHistoryUrls?.length > 0 && (
-                  <div>
-                    <span className="text-gray-500 font-medium">Service History: </span>
-                    {car.serviceHistoryUrls.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline mr-2">
-                        Document {i + 1}
-                      </a>
-                    ))}
-                  </div>
-                )}
+        {/* Specs */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Specifications</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Year',           value: String(car.year) },
+                { label: 'Kilometers',     value: `${car.km.toLocaleString()} km` },
+                { label: 'Power',          value: `${car.power} HP` },
+                { label: 'Condition',      value: car.condition },
+                { label: 'Fuel',           value: car.fuel },
+                { label: 'Starting Price', value: `${car.startingPrice.toLocaleString('da-DK')} kr` },
+                { label: 'Auction Ends',   value: new Date(car.auctionEndDate).toLocaleDateString('da-DK') },
+                ...(car.bidIncrement ? [{ label: 'Bid Increment', value: `${car.bidIncrement.toLocaleString('da-DK')} kr` }] : []),
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="font-semibold capitalize text-sm">{value}</p>
+                </div>
+              ))}
+            </div>
+            {car.status === 'active' && (
+              <div className="mt-4">
+                <AuctionCountdown endDate={car.auctionEndDate} />
               </div>
-            </div>
-          )}
+            )}
+          </CardContent>
+        </Card>
 
-          {car.description && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold mb-2">Description</h2>
-              <p className="text-gray-700 whitespace-pre-line">{car.description}</p>
-            </div>
-          )}
+        {/* Documentation */}
+        {(car.vin || car.inspectionReportUrl || car.serviceHistoryUrls?.length > 0) && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Vehicle Documentation</CardTitle></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {car.vin && (
+                <p><span className="text-muted-foreground font-medium">VIN:</span> <span className="font-mono">{car.vin}</span></p>
+              )}
+              {car.inspectionReportUrl && (
+                <p>
+                  <span className="text-muted-foreground font-medium">Inspection Report: </span>
+                  <a href={car.inspectionReportUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View Report</a>
+                </p>
+              )}
+              {car.serviceHistoryUrls?.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground font-medium">Service History: </span>
+                  {car.serviceHistoryUrls.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline mr-2">Document {i + 1}</a>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-          {car.specs && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold mb-2">Additional Notes</h2>
-              <p className="text-gray-700 whitespace-pre-line">{car.specs}</p>
-            </div>
-          )}
+        {/* Description */}
+        {car.description && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Description</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-line text-sm leading-relaxed">{car.description}</p>
+            </CardContent>
+          </Card>
+        )}
 
-          <div className="border-t pt-6">
+        {car.specs && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Additional Notes</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-line text-sm leading-relaxed">{car.specs}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Owner bid activity log */}
+        {isOwner && bidLog.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">Bid Activity</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bidder</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bidLog.map(bid => (
+                    <TableRow key={bid.id}>
+                      <TableCell className="text-sm">{bid.bidder.name || bid.bidder.email}</TableCell>
+                      <TableCell className="text-right font-semibold text-sm">{bid.amount.toLocaleString('da-DK')} kr</TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {new Date(bid.createdAt).toLocaleString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bidding + owner actions */}
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            {actionError && (
+              <Alert variant="destructive"><AlertDescription>{actionError}</AlertDescription></Alert>
+            )}
+
             <BiddingSection
               carId={car.id}
               currentPrice={car.currentPrice}
@@ -242,110 +321,116 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               bidIncrement={car.bidIncrement}
               onBidPlaced={fetchCar}
             />
+
             {isOwner && car.status === 'reserve_not_met' && car.bids.length > 0 && (
-              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
-                <p className="text-yellow-800 font-semibold mb-1">Reserve not met</p>
-                <p className="text-yellow-700 text-sm mb-3">
-                  The highest bid was <strong>{car.currentPrice.toLocaleString('da-DK')} kr</strong>. You can accept it and close the auction as sold.
-                </p>
-                <button
-                  onClick={handleAcceptHighestBid}
-                  disabled={accepting}
-                  className="px-4 py-2 bg-green-600 text-white font-semibold rounded hover:bg-green-700 transition-colors disabled:opacity-50"
-                >
-                  {accepting ? 'Processing...' : 'Accept Highest Bid'}
-                </button>
-              </div>
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertDescription>
+                  <p className="font-semibold text-amber-800 mb-1">Reserve not met</p>
+                  <p className="text-amber-700 text-sm mb-3">
+                    The highest bid was <strong>{car.currentPrice.toLocaleString('da-DK')} kr</strong>. You can accept it and close the auction as sold.
+                  </p>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => setConfirmAccept(true)}>
+                    <CheckCircle2 className="h-4 w-4 mr-1" /> Accept Highest Bid
+                  </Button>
+                </AlertDescription>
+              </Alert>
             )}
 
             {session && !isOwner && car.status === 'active' && (
-              <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-                <input
-                  type="checkbox"
-                  id="notifyClose"
-                  checked={notifyClose}
-                  onChange={(e) => handleNotifyToggle(e.target.checked)}
-                  className="rounded"
-                />
-                <label htmlFor="notifyClose">Email me when this auction is closing soon</label>
+              <div className="flex items-center gap-2">
+                <Checkbox id="notifyClose" checked={notifyClose} onCheckedChange={v => handleNotifyToggle(!!v)} />
+                <Label htmlFor="notifyClose" className="text-sm cursor-pointer">Email me when this auction is closing soon</Label>
               </div>
             )}
 
             <MessageSeller carId={car.id} ownerId={car.owner.id} ownerName={car.owner.name || 'Seller'} />
-          </div>
 
-          {isOwner && ['cancelled', 'reserve_not_met'].includes(car.status) && (
-            <div className="mt-4">
-              {showRelistForm ? (
-                <div className="p-4 border border-gray-200 rounded-lg space-y-3">
-                  <p className="text-sm font-medium text-gray-700">New auction end date:</p>
-                  <input
-                    type="datetime-local"
-                    value={relistDate}
-                    onChange={(e) => setRelistDate(e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded text-gray-900"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleRelist}
-                      disabled={relisting || !relistDate}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {relisting ? 'Relisting...' : 'Confirm Relist'}
-                    </button>
-                    <button onClick={() => setShowRelistForm(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300">
-                      Cancel
-                    </button>
+            <Separator />
+
+            {isOwner && ['cancelled', 'reserve_not_met'].includes(car.status) && (
+              <div>
+                {showRelistForm ? (
+                  <div className="space-y-3 p-4 border rounded-lg">
+                    <Label className="text-sm font-medium">New auction end date</Label>
+                    <Input
+                      type="datetime-local"
+                      value={relistDate}
+                      onChange={e => setRelistDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleRelist} disabled={relisting || !relistDate}>
+                        <CalendarClock className="h-4 w-4 mr-1" />
+                        {relisting ? 'Relisting…' : 'Confirm Relist'}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setShowRelistForm(false)}>Cancel</Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowRelistForm(true)}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700"
-                >
-                  Relist Auction
-                </button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowRelistForm(true)}>
+                    <CalendarClock className="h-4 w-4 mr-1" /> Relist Auction
+                  </Button>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={() => router.back()}>Back</Button>
+              {isOwner && car.bids.length === 0 && (
+                <Button variant="outline" onClick={() => router.push(`/${locale}/cars/${car.id}/edit`)}>
+                  <Pencil className="h-4 w-4 mr-1" /> Edit Listing
+                </Button>
+              )}
+              {isOwner && (
+                <Button variant="secondary" onClick={handleDuplicate} disabled={duplicating}>
+                  <Copy className="h-4 w-4 mr-1" />
+                  {duplicating ? 'Duplicating…' : 'Duplicate as Draft'}
+                </Button>
+              )}
+              {isOwner && car.status === 'active' && (
+                <Button variant="destructive" onClick={() => setConfirmCancel(true)} disabled={cancelling}>
+                  <XCircle className="h-4 w-4 mr-1" />
+                  {cancelling ? 'Cancelling…' : 'Cancel Auction'}
+                </Button>
               )}
             </div>
-          )}
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={() => router.back()}
-              className="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded hover:bg-gray-300 transition-colors"
-            >
-              Back
-            </button>
-            {isOwner && car.bids.length === 0 && (
-              <button
-                onClick={() => router.push(`/${locale}/cars/${car.id}/edit`)}
-                className="px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
-              >
-                Edit Listing
-              </button>
-            )}
-            {isOwner && (
-              <button
-                onClick={handleDuplicate}
-                disabled={duplicating}
-                className="px-6 py-2 bg-gray-600 text-white font-semibold rounded hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                {duplicating ? 'Duplicating...' : 'Duplicate as Draft'}
-              </button>
-            )}
-            {isOwner && car.status === 'active' && (
-              <button
-                onClick={handleCancelAuction}
-                disabled={cancelling}
-                className="px-6 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {cancelling ? 'Cancelling...' : 'Cancel Auction'}
-              </button>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Auction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this auction? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Keep Auction</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelAuction} disabled={cancelling} className="bg-destructive hover:bg-destructive/90">
+              {cancelling ? 'Cancelling…' : 'Yes, Cancel'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmAccept} onOpenChange={setConfirmAccept}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Accept Highest Bid</AlertDialogTitle>
+            <AlertDialogDescription>
+              Accept the highest bid of {car.currentPrice.toLocaleString('da-DK')} kr and close this auction as sold?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={accepting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAcceptHighestBid} disabled={accepting} className="bg-green-600 hover:bg-green-700">
+              {accepting ? 'Processing…' : 'Accept Bid'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   )
 }

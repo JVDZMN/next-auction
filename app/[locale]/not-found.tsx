@@ -2,24 +2,21 @@
 
 import Link from 'next/link'
 import { useLocale } from '@/lib/i18n/context'
+import { Card, CardContent } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
 
 export default function NotFound() {
   const locale = useLocale()
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-        <div className="text-6xl font-black text-blue-600 mb-4">404</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Page not found</h1>
-        <p className="text-gray-600 mb-6 text-sm">
-          The page you are looking for does not exist or has been moved.
-        </p>
-        <Link
-          href={`/${locale}`}
-          className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
-        >
-          Back to home
-        </Link>
-      </div>
+    <div className="min-h-screen bg-muted/40 flex flex-col items-center justify-center px-4">
+      <Card className="max-w-md w-full text-center">
+        <CardContent className="pt-8 pb-8 space-y-4">
+          <p className="text-7xl font-black text-primary">404</p>
+          <h1 className="text-2xl font-bold">Page not found</h1>
+          <p className="text-muted-foreground text-sm">The page you are looking for does not exist or has been moved.</p>
+          <Link href={`/${locale}`} className={buttonVariants()}>Back to home</Link>
+        </CardContent>
+      </Card>
     </div>
   )
 }

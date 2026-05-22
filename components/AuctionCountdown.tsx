@@ -1,13 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 interface TimeLeft {
-  days: number
-  hours: number
-  minutes: number
-  seconds: number
-  total: number
+  days: number; hours: number; minutes: number; seconds: number; total: number
 }
 
 function compute(endDate: string | Date): TimeLeft {
@@ -25,28 +23,19 @@ function compute(endDate: string | Date): TimeLeft {
 type Urgency = 'normal' | 'warning' | 'critical'
 
 function urgency(ms: number): Urgency {
-  if (ms <= 0)             return 'normal'
-  if (ms <  5 * 60_000)   return 'critical'
-  if (ms < 60 * 60_000)   return 'warning'
+  if (ms <= 0)            return 'normal'
+  if (ms <  5 * 60_000)  return 'critical'
+  if (ms < 60 * 60_000)  return 'warning'
   return 'normal'
-}
-
-// Stone-based palette keeps the Nordic neutral baseline;
-// amber and red only appear when time actually matters.
-const styles: Record<Urgency, string> = {
-  normal:   'text-stone-500  bg-stone-50   border-stone-100',
-  warning:  'text-amber-700  bg-amber-50   border-amber-100',
-  critical: 'text-red-700    bg-red-50     border-red-100',
 }
 
 interface Props {
   endDate: string | Date
-  /** Show seconds when under 1 hour. Default true. */
   showSeconds?: boolean
   className?: string
 }
 
-export function AuctionCountdown({ endDate, showSeconds = true, className = '' }: Props) {
+export function AuctionCountdown({ endDate, showSeconds = true, className }: Props) {
   const [left, setLeft] = useState<TimeLeft>(() => compute(endDate))
 
   useEffect(() => {
@@ -58,30 +47,35 @@ export function AuctionCountdown({ endDate, showSeconds = true, className = '' }
 
   const u = urgency(left.total)
 
-  if (left.total <= 0) {
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium text-stone-400 bg-stone-50 border-stone-100 ${className}`}>
-        <ClockIcon />
-        Afsluttet
-      </span>
-    )
-  }
-
   const underHour = left.days === 0 && left.hours === 0
-
   const parts: string[] = []
-  if (left.days > 0)  parts.push(`${left.days}d`)
+  if (left.days > 0) parts.push(`${left.days}d`)
   if (left.hours > 0 || left.days > 0) parts.push(`${left.hours}t`)
   parts.push(`${left.minutes}m`)
   if (showSeconds && underHour) parts.push(`${String(left.seconds).padStart(2, '0')}s`)
 
+  if (left.total <= 0) {
+    return (
+      <Badge variant="outline" className={cn('text-muted-foreground', className)}>
+        <ClockIcon /> Afsluttet
+      </Badge>
+    )
+  }
+
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-semibold tabular-nums transition-colors duration-700 ${styles[u]} ${className}`}
+    <Badge
+      variant="outline"
+      className={cn(
+        'tabular-nums transition-colors duration-700 gap-1',
+        u === 'critical' && 'border-red-200 bg-red-50 text-red-700',
+        u === 'warning'  && 'border-amber-200 bg-amber-50 text-amber-700',
+        u === 'normal'   && 'border-stone-200 bg-stone-50 text-stone-500',
+        className,
+      )}
     >
       <ClockIcon />
       {parts.join(' ')}
-    </span>
+    </Badge>
   )
 }
 

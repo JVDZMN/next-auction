@@ -178,7 +178,10 @@
       "title": "Bid History",
       "loading": "Loading bids...",
       "empty": "No bids yet. Be the first to bid!",
-      "leading": "Leading Bid"
+      "leading": "Leading Bid",
+      "bidder": "Bidder",
+      "amount": "Amount",
+      "time": "Time"
     }
   },
   "vehicle": {

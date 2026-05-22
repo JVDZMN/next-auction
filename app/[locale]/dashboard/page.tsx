@@ -1,282 +1,679 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { Fragment, useEffect, useState, useCallback, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useSession } from "next-auth/react"
+import Link from "next/link"
 import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout"
 import { useLocale } from "@/lib/i18n/context"
+import { useNotifications } from "@/lib/notification-context"
+import { useUserChatSocket } from "@/lib/useUserChatSocket"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Plus, Trash2, Send, ArrowLeft, MessageSquare,
+  ChevronDown, ChevronRight, ExternalLink,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface SavedSearch {
-  id: string
-  label: string | null
-  brand: string | null
-  maxPrice: number | null
-  minYear: number | null
-  fuel: string | null
-  notifyNewListing: boolean
-  createdAt: string
+  id: string; label: string | null; brand: string | null; maxPrice: number | null
+  minYear: number | null; fuel: string | null; notifyNewListing: boolean; createdAt: string
 }
-
 interface UserCar {
-  id: string
-  brand: string
-  model: string
-  year: number
-  status: string
-  isDraft: boolean
-  currentPrice: number
-  startingPrice: number
-  auctionEndDate: string
-  views: number
-  _count: { bids: number }
+  id: string; brand: string; model: string; year: number; status: string
+  isDraft: boolean; currentPrice: number; startingPrice: number
+  auctionEndDate: string; views: number; _count: { bids: number }
 }
-
+interface BidEntry {
+  id: string; amount: number; createdAt: string
+  bidder: { id: string; name: string | null; email: string }
+}
 interface User {
-  id: string
-  name: string | null
-  email: string
-  image?: string | null
-  role: string
-  createdAt: string
+  id: string; name: string | null; email: string; image?: string | null
+  role: string; createdAt: string
   cars: UserCar[]
   bids: Array<{
-    id: string
-    car: {
-      id: string
-      brand: string
-      model: string
-      year: number
-      status: string
-      currentPrice: number
-      auctionEndDate: string
-    }
-    amount: number
-    createdAt: string
+    id: string; amount: number; createdAt: string
+    car: { id: string; brand: string; model: string; year: number; status: string; currentPrice: number; auctionEndDate: string }
   }>
   savedSearches: SavedSearch[]
 }
+interface ChatUser { id: string; name: string; image: string | null }
+interface ChatMessage { senderId: string; content: string; carId?: string }
 
-export default function UserDashboardPage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [newSearch, setNewSearch] = useState({ label: '', brand: '', maxPrice: '', minYear: '', fuel: '' })
+// ─── Status colour map ────────────────────────────────────────────────────────
+
+const statusVariant: Record<string, string> = {
+  active:           'bg-green-100 text-green-800 border-green-200',
+  completed:        'bg-blue-100 text-blue-800 border-blue-200',
+  reserve_not_met:  'bg-amber-100 text-amber-800 border-amber-200',
+  cancelled:        'bg-red-100 text-red-800 border-red-200',
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleString('da-DK', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  })
+}
+
+// ─── Inline bid audit log ─────────────────────────────────────────────────────
+
+function BidAuditPanel({
+  car, bids, loading, locale,
+}: {
+  car: UserCar
+  bids: BidEntry[] | undefined
+  loading: boolean
+  locale: string
+}) {
+  return (
+    <div className="p-4 border-t bg-muted/20 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">
+          Bid History — {car.year} {car.brand} {car.model}
+        </p>
+        <Link
+          href={`/${locale}/cars/${car.id}`}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          onClick={e => e.stopPropagation()}
+        >
+          <ExternalLink className="h-3 w-3" /> View public listing
+        </Link>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+        </div>
+      ) : !bids || bids.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-2">No bids placed yet.</p>
+      ) : (
+        <div className="rounded-md border overflow-hidden bg-background">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Bidder</TableHead>
+                <TableHead className="text-xs text-right">Amount</TableHead>
+                <TableHead className="text-xs text-right">Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bids.map((bid, i) => (
+                <TableRow key={bid.id} className={i === 0 ? 'font-medium' : ''}>
+                  <TableCell className="py-2 text-sm">
+                    <Link
+                      href={`/${locale}/dashboard/users/${bid.bidder.id}`}
+                      className="text-primary hover:underline underline-offset-2"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {bid.bidder.name || 'Anonymous'}
+                    </Link>
+                    {i === 0 && (
+                      <span className="ml-2 text-[10px] font-semibold text-green-700 bg-green-100 border border-green-200 rounded-full px-1.5 py-0.5">
+                        Leading
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2 text-sm text-right font-mono">
+                    {bid.amount.toLocaleString('da-DK')} kr
+                  </TableCell>
+                  <TableCell className="py-2 text-xs text-right text-muted-foreground">
+                    {fmtDate(bid.createdAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+function DashboardContent() {
+  const { data: session } = useSession()
+  const router       = useRouter()
+  const locale       = useLocale()
+  const searchParams = useSearchParams()
+  const {
+    unreadMessages, carsWithNewBids, outbidCarIds,
+    markMessagesRead, markCarBidsRead, markOutbidRead,
+  } = useNotifications()
+
+  const [activeTab, setActiveTab] = useState(searchParams?.get('tab') ?? 'listings')
+
+  function switchTab(tab: string) {
+    setActiveTab(tab)
+    router.replace(`/${locale}/dashboard?tab=${tab}`, { scroll: false })
+  }
+
+  // ── User data ──────────────────────────────────────────────────────────────
+  const [user,         setUser]         = useState<User | null>(null)
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState<string | null>(null)
+  const [newSearch,    setNewSearch]    = useState({ label: '', brand: '', maxPrice: '', minYear: '', fuel: '' })
   const [addingSearch, setAddingSearch] = useState(false)
-  const [showSearchForm, setShowSearchForm] = useState(false)
-  const router = useRouter()
-  const locale = useLocale()
+  const [showForm,     setShowForm]     = useState(false)
 
-  useEffect(() => { fetchUser() }, [])
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const res = await fetch("/api/user/dashboard")
       if (!res.ok) throw new Error("Failed to fetch user data")
-      const data = await res.json()
-      setUser(data.user)
+      setUser((await res.json()).user)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => { fetchUser() }, [fetchUser])
+
+  // ── Auction bid-log expansion (My Auctions tab) ────────────────────────────
+  const [expandedCarId,  setExpandedCarId]  = useState<string | null>(null)
+  const [bidsByCarId,    setBidsByCarId]    = useState<Record<string, BidEntry[]>>({})
+  const [bidLogLoading,  setBidLogLoading]  = useState(false)
+
+  function toggleExpand(carId: string) {
+    if (expandedCarId === carId) {
+      setExpandedCarId(null)
+      return
+    }
+    setExpandedCarId(carId)
+    // Clear the "New bids" badge as soon as the owner opens the log
+    if (carsWithNewBids.includes(carId)) markCarBidsRead(carId)
   }
 
-  const handleAddSearch = async () => {
-    setAddingSearch(true)
-    try {
-      const res = await fetch('/api/saved-searches', {
+  useEffect(() => {
+    if (!expandedCarId || bidsByCarId[expandedCarId] !== undefined) return
+    setBidLogLoading(true)
+    fetch(`/api/bids?carId=${expandedCarId}`)
+      .then(r => r.json())
+      .then(d => setBidsByCarId(prev => ({ ...prev, [expandedCarId]: d.bids ?? [] })))
+      .catch(() => setBidsByCarId(prev => ({ ...prev, [expandedCarId]: [] })))
+      .finally(() => setBidLogLoading(false))
+  }, [expandedCarId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Messages tab ──────────────────────────────────────────────────────────
+  const [msgUsers,        setMsgUsers]        = useState<ChatUser[]>([])
+  const [activeChatUser,  setActiveChatUser]  = useState<ChatUser | null>(null)
+  const [chatMessages,    setChatMessages]    = useState<ChatMessage[]>([])
+  const [chatInput,       setChatInput]       = useState('')
+  const [activeChatCarId, setActiveChatCarId] = useState<string | null>(null)
+  const [messagesLoaded,  setMessagesLoaded]  = useState(false)
+
+  useEffect(() => {
+    if (activeTab !== 'messages') return
+    markMessagesRead()
+    if (messagesLoaded) return
+    fetch('/api/messages/notifications')
+      .then(r => r.json())
+      .then(d => { setMsgUsers(d.users ?? []); setMessagesLoaded(true) })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, messagesLoaded])
+
+  useEffect(() => {
+    if (!activeChatUser) return
+    fetch(`/api/messages?peerId=${activeChatUser.id}`)
+      .then(r => r.json())
+      .then(data => {
+        setChatMessages((data.messages ?? []).map((m: { senderId: string; content: string; carId: string }) => ({
+          senderId: m.senderId, content: m.content ?? '', carId: m.carId,
+        })))
+        setActiveChatCarId((data.messages as { carId?: string }[])?.[0]?.carId ?? null)
+      })
+      .catch(() => { setChatMessages([]); setActiveChatCarId(null) })
+  }, [activeChatUser])
+
+  const handleIncoming = useCallback((msg: ChatMessage) => {
+    setChatMessages(prev => [...prev, msg])
+  }, [])
+  const chatSocket = useUserChatSocket(session?.user?.id ?? '', activeChatUser?.id ?? '', handleIncoming)
+
+  async function sendMessage() {
+    if (!chatInput.trim() || !session?.user || !activeChatUser) return
+    const content = chatInput.trim()
+    setChatInput('')
+    setChatMessages(prev => [...prev, { senderId: session.user.id, content }])
+    if (activeChatCarId) {
+      await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          label: newSearch.label || undefined,
-          brand: newSearch.brand || undefined,
-          maxPrice: newSearch.maxPrice ? parseFloat(newSearch.maxPrice) : undefined,
-          minYear: newSearch.minYear ? parseInt(newSearch.minYear) : undefined,
-          fuel: newSearch.fuel || undefined,
-          notifyNewListing: true,
-        }),
-      })
-      if (!res.ok) throw new Error()
-      setNewSearch({ label: '', brand: '', maxPrice: '', minYear: '', fuel: '' })
-      setShowSearchForm(false)
-      await fetchUser()
-    } catch {
-      alert('Failed to save search.')
-    } finally {
-      setAddingSearch(false)
+        body: JSON.stringify({ carId: activeChatCarId, receiverId: activeChatUser.id, content }),
+      }).catch(() => {})
+    } else if (chatSocket) {
+      chatSocket.emit('sendMessage', { senderId: session.user.id, receiverId: activeChatUser.id, content })
     }
   }
 
-  const handleDeleteSearch = async (id: string) => {
-    await fetch(`/api/saved-searches/${id}`, { method: 'DELETE' })
-    await fetchUser()
+  // ── Saved searches ────────────────────────────────────────────────────────
+  const handleAddSearch = async () => {
+    setAddingSearch(true)
+    try {
+      await fetch('/api/saved-searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: newSearch.label || undefined, brand: newSearch.brand || undefined,
+          maxPrice: newSearch.maxPrice ? parseFloat(newSearch.maxPrice) : undefined,
+          minYear: newSearch.minYear ? parseInt(newSearch.minYear) : undefined,
+          fuel: newSearch.fuel || undefined, notifyNewListing: true,
+        }),
+      })
+      setNewSearch({ label: '', brand: '', maxPrice: '', minYear: '', fuel: '' })
+      setShowForm(false)
+      await fetchUser()
+    } catch { /* ignore */ }
+    finally { setAddingSearch(false) }
   }
 
-  if (loading) return <LoadingPage maxWidth="max-w-4xl" />
-  if (error || !user) return <ErrorPage message={error || "Failed to load user data"} maxWidth="max-w-4xl" />
+  if (loading) return <LoadingPage maxWidth="max-w-5xl" />
+  if (error || !user) return <ErrorPage message={error || "Failed to load"} maxWidth="max-w-5xl" />
 
-  const activeCars = user.cars.filter(c => c.status === 'active' && !c.isDraft)
-  const totalViews = user.cars.reduce((s, c) => s + c.views, 0)
+  const activeCars        = user.cars.filter(c => c.status === 'active' && !c.isDraft)
+  const totalViews        = user.cars.reduce((s, c) => s + c.views, 0)
   const totalBidsReceived = user.cars.reduce((s, c) => s + c._count.bids, 0)
-  const soldCars = user.cars.filter(c => c.status === 'completed')
+  const soldCars          = user.cars.filter(c => c.status === 'completed')
+  const initials          = (user.name ?? user.email).slice(0, 2).toUpperCase()
 
   return (
-    <PageLayout maxWidth="max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">My Dashboard</h1>
-
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <div className="flex items-center gap-6">
-          {user.image && (
-            <img src={user.image} alt={user.name || user.email} className="w-20 h-20 rounded-full object-cover border" />
-          )}
-          <div>
-            <h2 className="text-2xl font-semibold">{user.name || user.email}</h2>
-            <p className="text-gray-600">{user.email}</p>
-            <div className="flex gap-4 mt-2 text-sm">
-              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Role: {user.role}</span>
-              <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded">Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
+    <PageLayout maxWidth="max-w-5xl">
+      {/* ── Profile card ── */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={user.image ?? undefined} />
+              <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h2 className="text-xl font-semibold">{user.name || user.email}</h2>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <div className="flex gap-2 mt-1.5">
+                <Badge variant="secondary">{user.role}</Badge>
+                <Badge variant="outline">Joined {new Date(user.createdAt).toLocaleDateString()}</Badge>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
+      {/* ── Stats ── */}
       {user.cars.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-xl font-bold mb-3">Seller Analytics</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Active Listings', value: activeCars.length },
-              { label: 'Total Views', value: totalViews.toLocaleString() },
-              { label: 'Total Bids Received', value: totalBidsReceived.toLocaleString() },
-              { label: 'Cars Sold', value: soldCars.length },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded shadow p-4 text-center">
-                <p className="text-2xl font-bold text-blue-600">{value}</p>
-                <p className="text-sm text-gray-500 mt-1">{label}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {[
+            { label: 'Active Auctions', value: activeCars.length },
+            { label: 'Total Views',     value: totalViews },
+            { label: 'Bids Received',   value: totalBidsReceived },
+            { label: 'Cars Sold',       value: soldCars.length },
+          ].map(({ label, value }) => (
+            <Card key={label}>
+              <CardContent className="pt-4 pb-3 text-center">
+                <p className="text-2xl font-bold text-primary">{value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-xl font-bold">My Listings</h3>
-          <button onClick={() => router.push(`/${locale}/cars/create`)} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-            + New Listing
-          </button>
-        </div>
-        {user.cars.length === 0 ? (
-          <p className="text-gray-500">You have not listed any cars for auction yet.</p>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {user.cars.map((car) => (
-              <div key={car.id} className="bg-white rounded shadow p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="font-semibold">{car.year} {car.brand} {car.model}</p>
-                    <div className="flex gap-1 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                        car.status === 'active' ? 'bg-green-100 text-green-800' :
-                        car.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                        car.status === 'reserve_not_met' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>{car.status}</span>
-                      {car.isDraft && <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-700">draft</span>}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-green-600 font-bold">{car.currentPrice.toLocaleString('da-DK')} kr</p>
-                    <p className="text-xs text-gray-400">{car.views} views · {car._count.bids} bids</p>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mb-2">Ends: {new Date(car.auctionEndDate).toLocaleString()}</p>
-                <button onClick={() => router.push(`/${locale}/cars/${car.id}`)} className="text-blue-600 hover:underline text-sm">
-                  View Auction →
-                </button>
-              </div>
-            ))}
+      <Tabs value={activeTab} onValueChange={switchTab}>
+        <TabsList className="mb-4 flex-wrap h-auto gap-1">
+
+          {/* My Auctions — pulsing amber badge if any car received new bids */}
+          <TabsTrigger value="listings" className="gap-1.5">
+            My Auctions
+            <Badge variant="secondary" className="ml-1">{user.cars.length}</Badge>
+            {carsWithNewBids.length > 0 && (
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white tabular-nums animate-pulse">
+                {carsWithNewBids.length}
+              </span>
+            )}
+          </TabsTrigger>
+
+          {/* My Bids — pulsing red badge when outbid on any car */}
+          <TabsTrigger value="bids" className="gap-1.5">
+            My Bids
+            <Badge variant="secondary" className="ml-1">{user.bids.length}</Badge>
+            {outbidCarIds.length > 0 && (
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums animate-pulse">
+                {outbidCarIds.length}
+              </span>
+            )}
+          </TabsTrigger>
+
+          <TabsTrigger value="searches">
+            Saved Searches <Badge variant="secondary" className="ml-1.5">{user.savedSearches.length}</Badge>
+          </TabsTrigger>
+
+          <TabsTrigger value="messages" className="gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" /> Messages
+            {unreadMessages > 0 && (
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums">
+                {unreadMessages > 99 ? '99+' : unreadMessages}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ─── My Auctions ────────────────────────────────────────────────── */}
+        <TabsContent value="listings">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-semibold">My Auctions</h3>
+            <Button size="sm" onClick={() => router.push(`/${locale}/cars/create`)}>
+              <Plus className="h-4 w-4 mr-1" /> New Listing
+            </Button>
           </div>
-        )}
-      </div>
+          {user.cars.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No listings yet.</p>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Car</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Activity</TableHead>
+                    <TableHead className="w-8" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {user.cars.map(car => {
+                    const hasNewBids = carsWithNewBids.includes(car.id)
+                    const isExpanded = expandedCarId === car.id
+                    return (
+                      <Fragment key={car.id}>
+                        <TableRow
+                          className="cursor-pointer hover:bg-muted/50 select-none"
+                          onClick={() => toggleExpand(car.id)}
+                        >
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {car.year} {car.brand} {car.model}
+                              {hasNewBids && (
+                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-300 animate-pulse">
+                                  New bids
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 flex-wrap">
+                              <Badge variant="outline" className={statusVariant[car.status] ?? ''}>{car.status}</Badge>
+                              {car.isDraft && <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">draft</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">{car.currentPrice.toLocaleString('da-DK')} kr</TableCell>
+                          <TableCell className="text-right text-xs text-muted-foreground">{car.views} views · {car._count.bids} bids</TableCell>
+                          <TableCell className="text-right pr-3">
+                            {isExpanded
+                              ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                          </TableCell>
+                        </TableRow>
 
-      <div className="mb-8">
-        <h3 className="text-xl font-bold mb-3">My Bids</h3>
-        {user.bids.length === 0 ? (
-          <p className="text-gray-500">You have not placed any bids yet.</p>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {user.bids.map((bid) => (
-              <div key={bid.id} className="bg-white rounded shadow p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <p className="font-semibold">{bid.car.year} {bid.car.brand} {bid.car.model}</p>
-                    <p className="text-xs text-gray-500">Status: {bid.car.status}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-green-600 font-bold">Bid: {bid.amount.toLocaleString('da-DK')} kr</p>
-                    <p className="text-xs text-gray-500">Current: {bid.car.currentPrice.toLocaleString('da-DK')} kr</p>
-                  </div>
-                </div>
-                <button onClick={() => router.push(`/${locale}/cars/${bid.car.id}`)} className="text-blue-600 hover:underline text-sm">
-                  View Auction →
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-xl font-bold">Saved Searches</h3>
-          <button onClick={() => setShowSearchForm(v => !v)} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
-            + Add Search
-          </button>
-        </div>
-
-        {showSearchForm && (
-          <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <input placeholder="Label (optional)" value={newSearch.label} onChange={e => setNewSearch(s => ({ ...s, label: e.target.value }))}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
-              <input placeholder="Brand (e.g. BMW)" value={newSearch.brand} onChange={e => setNewSearch(s => ({ ...s, brand: e.target.value }))}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
-              <input placeholder="Max price" type="number" value={newSearch.maxPrice} onChange={e => setNewSearch(s => ({ ...s, maxPrice: e.target.value }))}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
-              <input placeholder="Min year" type="number" value={newSearch.minYear} onChange={e => setNewSearch(s => ({ ...s, minYear: e.target.value }))}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
-              <input placeholder="Fuel type" value={newSearch.fuel} onChange={e => setNewSearch(s => ({ ...s, fuel: e.target.value }))}
-                className="px-3 py-2 text-sm border border-gray-300 rounded text-gray-900" />
+                        {/* ── Inline bid audit log ── */}
+                        {isExpanded && (
+                          <TableRow>
+                            <TableCell colSpan={5} className="p-0">
+                              <BidAuditPanel
+                                car={car}
+                                bids={bidsByCarId[car.id]}
+                                loading={bidLogLoading && !bidsByCarId[car.id]}
+                                locale={locale}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleAddSearch} disabled={addingSearch} className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 disabled:opacity-50">
-                {addingSearch ? 'Saving...' : 'Save Search'}
-              </button>
-              <button onClick={() => setShowSearchForm(false)} className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300">
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </TabsContent>
 
-        {user.savedSearches.length === 0 ? (
-          <p className="text-gray-500">No saved searches yet. Add one to get email alerts for new matching listings.</p>
-        ) : (
-          <div className="space-y-2">
-            {user.savedSearches.map((s) => (
-              <div key={s.id} className="bg-white rounded shadow p-3 flex justify-between items-center">
-                <div>
-                  <p className="font-medium text-sm">{s.label || 'Unnamed search'}</p>
-                  <p className="text-xs text-gray-500">
-                    {[s.brand, s.maxPrice && `max ${s.maxPrice.toLocaleString('da-DK')} kr`, s.minYear && `from ${s.minYear}`, s.fuel].filter(Boolean).join(' · ') || 'Any car'}
-                  </p>
-                </div>
-                <button onClick={() => handleDeleteSearch(s.id)} className="text-red-500 hover:text-red-700 text-sm">Remove</button>
-              </div>
-            ))}
+        {/* ─── My Bids ─────────────────────────────────────────────────────── */}
+        <TabsContent value="bids">
+          {user.bids.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No bids placed yet.</p>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Car</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Your Bid</TableHead>
+                    <TableHead className="text-right">Current</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {user.bids.map(bid => {
+                    const isOutbid = outbidCarIds.includes(bid.car.id)
+                    return (
+                      <TableRow
+                        key={bid.id}
+                        className={cn(
+                          "cursor-pointer hover:bg-muted/50",
+                          isOutbid && "bg-red-50 hover:bg-red-100/60"
+                        )}
+                        onClick={() => {
+                          if (isOutbid) markOutbidRead(bid.car.id)
+                          router.push(`/${locale}/cars/${bid.car.id}`)
+                        }}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {bid.car.year} {bid.car.brand} {bid.car.model}
+                            {isOutbid && (
+                              <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 border border-red-300 animate-pulse">
+                                Outbid — click to re-bid
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={statusVariant[bid.car.status] ?? ''}>
+                            {bid.car.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className={cn("text-right font-semibold", isOutbid ? "text-red-600 line-through" : "text-primary")}>
+                          {bid.amount.toLocaleString('da-DK')} kr
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">
+                          {bid.car.currentPrice.toLocaleString('da-DK')} kr
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ─── Saved searches ──────────────────────────────────────────────── */}
+        <TabsContent value="searches" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold">Saved Searches</h3>
+            <Button size="sm" variant="outline" onClick={() => setShowForm(v => !v)}>
+              <Plus className="h-4 w-4 mr-1" /> Add Search
+            </Button>
           </div>
-        )}
-      </div>
+          {showForm && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">New Saved Search</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { key: 'label',    placeholder: 'Label (optional)', type: 'text' },
+                    { key: 'brand',    placeholder: 'Brand (e.g. BMW)', type: 'text' },
+                    { key: 'maxPrice', placeholder: 'Max price',        type: 'number' },
+                    { key: 'minYear',  placeholder: 'Min year',         type: 'number' },
+                    { key: 'fuel',     placeholder: 'Fuel type',        type: 'text' },
+                  ].map(({ key, placeholder, type }) => (
+                    <Input key={key} type={type} placeholder={placeholder}
+                      value={newSearch[key as keyof typeof newSearch]}
+                      onChange={e => setNewSearch(s => ({ ...s, [key]: e.target.value }))} />
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleAddSearch} disabled={addingSearch}>
+                    {addingSearch ? 'Saving…' : 'Save Search'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {user.savedSearches.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No saved searches yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {user.savedSearches.map(s => (
+                <div key={s.id} className="flex justify-between items-center rounded-lg border p-3">
+                  <div>
+                    <p className="font-medium text-sm">{s.label || 'Unnamed search'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[
+                        s.brand,
+                        s.maxPrice && `max ${s.maxPrice.toLocaleString('da-DK')} kr`,
+                        s.minYear && `from ${s.minYear}`,
+                        s.fuel,
+                      ].filter(Boolean).join(' · ') || 'Any car'}
+                    </p>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive"
+                    onClick={async () => { await fetch(`/api/saved-searches/${s.id}`, { method: 'DELETE' }); fetchUser() }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ─── Messages ────────────────────────────────────────────────────── */}
+        <TabsContent value="messages">
+          <div className="rounded-lg border overflow-hidden min-h-120 grid md:grid-cols-[260px_1fr]">
+            <div className="border-b md:border-b-0 md:border-r">
+              <div className="px-4 py-3 border-b">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Conversations</p>
+              </div>
+              {msgUsers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground">
+                  <MessageSquare className="h-8 w-8 opacity-30" />
+                  <p className="text-sm">No messages yet</p>
+                </div>
+              ) : (
+                <ul>
+                  {msgUsers.map(u => (
+                    <li key={u.id}>
+                      <button
+                        onClick={() => setActiveChatUser(u)}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors",
+                          activeChatUser?.id === u.id && "bg-muted"
+                        )}
+                      >
+                        <Avatar className="h-8 w-8 shrink-0">
+                          <AvatarImage src={u.image ?? undefined} />
+                          <AvatarFallback className="text-xs">{u.name?.slice(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium truncate">{u.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {activeChatUser ? (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3 px-4 py-3 border-b">
+                  <button onClick={() => setActiveChatUser(null)} className="md:hidden text-muted-foreground hover:text-foreground">
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={activeChatUser.image ?? undefined} />
+                    <AvatarFallback className="text-xs">{activeChatUser.name?.slice(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-semibold text-sm">{activeChatUser.name}</span>
+                </div>
+
+                <ScrollArea className="flex-1 p-4 min-h-0 h-80">
+                  {chatMessages.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">Start the conversation.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {chatMessages.map((msg, i) => {
+                        const isMine = msg.senderId === session?.user?.id
+                        return (
+                          <li key={i} className={cn('flex', isMine ? 'justify-end' : 'justify-start')}>
+                            <span className={cn(
+                              'max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-snug',
+                              isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+                            )}>
+                              {msg.content}
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </ScrollArea>
+
+                <Separator />
+                <form
+                  onSubmit={e => { e.preventDefault(); void sendMessage() }}
+                  className="flex items-center gap-2 p-3"
+                >
+                  <Input
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    placeholder="Type a message…"
+                    className="flex-1 h-8 text-sm"
+                    maxLength={2001}
+                  />
+                  <Button type="submit" size="icon" className="h-8 w-8 shrink-0" disabled={!chatInput.trim()}>
+                    <Send className="h-3.5 w-3.5" />
+                  </Button>
+                </form>
+              </div>
+            ) : (
+              <div className="hidden md:flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                <MessageSquare className="h-10 w-10 opacity-20" />
+                <p className="text-sm">Select a conversation</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </PageLayout>
+  )
+}
+
+export default function UserDashboardPage() {
+  return (
+    <Suspense fallback={<LoadingPage maxWidth="max-w-5xl" />}>
+      <DashboardContent />
+    </Suspense>
   )
 }

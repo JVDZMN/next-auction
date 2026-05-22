@@ -1,6 +1,4 @@
 // Server component — fetches its own data and reads dict directly.
-// No 'use client' needed; useDict() is for client components only.
-
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
@@ -8,6 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { getDictionary, toLocale } from '@/lib/i18n'
 import { Header } from '@/components/Header'
 import { CarCard } from '@/components/CarCard'
+import { Badge } from '@/components/ui/badge'
 
 async function getActiveCars(userId: string) {
   const cars = await prisma.car.findMany({
@@ -74,7 +73,7 @@ export default async function HomePage({
           <h2 className="text-2xl font-bold text-stone-900">
             {t.activeAuctions}
             {cars.length > 0 && (
-              <span className="ml-2 text-stone-400 font-normal text-xl">({cars.length})</span>
+              <Badge variant="secondary" className="ml-2 font-normal text-base">{cars.length}</Badge>
             )}
           </h2>
           <Link href={`/${locale}/cars`} className="text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors">
@@ -142,8 +141,6 @@ export default async function HomePage({
     </div>
   )
 }
-
-// ── Inline icon components — no external dep ────────────────────────────────
 
 function BoltIcon({ className }: { className?: string }) {
   return (

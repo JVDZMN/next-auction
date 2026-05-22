@@ -4,6 +4,10 @@ import Link from 'next/link'
 import { useLocale } from '@/lib/i18n/context'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
 
 const errors: Record<string, string> = {
   missing: 'The verification request was incomplete.',
@@ -20,27 +24,30 @@ function MitIdContent() {
     : (errors[searchParams?.get('reason') ?? ''] ?? 'Something went wrong. Please try again.')
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white rounded-xl shadow-md p-8 max-w-md w-full text-center">
-        <div className="text-5xl mb-4">{success ? '🇩🇰' : '❌'}</div>
-        <h1 className={`text-2xl font-bold mb-2 ${success ? 'text-green-700' : 'text-red-700'}`}>
-          {success ? 'MitID Verified' : 'Verification Failed'}
-        </h1>
-        <p className="text-gray-600 mb-6">{message}</p>
-        <Link
-          href={`/${locale}`}
-          className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-        >
-          Go to Home
-        </Link>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
+      <Card className="w-full max-w-md text-center">
+        <CardHeader>
+          <div className="flex justify-center mb-2">
+            {success
+              ? <CheckCircle2 className="h-12 w-12 text-green-600" />
+              : <XCircle className="h-12 w-12 text-destructive" />}
+          </div>
+          <CardTitle className={success ? 'text-green-700' : 'text-destructive'}>
+            {success ? 'MitID Verified' : 'Verification Failed'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground text-sm">{message}</p>
+          <Link href={`/${locale}`} className={buttonVariants()}>Go to Home</Link>
+        </CardContent>
+      </Card>
     </div>
   )
 }
 
 export default function MitIdVerifiedPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner className="h-6 w-6" /></div>}>
       <MitIdContent />
     </Suspense>
   )

@@ -71,3 +71,19 @@ export async function GET(
     return serverError('Failed to fetch car details', error)
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params
+    const session = await requireAdmin()
+    if (!session) return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+
+    await prisma.car.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return serverError('Failed to delete car', error)
+  }
+}

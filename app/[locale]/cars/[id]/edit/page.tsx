@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Header } from '@/components/Header'
+import { LoadingPage, PageLayout } from '@/components/PageLayout'
 import { CarImageUpload } from '@/components/CarImageUpload'
 import { getAllBrands, getModelsByBrand, getSubModelsByBrandModel } from '@/lib/car-brands'
 import { CarAddressSection } from '@/components/car-create/CarAddressSection'
@@ -12,6 +12,12 @@ import { CarAuctionSection } from '@/components/car-create/CarAuctionSection'
 import { CarDocsSection } from '@/components/car-create/CarDocsSection'
 import { useLocale } from '@/lib/i18n/context'
 import type { Car } from '@/types/car'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 
 function toDateInput(iso: string | null | undefined): string {
   if (!iso) return ''
@@ -143,10 +149,7 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
           isDraft,
         }),
       })
-      if (response.status === 409) {
-        setError('This listing has received bids and can no longer be edited.')
-        return
-      }
+      if (response.status === 409) { setError('This listing has received bids and can no longer be edited.'); return }
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.error || 'Failed to update listing')
@@ -159,64 +162,33 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-3xl mx-auto px-4 py-6">
-          <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-48 mb-4" />
-            <div className="space-y-3">
-              {[...Array(6)].map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded" />)}
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
+  if (loading) return <LoadingPage maxWidth="max-w-3xl" />
 
-  if (!car) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-3xl mx-auto px-4 py-6">
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <p className="text-red-600">{error ?? 'Car not found'}</p>
-            <button onClick={() => router.back()} className="mt-4 px-4 py-2 bg-gray-200 rounded">Go back</button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  const hasBids = car.bids.length > 0
+  const hasBids = car && car.bids.length > 0
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="max-w-3xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold mb-4">Edit Listing</h1>
-
-          {hasBids && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-300 rounded-lg">
-              <p className="font-semibold text-amber-800">This listing has received bids and can no longer be edited.</p>
-              <p className="text-sm text-amber-700 mt-1">
-                To make changes, cancel the auction and create a new listing.
-              </p>
-              <button
-                onClick={() => router.push(`/${locale}/cars/${id}`)}
-                className="mt-3 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded hover:bg-amber-700 transition-colors"
-              >
-                Back to listing
-              </button>
-            </div>
-          )}
-
-          {!hasBids && (
+    <PageLayout maxWidth="max-w-3xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Listing</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {hasBids ? (
+            <Alert className="border-amber-200 bg-amber-50">
+              <AlertDescription>
+                <p className="font-semibold text-amber-800">This listing has received bids and can no longer be edited.</p>
+                <p className="text-sm text-amber-700 mt-1">To make changes, cancel the auction and create a new listing.</p>
+                <Button size="sm" className="mt-3 bg-amber-600 hover:bg-amber-700" onClick={() => router.push(`/${locale}/cars/${id}`)}>
+                  Back to listing
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
             <>
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{error}</div>
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -237,9 +209,7 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
                 />
 
                 <CarSpecsSection formData={formData} onChange={handleChange} />
-
                 <CarAuctionSection formData={formData} onChange={handleChange} />
-
                 <CarDocsSection
                   formData={formData}
                   onChange={handleChange}
@@ -247,33 +217,21 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
                 />
 
                 <div className="flex items-center gap-2">
-                  <input
-                    id="isDraft" type="checkbox"
-                    checked={isDraft} onChange={e => setIsDraft(e.target.checked)}
-                    className="rounded"
-                  />
-                  <label htmlFor="isDraft" className="text-sm text-gray-700">Save as draft (not visible to buyers)</label>
+                  <Checkbox id="isDraft" checked={isDraft} onCheckedChange={v => setIsDraft(!!v)} />
+                  <Label htmlFor="isDraft" className="cursor-pointer text-sm">Save as draft (not visible to buyers)</Label>
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <button
-                    type="submit" disabled={isSubmitting}
-                    className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button
-                    type="button" onClick={() => router.push(`/${locale}/cars/${id}`)}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded hover:bg-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Saving…</> : 'Save Changes'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => router.push(`/${locale}/cars/${id}`)}>Cancel</Button>
                 </div>
               </form>
             </>
           )}
-        </div>
-      </main>
-    </div>
+        </CardContent>
+      </Card>
+    </PageLayout>
   )
 }

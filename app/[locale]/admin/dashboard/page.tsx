@@ -1,83 +1,85 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
-import AdminTabs from '@/components/AdminTabs'
 import { useLocale } from '@/lib/i18n/context'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Search, ShieldCheck, ShieldOff, UserCog, Trash2, XCircle, CheckCircle } from 'lucide-react'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Stats {
-  totalUsers: number
-  totalCars: number
-  activeCars: number
-  totalBids: number
-  adminCount: number
-  sellerCount: number
-  bidderCount: number
+  totalUsers: number; totalCars: number; activeCars: number; totalBids: number
+  adminCount: number; sellerCount: number; bidderCount: number
 }
-
 interface User {
-  id: string
-  name: string | null
-  email: string
-  createdAt?: string
-  role?: string
-  _count?: { cars?: number; bids?: number }
-  totalBidAmount?: number
-  totalBids?: number
+  id: string; name: string | null; email: string; role: string
+  sellerVerified: boolean; createdAt: string
+  _count?: { cars: number; bids: number }
+  totalBidAmount?: number; totalBids?: number
 }
-
 interface Car {
-  id: string
-  brand: string
-  model: string
-  year: number
-  currentPrice: number
-  status: string
-  createdAt: string
+  id: string; brand: string; model: string; year: number
+  currentPrice: number; status: string; isDraft: boolean; createdAt: string
   owner: { name: string | null; email: string }
 }
-
 interface DashboardData {
-  stats: Stats
-  adminUsers: User[]
-  sellers: User[]
-  bidders: User[]
-  recentUsers: User[]
-  recentCars: Car[]
-  topBidders: User[]
+  stats: Stats; adminUsers: User[]; sellers: User[]; bidders: User[]
+  recentUsers: User[]; recentCars: Car[]; topBidders: User[]
 }
+
+// ─── Variant maps ─────────────────────────────────────────────────────────────
+
+const statusVariant: Record<string, string> = {
+  active:           'bg-green-100 text-green-800 border-green-200',
+  completed:        'bg-blue-100 text-blue-800 border-blue-200',
+  reserve_not_met:  'bg-amber-100 text-amber-800 border-amber-200',
+  cancelled:        'bg-red-100 text-red-800 border-red-200',
+}
+const roleVariant: Record<string, string> = {
+  Admin: 'bg-purple-100 text-purple-800 border-purple-200',
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const locale = useLocale()
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'sellers' | 'bidders' | 'cars'>('overview')
+
+  const [data,          setData]          = useState<DashboardData | null>(null)
+  const [loading,       setLoading]       = useState(true)
+  const [error,         setError]         = useState<string | null>(null)
+  const [userSearch,    setUserSearch]    = useState('')
+  const [carSearch,     setCarSearch]     = useState('')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; label: string } | null>(null)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/${locale}/auth/signin`)
-      return
-    }
-    if (status === 'authenticated') {
-      fetchData()
-    }
-  }, [status, router, locale])
+    if (status === 'unauthenticated') { router.push(`/${locale}/auth/signin`); return }
+    if (status === 'authenticated')   { void fetchData() }
+  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchData = async () => {
+  async function fetchData() {
     try {
-      const response = await fetch('/api/admin/stats')
-      if (response.status === 403) {
-        setError('Access denied. Admin privileges required.')
-        return
-      }
-      if (!response.ok) throw new Error('Failed to fetch data')
-      const result = await response.json()
-      setData(result)
+      const res = await fetch('/api/admin/stats')
+      if (res.status === 403) { setError('Access denied. Admin privileges required.'); return }
+      if (!res.ok) throw new Error('Failed to fetch data')
+      setData(await res.json())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -85,192 +87,441 @@ export default function AdminDashboard() {
     }
   }
 
+  // ── User actions ─────────────────────────────────────────────────────────
+
+  async function toggleRole(user: User) {
+    const newRole = user.role === 'Admin' ? 'User' : 'Admin'
+    setActionLoading(`role-${user.id}`)
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      })
+      if (!res.ok) {
+        const e = await res.json()
+        toast.error(e.error ?? 'Failed to update role')
+        return
+      }
+      toast.success(`${user.name || user.email} is now ${newRole}`)
+      await fetchData()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function toggleVerify(user: User) {
+    const method = user.sellerVerified ? 'DELETE' : 'POST'
+    setActionLoading(`verify-${user.id}`)
+    try {
+      await fetch(`/api/admin/users/${user.id}/verify-seller`, { method })
+      toast.success(user.sellerVerified ? 'Seller verification removed' : 'Seller verified')
+      await fetchData()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // ── Car actions ───────────────────────────────────────────────────────────
+
+  async function forceCancelCar(car: Car) {
+    setActionLoading(`cancel-${car.id}`)
+    try {
+      const res = await fetch(`/api/cars/${car.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      })
+      if (!res.ok) { toast.error('Failed to cancel listing'); return }
+      toast.success(`${car.year} ${car.brand} ${car.model} cancelled`)
+      await fetchData()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function deleteCar(id: string) {
+    setActionLoading(`delete-${id}`)
+    try {
+      const res = await fetch(`/api/admin/cars/${id}`, { method: 'DELETE' })
+      if (!res.ok) { toast.error('Failed to delete listing'); return }
+      toast.success('Listing deleted')
+      setConfirmDelete(null)
+      await fetchData()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // ── Filtered lists ────────────────────────────────────────────────────────
+
+  const filteredUsers = useMemo(() => {
+    if (!data || !userSearch) return data?.recentUsers ?? []
+    const q = userSearch.toLowerCase()
+    return data.recentUsers.filter(u =>
+      u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q)
+    )
+  }, [data, userSearch])
+
+  const filteredCars = useMemo(() => {
+    if (!data || !carSearch) return data?.recentCars ?? []
+    const q = carSearch.toLowerCase()
+    return data.recentCars.filter(c =>
+      `${c.brand} ${c.model} ${c.year}`.toLowerCase().includes(q) ||
+      c.owner.name?.toLowerCase().includes(q) ||
+      c.owner.email.toLowerCase().includes(q) ||
+      c.status.toLowerCase().includes(q)
+    )
+  }, [data, carSearch])
+
   if (loading) return <LoadingPage />
   if (error || !data) return <ErrorPage message={error || 'Failed to load dashboard'} />
 
   return (
     <PageLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">Manage users, cars, and monitor auction activity</p>
+      {/* Confirm delete dialog */}
+      <AlertDialog open={!!confirmDelete} onOpenChange={open => { if (!open) setConfirmDelete(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete listing?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{confirmDelete?.label}</strong> will be permanently deleted along with all bids. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDelete && deleteCar(confirmDelete.id)}
+              disabled={actionLoading === `delete-${confirmDelete?.id}`}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Manage users, cars, and monitor auction activity</p>
       </div>
 
-      <AdminTabs activeTab={activeTab} setActiveTab={tab => setActiveTab(tab as typeof activeTab)} />
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">
+            Users <Badge variant="secondary" className="ml-1.5">{data.recentUsers.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="sellers">Sellers</TabsTrigger>
+          <TabsTrigger value="bidders">Bidders</TabsTrigger>
+          <TabsTrigger value="cars">
+            Cars <Badge variant="secondary" className="ml-1.5">{data.recentCars.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
 
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard title="Total Users" value={data.stats.totalUsers} icon="👥" />
-            <StatCard title="Total Cars" value={data.stats.totalCars} icon="🚗" />
-            <StatCard title="Active Auctions" value={data.stats.activeCars} icon="⚡" />
-            <StatCard title="Total Bids" value={data.stats.totalBids} icon="💰" />
-            <StatCard title="Admins" value={data.stats.adminCount} icon="👑" />
-            <StatCard title="Sellers" value={data.stats.sellerCount} icon="📦" />
-            <StatCard title="Bidders" value={data.stats.bidderCount} icon="🎯" />
+        {/* ── Overview ── */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { title: 'Total Users',     value: data.stats.totalUsers },
+              { title: 'Total Cars',      value: data.stats.totalCars },
+              { title: 'Active Auctions', value: data.stats.activeCars },
+              { title: 'Total Bids',      value: data.stats.totalBids },
+              { title: 'Admins',          value: data.stats.adminCount },
+              { title: 'Sellers',         value: data.stats.sellerCount },
+              { title: 'Bidders',         value: data.stats.bidderCount },
+            ].map(({ title, value }) => (
+              <Card key={title}>
+                <CardContent className="pt-4 pb-3 text-center">
+                  <p className="text-2xl font-bold text-primary">{value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{title}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">Recent Users</h2>
-              <div className="space-y-3">
-                {data.recentUsers.map((user) => (
-                  <div key={user.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Recent Users</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {data.recentUsers.slice(0, 8).map(user => (
+                  <div key={user.id} className="flex justify-between items-center p-2 rounded-md bg-muted/40">
                     <div>
-                      <p className="font-medium">{user.name || 'Anonymous'}</p>
-                      <p className="text-sm text-gray-600">{user.email}</p>
+                      <p className="font-medium text-sm">{user.name || 'Anonymous'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      user.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {user.role}
-                    </span>
+                    <Badge variant="outline" className={roleVariant[user.role] ?? ''}>{user.role}</Badge>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">Top Bidders</h2>
-              <div className="space-y-3">
-                {data.topBidders.map((bidder, index) => (
-                  <div key={bidder.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Top Bidders</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {data.topBidders.map((bidder, i) => (
+                  <div key={bidder.id} className="flex justify-between items-center p-2 rounded-md bg-muted/40">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                      <span className="text-sm font-bold text-muted-foreground">#{i + 1}</span>
                       <div>
-                        <p className="font-medium">{bidder.name || 'Anonymous'}</p>
-                        <p className="text-sm text-gray-600">{bidder.totalBids} bids</p>
+                        <p className="font-medium text-sm">{bidder.name || 'Anonymous'}</p>
+                        <p className="text-xs text-muted-foreground">{bidder.totalBids} bids</p>
                       </div>
                     </div>
-                    <p className="font-semibold text-green-600">
-                      {bidder.totalBidAmount?.toLocaleString('da-DK')} kr
-                    </p>
+                    <p className="font-semibold text-sm text-primary">{bidder.totalBidAmount?.toLocaleString('da-DK')} kr</p>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
+        </TabsContent>
 
-      {activeTab === 'users' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">All Users ({data.recentUsers.length})</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {data.recentUsers.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.name || 'Anonymous'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded ${
-                          user.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                      </td>
-                    </tr>
+        {/* ── Users ── */}
+        <TabsContent value="users" className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email or role…"
+              value={userSearch}
+              onChange={e => setUserSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Verified</TableHead>
+                    <TableHead className="text-right">Cars · Bids</TableHead>
+                    <TableHead className="text-right">Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map(user => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <p className="font-medium text-sm">{user.name || 'Anonymous'}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn(roleVariant[user.role] ?? '', 'text-xs')}>{user.role}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {user.sellerVerified ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
+                            <CheckCircle className="h-3 w-3" /> Verified
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {user._count?.cars ?? 0} · {user._count?.bids ?? 0}
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {new Date(user.createdAt).toLocaleDateString('da-DK')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Toggle admin role */}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className={cn('h-7 w-7', user.role === 'Admin' ? 'text-purple-600' : 'text-muted-foreground')}
+                            disabled={!!actionLoading || user.id === session?.user?.id}
+                            onClick={() => toggleRole(user)}
+                            title={user.role === 'Admin' ? 'Remove Admin' : 'Make Admin'}
+                          >
+                            <UserCog className="h-3.5 w-3.5" />
+                          </Button>
+                          {/* Toggle seller verification */}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className={cn('h-7 w-7', user.sellerVerified ? 'text-green-600' : 'text-muted-foreground')}
+                            disabled={!!actionLoading}
+                            onClick={() => toggleVerify(user)}
+                            title={user.sellerVerified ? 'Unverify Seller' : 'Verify Seller'}
+                          >
+                            {user.sellerVerified
+                              ? <ShieldOff className="h-3.5 w-3.5" />
+                              : <ShieldCheck className="h-3.5 w-3.5" />}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+                  {filteredUsers.length === 0 && (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No users found</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {activeTab === 'sellers' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Sellers ({data.sellers.length})</h2>
-            <div className="space-y-3">
-              {data.sellers.map((seller) => (
-                <div key={seller.id} className="flex justify-between items-center p-4 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">{seller.name || 'Anonymous'}</p>
-                    <p className="text-sm text-gray-600">{seller.email}</p>
-                  </div>
-                  <p className="font-semibold">{seller._count?.cars || 0} cars listed</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+        {/* ── Sellers ── */}
+        <TabsContent value="sellers">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Sellers ({data.sellers.length})</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Verified</TableHead>
+                    <TableHead className="text-right">Cars Listed</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.sellers.map(seller => {
+                    const full = data.recentUsers.find(u => u.id === seller.id)
+                    return (
+                      <TableRow key={seller.id}>
+                        <TableCell className="font-medium">{seller.name || 'Anonymous'}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{seller.email}</TableCell>
+                        <TableCell>
+                          {full?.sellerVerified ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
+                              <CheckCircle className="h-3 w-3" /> Verified
+                            </Badge>
+                          ) : <span className="text-xs text-muted-foreground">Unverified</span>}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">{seller._count?.cars ?? 0}</TableCell>
+                        <TableCell className="text-right">
+                          {full && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              disabled={!!actionLoading}
+                              onClick={() => toggleVerify(full)}
+                            >
+                              {full.sellerVerified ? 'Unverify' : 'Verify'}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {activeTab === 'bidders' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Bidders ({data.bidders.length})</h2>
-            <div className="space-y-3">
-              {data.bidders.map((bidder) => (
-                <div key={bidder.id} className="flex justify-between items-center p-4 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">{bidder.name || 'Anonymous'}</p>
-                    <p className="text-sm text-gray-600">{bidder.email}</p>
-                  </div>
-                  <p className="font-semibold">{bidder._count?.bids || 0} bids placed</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+        {/* ── Bidders ── */}
+        <TabsContent value="bidders">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Bidders ({data.bidders.length})</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead className="text-right">Bids Placed</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.bidders.map(bidder => (
+                    <TableRow key={bidder.id}>
+                      <TableCell className="font-medium">{bidder.name || 'Anonymous'}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{bidder.email}</TableCell>
+                      <TableCell className="text-right font-semibold">{bidder._count?.bids ?? 0}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {activeTab === 'cars' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Recent Cars ({data.recentCars.length})</h2>
-            <div className="space-y-3">
-              {data.recentCars.map((car) => (
-                <a
-                  key={car.id}
-                  href={`/${locale}/admin/cars/${car.id}`}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded hover:bg-gray-100 transition-colors cursor-pointer"
-                >
-                  <div>
-                    <p className="font-medium">{car.year} {car.brand} {car.model}</p>
-                    <p className="text-sm text-gray-600">by {car.owner.name || car.owner.email}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">{car.currentPrice.toLocaleString('da-DK')} kr</p>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      car.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {car.status}
-                    </span>
-                  </div>
-                </a>
-              ))}
-            </div>
+        {/* ── Cars ── */}
+        <TabsContent value="cars" className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by car, seller, or status…"
+              value={carSearch}
+              onChange={e => setCarSearch(e.target.value)}
+              className="pl-9"
+            />
           </div>
-        </div>
-      )}
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Car</TableHead>
+                    <TableHead>Seller</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCars.map(car => (
+                    <TableRow key={car.id}>
+                      <TableCell
+                        className="font-medium cursor-pointer hover:text-primary"
+                        onClick={() => router.push(`/${locale}/admin/cars/${car.id}`)}
+                      >
+                        {car.year} {car.brand} {car.model}
+                        {car.isDraft && <Badge variant="outline" className="ml-2 bg-orange-50 text-orange-700 border-orange-200 text-xs">draft</Badge>}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{car.owner.name || car.owner.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusVariant[car.status] ?? ''}>{car.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">{car.currentPrice.toLocaleString('da-DK')} kr</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Force cancel — only for active listings */}
+                          {car.status === 'active' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-amber-600 hover:text-amber-700"
+                              disabled={actionLoading === `cancel-${car.id}`}
+                              onClick={() => forceCancelCar(car)}
+                              title="Force cancel"
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {/* Delete — only non-active listings */}
+                          {car.status !== 'active' && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              disabled={actionLoading === `delete-${car.id}`}
+                              onClick={() => setConfirmDelete({ id: car.id, label: `${car.year} ${car.brand} ${car.model}` })}
+                              title="Delete listing"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredCars.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No cars found</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </PageLayout>
-  )
-}
-
-function StatCard({ title, value, icon }: { title: string; value: number; icon: string }) {
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-600">{title}</p>
-          <p className="text-2xl font-bold mt-1">{value}</p>
-        </div>
-        <span className="text-3xl">{icon}</span>
-      </div>
-    </div>
   )
 }

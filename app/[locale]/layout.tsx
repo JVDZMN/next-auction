@@ -3,7 +3,10 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { DictionaryProvider } from '@/lib/i18n/context'
+import { NotificationProvider } from '@/lib/notification-context'
 import { getDictionary, toLocale, locales } from '@/lib/i18n'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { Toaster } from '@/components/ui/sonner'
 import '../globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -45,7 +48,12 @@ export default async function LocaleLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProvider>
           <DictionaryProvider locale={locale} dict={dict}>
-            {children}
+            <NotificationProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster richColors position="bottom-center" />
+              </TooltipProvider>
+            </NotificationProvider>
           </DictionaryProvider>
         </SessionProvider>
       </body>

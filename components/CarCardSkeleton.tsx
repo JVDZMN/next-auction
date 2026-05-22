@@ -1,30 +1,24 @@
-// No 'use client' needed — pure markup, no state.
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
 
 export function CarCardSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
-      {/* Image area — matches aspect-4/3 from CarCard */}
-      <div className="aspect-[4/3] bg-stone-100 animate-pulse" />
-
-      <div className="p-4 space-y-3">
-        {/* Title + condition badge */}
+    <Card className="overflow-hidden">
+      <Skeleton className="aspect-4/3 w-full rounded-none" />
+      <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="h-4 bg-stone-100 rounded animate-pulse w-2/3" />
-          <div className="h-4 bg-stone-100 rounded animate-pulse w-12 shrink-0" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-12 shrink-0" />
         </div>
-
-        {/* km · city */}
-        <div className="h-3 bg-stone-100 rounded animate-pulse w-1/2" />
-
-        {/* Price row */}
-        <div className="border-t border-stone-50 pt-3 flex items-end justify-between">
+        <Skeleton className="h-3 w-1/2" />
+        <div className="border-t pt-3 flex items-end justify-between">
           <div className="space-y-1.5">
-            <div className="h-2.5 bg-stone-100 rounded animate-pulse w-16" />
-            <div className="h-5 bg-stone-100 rounded animate-pulse w-28" />
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="h-5 w-28" />
           </div>
-          <div className="h-3 bg-stone-100 rounded animate-pulse w-10" />
+          <Skeleton className="h-3 w-10" />
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
