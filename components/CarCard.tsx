@@ -49,7 +49,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
       </div>
 
       <Link href={`/${locale}/cars/${id}`} className="block">
-      <Card className="overflow-hidden transition-shadow hover:shadow-md">
+      <Card className="overflow-hidden rounded-[20px] bg-card-bg shadow-sm transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
         <div className="relative aspect-4/3 bg-muted">
           {images?.[0] ? (
             <Image
@@ -65,7 +65,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
           {/* Time badge */}
           <Badge
             variant="secondary"
-            className={`absolute top-2 left-2 gap-1 bg-white/90 backdrop-blur-sm ${urgent ? 'text-red-600' : 'text-foreground'}`}
+            className={`absolute top-2 left-2 gap-1 bg-white/90 backdrop-blur-sm ${urgent ? 'text-copper' : 'text-foreground'}`}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -101,7 +101,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
           <div className="flex items-end justify-between border-t pt-3 mt-2">
             <div>
               <p className="text-xs text-muted-foreground">Current bid</p>
-              <p className="text-lg font-bold text-primary">{currentPrice.toLocaleString('da-DK')} kr</p>
+              <p className="text-lg font-bold text-copper">{currentPrice.toLocaleString('da-DK')} kr</p>
             </div>
             <p className="text-xs text-muted-foreground">{bidCount} {bidCount === 1 ? 'bid' : 'bids'}</p>
           </div>

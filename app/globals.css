@@ -5,6 +5,18 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ── Brand Palette ───────────────────────────────────────────── */
+  --color-page-bg:      var(--page-bg);
+  --color-section-alt:  var(--section-alt);
+  --color-dark-section: var(--dark-section);
+  --color-card-bg:      var(--card-bg);
+  --color-text-body:    var(--text-body);
+  --color-text-muted:   var(--text-muted);
+  --color-text-light:   var(--text-light);
+  --color-brand:        var(--brand);
+  --color-brand-mid:    var(--brand-mid);
+  --color-copper:       var(--copper);
+  /* ────────────────────────────────────────────────────────────── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -49,38 +61,52 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ── Brand Palette — edit these 10 values to retheme the entire project ── */
+  --page-bg:      #f6f3f5;   /* warm off-white — page & light sections  */
+  --section-alt:  #ede8eb;   /* alternate light section background       */
+  --dark-section: #082924;   /* near-black green — dark sections         */
+  --card-bg:      #ffffff;   /* white card surfaces                      */
+  --text-body:    #4b4b4b;   /* dark charcoal body text                  */
+  --text-muted:   #888888;   /* muted grey text                          */
+  --text-light:   #ffffff;   /* white text on dark surfaces              */
+  --brand:        #005c4e;   /* forest green primary                     */
+  --brand-mid:    #016959;   /* mid teal green accents & borders         */
+  --copper:       #91644a;   /* copper — CTA buttons & accent            */
+  /* ────────────────────────────────────────────────────────────────── */
+
+  /* shadcn base tokens — driven by the palette above */
+  --background:                 #f6f3f5;
+  --foreground:                 #4b4b4b;
+  --card:                       #ffffff;
+  --card-foreground:            #4b4b4b;
+  --popover:                    #ffffff;
+  --popover-foreground:         #4b4b4b;
+  --primary:                    #005c4e;
+  --primary-foreground:         #ffffff;
+  --secondary:                  #ede8eb;
+  --secondary-foreground:       #4b4b4b;
+  --muted:                      #ede8eb;
+  --muted-foreground:           #888888;
+  --accent:                     #ede8eb;
+  --accent-foreground:          #005c4e;
+  --destructive:                oklch(0.577 0.245 27.325);
+  --border:                     #d0cece;
+  --input:                      #d0cece;
+  --ring:                       #005c4e;
+  --chart-1:                    #005c4e;
+  --chart-2:                    #016959;
+  --chart-3:                    #91644a;
+  --chart-4:                    #4b4b4b;
+  --chart-5:                    #888888;
+  --radius:                     0.625rem;
+  --sidebar:                    #f6f3f5;
+  --sidebar-foreground:         #4b4b4b;
+  --sidebar-primary:            #005c4e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:             #ede8eb;
+  --sidebar-accent-foreground:  #005c4e;
+  --sidebar-border:             #d0cece;
+  --sidebar-ring:               #005c4e;
 }
 
 .dark {

@@ -49,13 +49,13 @@ export function Header() {
           >
             {isAdmin ? 'Admin' : 'Dashboard'}
             {totalCount > 0 && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums">
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-copper px-1 text-[10px] font-semibold text-white tabular-nums">
                 {totalCount > 99 ? '99+' : totalCount}
               </span>
             )}
           </Link>
           {isAdmin && (
-            <Link href={`/${locale}/admin/dashboard`} className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-purple-600 hover:text-purple-700')}>
+            <Link href={`/${locale}/admin/dashboard`} className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-brand hover:text-brand-mid')}>
               <Shield className="h-3.5 w-3.5 mr-1" /> Admin
             </Link>
           )}
@@ -92,8 +92,8 @@ export function Header() {
                 </DropdownMenuItem>
                 {(session.user as { mitIdVerified?: boolean }).mitIdVerified ? (
                   <DropdownMenuItem disabled>
-                    <BadgeCheck className="mr-2 h-4 w-4 text-green-600" />
-                    <span className="text-green-600">MitID Verified</span>
+                    <BadgeCheck className="mr-2 h-4 w-4 text-brand" />
+                    <span className="text-brand">MitID Verified</span>
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => { window.location.href = '/api/mitid/start' }}>
