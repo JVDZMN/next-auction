@@ -98,8 +98,9 @@ export default function CarsPage() {
   const fetchCars = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/cars?${new URLSearchParams(buildParams())}`)
-      setData(await res.json())
+      const res  = await fetch(`/api/cars?${new URLSearchParams(buildParams())}`)
+      const json = await res.json()
+      if (res.ok && Array.isArray(json.cars)) setData(json)
     } finally { setLoading(false) }
   }, [buildParams])
 

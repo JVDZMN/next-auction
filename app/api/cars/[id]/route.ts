@@ -46,7 +46,7 @@ export async function PATCH(
 
     const car = await prisma.car.findUnique({
       where: { id },
-      select: { ownerId: true, _count: { select: { bids: true } } },
+      select: { ownerId: true, fuel: true, _count: { select: { bids: true } } },
     })
 
     if (!car) {
@@ -89,8 +89,10 @@ export async function PATCH(
         ...(data.lastInspectionKm !== undefined && { lastInspectionKm: data.lastInspectionKm !== null ? Number(data.lastInspectionKm) : null }),
         ...(data.year !== undefined && { year: Number(data.year) }),
         ...(data.power !== undefined && { power: Number(data.power) }),
-        ...(data.fuel !== undefined && { fuel: data.fuel as never }),
-        ...(data.gearType !== undefined && { gearType: data.gearType as never }),
+        ...(data.fuel !== undefined && { fuel: (data.fuel || null) as never }),
+        ...(data.gearType !== undefined && {
+          gearType: (data.gearType || ((data.fuel ?? car.fuel) === 'Electric' ? 'Automatic' : 'Manual')) as never,
+        }),
         ...(data.engineSize !== undefined && { engineSize: data.engineSize !== null ? Number(data.engineSize) : null }),
         ...(data.seats !== undefined && { seats: data.seats !== null ? Number(data.seats) : null }),
         ...(data.weight !== undefined && { weight: data.weight !== null ? Number(data.weight) : null }),

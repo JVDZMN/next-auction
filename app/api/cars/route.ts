@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
         variant: data.variant || null,
         bodyType: data.bodyType || null,
         category: data.category || null,
-        gearType: (data.gearType as import('@prisma/client').GearType) || null,
+        gearType: (data.gearType || (data.fuel === 'Electric' ? 'Automatic' : 'Manual')) as import('@prisma/client').GearType,
         engineSize: data.engineSize != null ? Number(data.engineSize) : null,
         seats: data.seats != null ? Number(data.seats) : null,
         weight: data.weight != null ? Number(data.weight) : null,
