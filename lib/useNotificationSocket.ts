@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { getPusherClient } from './pusher-client'
 
 type Notification = {
@@ -16,7 +16,7 @@ export function useNotificationSocket(
   onNotification: (n: Notification) => void,
 ) {
   const cbRef = useRef(onNotification)
-  cbRef.current = onNotification
+  useLayoutEffect(() => { cbRef.current = onNotification })
 
   useEffect(() => {
     if (!userId) return

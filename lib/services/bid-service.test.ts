@@ -1,9 +1,9 @@
 /**
  * Concurrent bid tests — service layer.
  *
- * These tests exercise the optimistic-lock path in placeBid() using a
- * deterministic mock of the Prisma transaction.  Two bids arrive for the
- * same car with the same currentPrice snapshot; our guard (updateMany WHERE
+ * These tests exercise the optimistic-lock path in placeBid() using
+ * deterministic mocks of the Prisma methods. Two bids arrive for the same car
+ * with the same currentPrice snapshot; our guard (updateMany WHERE
  * currentPrice = snapshot) ensures exactly one wins and the second receives
  * a 409 BidError.
  */
@@ -15,14 +15,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // ---------------------------------------------------------------------------
 
 const {
-  mockTransaction,
+  mockCarFindUnique,
+  mockCarUpdateMany,
+  mockCarUpdate,
+  mockBidCreate,
   mockProxyBidFindFirst,
   mockBidFindMany,
+  mockUserFindMany,
   mockNotificationCreateMany,
 } = vi.hoisted(() => ({
-  mockTransaction: vi.fn(),
-  mockProxyBidFindFirst: vi.fn(),
-  mockBidFindMany: vi.fn(),
+  mockCarFindUnique:        vi.fn(),
+  mockCarUpdateMany:        vi.fn(),
+  mockCarUpdate:            vi.fn(),
+  mockBidCreate:            vi.fn(),
+  mockProxyBidFindFirst:    vi.fn(),
+  mockBidFindMany:          vi.fn(),
+  mockUserFindMany:         vi.fn(),
   mockNotificationCreateMany: vi.fn(),
 }))
 
@@ -31,7 +39,7 @@ const {
 // ---------------------------------------------------------------------------
 
 vi.mock('@/lib/email', () => ({
-  sendBidNotification: vi.fn().mockResolvedValue(undefined),
+  sendBidNotification:  vi.fn().mockResolvedValue(undefined),
   sendOutbidNotification: vi.fn().mockResolvedValue(undefined),
 }))
 vi.mock('@/lib/socket-server', () => ({ emitToUser: vi.fn() }))
@@ -44,9 +52,17 @@ vi.mock('@/lib/logger', () => ({
 vi.mock('@/lib/prisma', () => ({
   bidderSelect: { id: true, name: true, email: true },
   prisma: {
-    $transaction: mockTransaction,
-    proxyBid: { findFirst: mockProxyBidFindFirst },
-    bid: { findMany: mockBidFindMany },
+    car: {
+      findUnique: mockCarFindUnique,
+      updateMany: mockCarUpdateMany,
+      update:     mockCarUpdate,
+    },
+    bid: {
+      create:   mockBidCreate,
+      findMany: mockBidFindMany,
+    },
+    proxyBid:     { findFirst: mockProxyBidFindFirst },
+    user:         { findMany: mockUserFindMany },
     notification: { createMany: mockNotificationCreateMany },
   },
 }))
@@ -86,35 +102,14 @@ function makeBid(id: string, amount: number) {
   }
 }
 
-function makeTx(car: ReturnType<typeof makeCar>, updateCount: number, bid: ReturnType<typeof makeBid>) {
-  return {
-    car: {
-      findUnique: vi.fn().mockResolvedValue(car),
-      updateMany: vi.fn().mockResolvedValue({ count: updateCount }),
-      update: vi.fn().mockResolvedValue(car),
-    },
-    bid: { create: vi.fn().mockResolvedValue(bid) },
-  }
-}
-
 beforeEach(() => {
   vi.clearAllMocks()
   mockProxyBidFindFirst.mockResolvedValue(null)
   mockBidFindMany.mockResolvedValue([])
+  mockUserFindMany.mockResolvedValue([])
   mockNotificationCreateMany.mockResolvedValue({})
+  mockCarUpdate.mockImplementation(async ({ data }: { data: unknown }) => data)
 })
-
-// Explicit transaction callback type so we avoid the banned `Function` type.
-// car.updateMany and car.update are optional — some test mocks omit them
-// because the bid service throws before those methods are ever reached.
-type TxFn = (tx: {
-  car: {
-    findUnique: ReturnType<typeof vi.fn>
-    updateMany?: ReturnType<typeof vi.fn>
-    update?: ReturnType<typeof vi.fn>
-  }
-  bid: { create: ReturnType<typeof vi.fn> }
-}) => Promise<unknown>
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -125,26 +120,26 @@ describe('placeBid — optimistic lock', () => {
     const car = makeCar(10_000)
     const bid = makeBid('bid-1', 12_000)
 
-    mockTransaction.mockImplementation(async (fn: TxFn) => {
-      return fn(makeTx(car, 1, bid))
-    })
+    mockCarFindUnique.mockResolvedValue(car)
+    mockCarUpdateMany.mockResolvedValue({ count: 1 })
+    mockBidCreate.mockResolvedValue(bid)
 
-    const result = await placeBid({ userId: 'bidder-1', carId: 'car-1', amount: 12_000 })
+    const result = await placeBid({
+      userId: 'bidder-1', carId: 'car-1', amount: 12_000, _disableSideEffects: true,
+    })
     expect(result.id).toBe('bid-1')
     expect(result.amount).toBe(12_000)
   })
 
   it('throws BidError(409) when the optimistic lock fails', async () => {
     const car = makeCar(10_000)
-    const bid = makeBid('bid-x', 12_000)
 
-    mockTransaction.mockImplementation(async (fn: TxFn) => {
-      return fn(makeTx(car, 0, bid))
-    })
+    mockCarFindUnique.mockResolvedValue(car)
+    mockCarUpdateMany.mockResolvedValue({ count: 0 })
 
-    const error = await placeBid({ userId: 'bidder-1', carId: 'car-1', amount: 12_000 })
-      .then(() => null)
-      .catch(e => e)
+    const error = await placeBid({
+      userId: 'bidder-1', carId: 'car-1', amount: 12_000, _disableSideEffects: true,
+    }).then(() => null).catch(e => e)
 
     expect(error).toBeDefined()
     expect(error.httpStatus).toBe(409)
@@ -154,18 +149,17 @@ describe('placeBid — optimistic lock', () => {
   it('simulates two concurrent bids — exactly one succeeds, one gets 409', async () => {
     const car = makeCar(10_000)
     const bidA = makeBid('bid-A', 12_000)
-    const bidB = makeBid('bid-B', 12_000)
-    let callCount = 0
 
-    mockTransaction.mockImplementation(async (fn: TxFn) => {
-      const isFirst = callCount++ === 0
-      const bid = isFirst ? bidA : bidB
-      return fn(makeTx(car, isFirst ? 1 : 0, bid))
-    })
+    mockCarFindUnique.mockResolvedValue(car)
+    // First updateMany succeeds, second fails (simulates the optimistic lock)
+    mockCarUpdateMany
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 })
+    mockBidCreate.mockResolvedValue(bidA)
 
     const results = await Promise.allSettled([
-      placeBid({ userId: 'bidder-A', carId: 'car-1', amount: 12_000 }),
-      placeBid({ userId: 'bidder-B', carId: 'car-1', amount: 12_000 }),
+      placeBid({ userId: 'bidder-A', carId: 'car-1', amount: 12_000, _disableSideEffects: true }),
+      placeBid({ userId: 'bidder-B', carId: 'car-1', amount: 12_000, _disableSideEffects: true }),
     ])
 
     const fulfilled = results.filter(r => r.status === 'fulfilled')
@@ -180,17 +174,11 @@ describe('placeBid — optimistic lock', () => {
   })
 
   it('does not place a bid if the car is not found', async () => {
-    mockTransaction.mockImplementation(async (fn: TxFn) => {
-      const tx = {
-        car: { findUnique: vi.fn().mockResolvedValue(null) },
-        bid: { create: vi.fn() },
-      }
-      return fn(tx)
-    })
+    mockCarFindUnique.mockResolvedValue(null)
 
-    const error = await placeBid({ userId: 'bidder-1', carId: 'ghost', amount: 5_000 })
-      .then(() => null)
-      .catch(e => e)
+    const error = await placeBid({
+      userId: 'bidder-1', carId: 'ghost', amount: 5_000, _disableSideEffects: true,
+    }).then(() => null).catch(e => e)
 
     expect(error).toBeDefined()
     expect(error.httpStatus).toBe(404)
@@ -198,18 +186,11 @@ describe('placeBid — optimistic lock', () => {
 
   it('does not place a bid if the auction has ended', async () => {
     const expiredCar = { ...makeCar(), auctionEndDate: new Date(Date.now() - 1000) }
+    mockCarFindUnique.mockResolvedValue(expiredCar)
 
-    mockTransaction.mockImplementation(async (fn: TxFn) => {
-      const tx = {
-        car: { findUnique: vi.fn().mockResolvedValue(expiredCar), updateMany: vi.fn(), update: vi.fn() },
-        bid: { create: vi.fn() },
-      }
-      return fn(tx)
-    })
-
-    const error = await placeBid({ userId: 'bidder-1', carId: 'car-1', amount: 12_000 })
-      .then(() => null)
-      .catch(e => e)
+    const error = await placeBid({
+      userId: 'bidder-1', carId: 'car-1', amount: 12_000, _disableSideEffects: true,
+    }).then(() => null).catch(e => e)
 
     expect(error).toBeDefined()
     expect(error.httpStatus).toBe(400)

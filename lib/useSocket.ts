@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { getPusherClient } from './pusher-client'
 
 export function useSocket<T = unknown>(carId: string, onMessage: (msg: T) => void) {
   const cbRef = useRef(onMessage)
-  cbRef.current = onMessage
+  useLayoutEffect(() => { cbRef.current = onMessage })
 
   useEffect(() => {
     if (!carId) return

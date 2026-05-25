@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { getPusherClient } from './pusher-client'
 
 export function useUserChatSocket<T = unknown>(
@@ -9,7 +9,7 @@ export function useUserChatSocket<T = unknown>(
   onMessage: (msg: T) => void,
 ) {
   const cbRef = useRef(onMessage)
-  cbRef.current = onMessage
+  useLayoutEffect(() => { cbRef.current = onMessage })
 
   useEffect(() => {
     if (!userId) return

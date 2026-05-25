@@ -15,6 +15,7 @@ export function LanguageSwitcher() {
   function switchTo(next: Locale) {
     if (next === locale) return
     const stripped = pathname?.replace(new RegExp(`^/${locale}`), '') || '/'
+    // eslint-disable-next-line react-hooks/immutability
     document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
     router.push(`/${next}${stripped}`)
   }
