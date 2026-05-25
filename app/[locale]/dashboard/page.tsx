@@ -413,9 +413,19 @@ function DashboardContent() {
                           <TableCell className="text-right font-semibold">{car.currentPrice.toLocaleString('da-DK')} kr</TableCell>
                           <TableCell className="text-right text-xs text-muted-foreground">{car.views} views · {car._count.bids} bids</TableCell>
                           <TableCell className="text-right pr-3">
-                            {isExpanded
-                              ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                              : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                            <div className="flex items-center justify-end gap-2">
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                                onClick={e => { e.stopPropagation(); router.push(`/${locale}/cars/${car.id}`) }}>
+                                View
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                                onClick={e => { e.stopPropagation(); router.push(`/${locale}/cars/${car.id}/edit`) }}>
+                                Edit
+                              </Button>
+                              {isExpanded
+                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                            </div>
                           </TableCell>
                         </TableRow>
 

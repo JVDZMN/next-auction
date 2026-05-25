@@ -193,9 +193,24 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
                 <Badge variant="outline" className={`mt-1 ${statusVariant[car.status] ?? ''}`}>{car.status}</Badge>
               </div>
             </div>
-            {car.isDraft && (
+            {isOwner && car.isDraft && (
               <Alert className="mt-4 border-amber-200 bg-amber-50 text-amber-800">
-                <AlertDescription>This listing is a draft and not visible to other users.</AlertDescription>
+                <AlertDescription className="flex items-center justify-between gap-4">
+                  <span>This listing is a draft and not visible to other users.</span>
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      const res = await fetch(`/api/cars/${id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ isDraft: false }),
+                      })
+                      if (res.ok) await fetchCar()
+                    }}
+                  >
+                    Publish
+                  </Button>
+                </AlertDescription>
               </Alert>
             )}
           </CardContent>

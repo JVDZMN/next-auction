@@ -26,6 +26,14 @@ export async function GET(
       return NextResponse.json({ error: 'Car not found' }, { status: 404 })
     }
 
+    // Draft cars are only visible to their owner
+    if (car.isDraft) {
+      const session = await requireAuth()
+      if (!session || session.user.id !== car.owner.id) {
+        return NextResponse.json({ error: 'Car not found' }, { status: 404 })
+      }
+    }
+
     return NextResponse.json(car)
   } catch (error) {
     return serverError('Failed to fetch car', error)
