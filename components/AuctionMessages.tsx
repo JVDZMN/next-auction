@@ -7,7 +7,6 @@ import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 // File was truncated. Re-adding a minimal valid AuctionMessages component to fix build error.
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
 
 interface Message {
   id: string;
@@ -24,40 +23,20 @@ interface AuctionMessagesProps {
 }
 
 export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps) {
-  const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
 
-  // Real-time: Listen for new messages via Socket.IO
   const handleSocketMessage = useCallback((msg: Message) => {
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
   }, []);
 
-  const socket = useSocket(carId, handleSocketMessage);
-
-  // Join user room for direct messages
-  useEffect(() => {
-    if (socket && session?.user?.id) {
-      socket.emit('joinUserRoom', session.user.id);
-    }
-  }, [socket, session]);
+  useSocket(carId, handleSocketMessage);
 
   useEffect(() => {
     fetchMessages();
-    // Optionally, add polling or socket updates here
-    // Join car room on mount
-    if (socket && carId) {
-      socket.emit('joinCarRoom', carId);
-    }
-    // Cleanup: leave room if needed
-    return () => {
-      if (socket && carId) {
-        socket.emit('leaveCarRoom', carId);
-      }
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carId]);
 
@@ -88,11 +67,8 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
       });
       const data = await res.json();
       if (data.message) {
+        setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]);
         setInput('');
-        // Emit real-time event to all clients (including sender)
-        if (socket) {
-          socket.emit('sendMessage', { carId, message: data.message, receiverId: ownerId });
-        }
       } else {
         setError(data.error || 'Failed to send message');
       }

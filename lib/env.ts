@@ -60,4 +60,11 @@ export const env = {
   CRIIPTO_CLIENT_SECRET: process.env.CRIIPTO_CLIENT_SECRET,
   CRIIPTO_DOMAIN: process.env.CRIIPTO_DOMAIN,
   NODE_ENV: process.env.NODE_ENV ?? 'development',
+  PUSHER_APP_ID: process.env.PUSHER_APP_ID,
+  PUSHER_KEY: process.env.PUSHER_KEY,
+  PUSHER_SECRET: process.env.PUSHER_SECRET,
+  PUSHER_CLUSTER: process.env.PUSHER_CLUSTER,
+  NEXT_PUBLIC_PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY,
+  NEXT_PUBLIC_PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+  
 } as const

@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/auth'
 import { serverError } from '@/lib/api'
 
 // GET /api/messages/notifications
-// Returns { unreadMessages, carsWithNewBids, outbidCarIds, users, totalCount }
+// Returns { unreadMessages, carsWithNewBids, outbidCarIds, users, unreadPerSender, totalCount }
 export async function GET() {
   try {
     const session = await requireAuth()
@@ -12,43 +12,104 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const [unreadMessages, newBidNotifs, outbidNotifs, senderUsers] = await Promise.all([
+    const userId = session.user.id
+
+    // All queries use scalar selects only — no distinct+relation (unsupported in HTTP mode)
+    const [
+      unreadMessages,
+      newBidNotifRows,
+      outbidNotifRows,
+      sentPeerRows,
+      receivedPeerRows,
+      unreadMsgCarRows,
+    ] = await Promise.all([
       prisma.notification.count({
-        where: { userId: session.user.id, read: false, type: 'new_message' },
+        where: { userId, read: false, type: 'new_message' },
       }),
-      // Distinct carIds where this user (as owner) has unread new_bid notifications
       prisma.notification.findMany({
-        where: { userId: session.user.id, read: false, type: 'new_bid' },
-        distinct: ['carId'],
+        where: { userId, read: false, type: 'new_bid' },
         select: { carId: true },
       }),
-      // Distinct carIds where this user (as bidder) has been outbid
       prisma.notification.findMany({
-        where: { userId: session.user.id, read: false, type: 'outbid' },
-        distinct: ['carId'],
+        where: { userId, read: false, type: 'outbid' },
         select: { carId: true },
       }),
+      // Users this person has sent messages to
       prisma.message.findMany({
-        where: { receiverId: session.user.id },
-        distinct: ['senderId'],
+        where: { senderId: userId },
+        select: { receiverId: true },
         orderBy: { createdAt: 'desc' },
-        select: { sender: { select: { id: true, name: true, image: true } } },
+      }),
+      // Users who have sent messages to this person
+      prisma.message.findMany({
+        where: { receiverId: userId },
+        select: { senderId: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      // carIds with unread new_message notifications (for per-sender lookup)
+      prisma.notification.findMany({
+        where: { userId, read: false, type: 'new_message' },
+        select: { carId: true },
       }),
     ])
 
-    const carsWithNewBids = newBidNotifs
-      .map((n: (typeof newBidNotifs)[number]) => n.carId)
-      .filter((id): id is string => id !== null)
+    // Deduplicate car IDs for bid/outbid
+    const carsWithNewBids = [...new Set(
+      newBidNotifRows.map(n => n.carId).filter((id): id is string => id !== null)
+    )]
+    const outbidCarIds = [...new Set(
+      outbidNotifRows.map(n => n.carId).filter((id): id is string => id !== null)
+    )]
 
-    const outbidCarIds = outbidNotifs
-      .map((n: (typeof outbidNotifs)[number]) => n.carId)
-      .filter((id): id is string => id !== null)
+    // Build unique peer list (sent + received), preserving most-recent order
+    const seen = new Set<string>()
+    const peerIds: string[] = []
+    for (const { receiverId } of sentPeerRows) {
+      if (receiverId !== userId && !seen.has(receiverId)) { seen.add(receiverId); peerIds.push(receiverId) }
+    }
+    for (const { senderId } of receivedPeerRows) {
+      if (senderId !== userId && !seen.has(senderId)) { seen.add(senderId); peerIds.push(senderId) }
+    }
+
+    // Fetch user details for all peers
+    const peerUsers = peerIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: peerIds } },
+          select: { id: true, name: true, image: true },
+        })
+      : []
+
+    // Approximate per-sender unread: look up senders for unread-notification carIds
+    const unreadCarIds = [...new Set(
+      unreadMsgCarRows.map(n => n.carId).filter((id): id is string => id !== null)
+    )]
+    const unreadPerSender: Record<string, number> = {}
+    if (unreadCarIds.length > 0) {
+      const recentUnreadMsgs = await prisma.message.findMany({
+        where: { receiverId: userId, carId: { in: unreadCarIds } },
+        select: { senderId: true, carId: true },
+        orderBy: { createdAt: 'desc' },
+      })
+      const seenCarSender = new Set<string>()
+      for (const { senderId, carId } of recentUnreadMsgs) {
+        const key = `${carId}:${senderId}`
+        if (!seenCarSender.has(key)) {
+          seenCarSender.add(key)
+          unreadPerSender[senderId] = (unreadPerSender[senderId] ?? 0) + 1
+        }
+      }
+    }
+
+    // Return peers in the same order as peerIds (most-recent first)
+    const userMap = new Map(peerUsers.map(u => [u.id, u]))
+    const users = peerIds.map(id => userMap.get(id)).filter(Boolean)
 
     return NextResponse.json({
       unreadMessages,
       carsWithNewBids,
       outbidCarIds,
-      users: senderUsers.map(m => m.sender),
+      users,
+      unreadPerSender,
       totalCount: unreadMessages + carsWithNewBids.length + outbidCarIds.length,
     })
   } catch (error) {

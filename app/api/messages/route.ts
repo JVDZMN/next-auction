@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { serverError } from '@/lib/api'
-import { emitToUser } from '@/lib/socket-server'
+import { emitToUser, emitToCar } from '@/lib/socket-server'
 import { sendMessageNotification } from '@/lib/email'
 import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 
@@ -58,21 +58,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Push real-time notification to the receiver's socket room
-    emitToUser(finalReceiverId, 'newNotification', {
+    // Push real-time notification to the receiver
+    emitToUser(finalReceiverId, 'new-notification', {
       id: notification.id,
       message: notification.message,
       type: notification.type,
       carId: notification.carId,
       createdAt: notification.createdAt,
+      senderId: session.user.id,
+      senderName: newMessage.sender.name || newMessage.sender.email,
+      senderImage: null,
     });
 
-    // Push the actual message content so an open chat window updates immediately
-    emitToUser(finalReceiverId, 'newMessage', {
-      senderId: session.user.id,
-      content,
-      carId,
-    });
+    // Push message to the receiver's DM channel
+    emitToUser(finalReceiverId, 'new-message', newMessage);
+
+    // Push message to the car channel so any open chat window updates immediately
+    emitToCar(carId, 'new-message', newMessage);
 
     // Send email notification to receiver (fire-and-forget)
     if (newMessage.receiver.email) {

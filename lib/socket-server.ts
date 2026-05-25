@@ -1,12 +1,9 @@
-import { Server } from 'socket.io';
-
-// Global singleton so App Router routes can emit events
-const globalForSocket = globalThis as unknown as { _io: Server | undefined };
-
-export function setSocketServer(io: Server) {
-  globalForSocket._io = io;
-}
+import { pusherServer } from './pusher'
 
 export function emitToUser(userId: string, event: string, data: unknown) {
-  globalForSocket._io?.to(`user:${userId}`).emit(event, data);
+  pusherServer.trigger(`user-${userId}`, event, data).catch(() => {})
+}
+
+export function emitToCar(carId: string, event: string, data: unknown) {
+  pusherServer.trigger(`car-${carId}`, event, data).catch(() => {})
 }

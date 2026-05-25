@@ -150,7 +150,8 @@ function DashboardContent() {
   const searchParams = useSearchParams()
   const {
     unreadMessages, carsWithNewBids, outbidCarIds,
-    markMessagesRead, markCarBidsRead, markOutbidRead,
+    unreadPerSender, msgUsers,
+    markMessagesRead, markCarBidsRead, markOutbidRead, markSenderRead,
   } = useNotifications()
 
   const [activeTab, setActiveTab] = useState(searchParams?.get('tab') ?? 'listings')
@@ -208,23 +209,16 @@ function DashboardContent() {
   }, [expandedCarId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Messages tab ──────────────────────────────────────────────────────────
-  const [msgUsers,        setMsgUsers]        = useState<ChatUser[]>([])
   const [activeChatUser,  setActiveChatUser]  = useState<ChatUser | null>(null)
   const [chatMessages,    setChatMessages]    = useState<ChatMessage[]>([])
   const [chatInput,       setChatInput]       = useState('')
   const [activeChatCarId, setActiveChatCarId] = useState<string | null>(null)
-  const [messagesLoaded,  setMessagesLoaded]  = useState(false)
 
   useEffect(() => {
     if (activeTab !== 'messages') return
     markMessagesRead()
-    if (messagesLoaded) return
-    fetch('/api/messages/notifications')
-      .then(r => r.json())
-      .then(d => { setMsgUsers(d.users ?? []); setMessagesLoaded(true) })
-      .catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, messagesLoaded])
+  }, [activeTab])
 
   useEffect(() => {
     if (!activeChatUser) return
@@ -242,7 +236,7 @@ function DashboardContent() {
   const handleIncoming = useCallback((msg: ChatMessage) => {
     setChatMessages(prev => [...prev, msg])
   }, [])
-  const chatSocket = useUserChatSocket(session?.user?.id ?? '', activeChatUser?.id ?? '', handleIncoming)
+  useUserChatSocket(session?.user?.id ?? '', activeChatUser?.id ?? '', handleIncoming)
 
   async function sendMessage() {
     if (!chatInput.trim() || !session?.user || !activeChatUser) return
@@ -255,8 +249,6 @@ function DashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ carId: activeChatCarId, receiverId: activeChatUser.id, content }),
       }).catch(() => {})
-    } else if (chatSocket) {
-      chatSocket.emit('sendMessage', { senderId: session.user.id, receiverId: activeChatUser.id, content })
     }
   }
 
@@ -584,23 +576,31 @@ function DashboardContent() {
                 </div>
               ) : (
                 <ul>
-                  {msgUsers.map(u => (
-                    <li key={u.id}>
-                      <button
-                        onClick={() => setActiveChatUser(u)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors",
-                          activeChatUser?.id === u.id && "bg-muted"
-                        )}
-                      >
-                        <Avatar className="h-8 w-8 shrink-0">
-                          <AvatarImage src={u.image ?? undefined} />
-                          <AvatarFallback className="text-xs">{u.name?.slice(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium truncate">{u.name}</span>
-                      </button>
-                    </li>
-                  ))}
+                  {msgUsers.map(u => {
+                    const unreadCount = unreadPerSender[u.id] ?? 0
+                    return (
+                      <li key={u.id}>
+                        <button
+                          onClick={() => { setActiveChatUser(u); markSenderRead(u.id) }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors",
+                            activeChatUser?.id === u.id && "bg-muted"
+                          )}
+                        >
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarImage src={u.image ?? undefined} />
+                            <AvatarFallback className="text-xs">{u.name?.slice(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium truncate flex-1">{u.name}</span>
+                          {unreadCount > 0 && (
+                            <span className="ml-auto shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>

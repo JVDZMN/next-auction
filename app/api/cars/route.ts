@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
       ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
     }
 
-    const [total, cars] = await prisma.$transaction([
+    const [total, cars] = await Promise.all([
       prisma.car.count({ where }),
       prisma.car.findMany({
         where,

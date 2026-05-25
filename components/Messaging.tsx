@@ -22,10 +22,11 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const onSocketMessage = useCallback((msg: Message) => {
-    if (msg.carId === carId) setMessages((prev) => [...prev, msg]);
+    if (msg.carId === carId)
+      setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
   }, [carId]);
 
-  const socket = useSocket(carId, onSocketMessage);
+  useSocket(carId, onSocketMessage);
 
   // Fetch messages
   useEffect(() => {
@@ -72,17 +73,18 @@ const Messaging: React.FC<MessagingProps> = ({ carId, ownerId }) => {
         setLoading(false);
         return;
       }
-      // Send message via Socket.IO server
-      socket?.emit('sendMessage', {
-        carId,
-        message: {
-          carId,
-          sender: session?.user,
-          receiverId,
-          content: input.trim(),
-          replyToMessageId,
-        },
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ carId, receiverId, content: input.trim(), replyToMessageId }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setError(err.error || 'Failed to send message');
+        return;
+      }
+      const data = await res.json();
+      if (data.message) setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]);
       setInput('');
       setReplyTo(null);
     } catch {

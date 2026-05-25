@@ -1,5 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client'
+import { PrismaClient } from '@prisma/client'
 import { prisma, bidderSelect } from '@/lib/prisma'
 import { validateBid } from '@/lib/bid-validation'
 import { BidError } from '@/lib/bid-error'
@@ -20,76 +19,54 @@ export interface PlaceBidInput {
 export async function placeBid({ userId, carId, amount, _db, _disableSideEffects }: PlaceBidInput) {
   const client = _db ?? prisma
   // ------------------------------------------------------------------
-  // Atomic transaction: read car, validate, optimistic-lock update, write bid
-  // Serializable isolation prevents two concurrent bids both winning.
+  // Optimistic concurrency: read → validate → updateMany (price guard) → write bid
+  // The updateMany where currentPrice = X acts as the lock: if another bid
+  // landed first, count === 0 and we surface a 409 to the client.
   // ------------------------------------------------------------------
-  // P2034 = Postgres serialization failure — surface as a retryable 409
-  const { bid, car } = await client.$transaction(
-    async (tx) => {
-      const car = await tx.car.findUnique({
-        where: { id: carId },
-        include: {
-          owner: { select: { id: true, email: true, name: true } },
-        },
-      })
+  const car = await client.car.findUnique({
+    where: { id: carId },
+    include: { owner: { select: { id: true, email: true, name: true } } },
+  })
 
-      if (!car) throw new BidError('Car not found', 404)
+  if (!car) throw new BidError('Car not found', 404)
 
-      const validation = validateBid({
-        amount,
-        currentPrice: car.currentPrice,
-        status: car.status,
-        auctionEndDate: new Date(car.auctionEndDate),
-        ownerId: car.ownerId,
-        bidderId: userId,
-        bidIncrement: car.bidIncrement,
-      })
+  const validation = validateBid({
+    amount,
+    currentPrice: car.currentPrice,
+    status: car.status,
+    auctionEndDate: new Date(car.auctionEndDate),
+    ownerId: car.ownerId,
+    bidderId: userId,
+    bidIncrement: car.bidIncrement,
+  })
 
-      if (!validation.valid) throw new BidError(validation.error, validation.httpStatus)
+  if (!validation.valid) throw new BidError(validation.error, validation.httpStatus)
 
-      const carUpdate = await tx.car.updateMany({
-        where: { id: carId, currentPrice: car.currentPrice },
-        data: { currentPrice: amount },
-      })
+  const carUpdate = await client.car.updateMany({
+    where: { id: carId, currentPrice: car.currentPrice },
+    data: { currentPrice: amount },
+  })
 
-      if (carUpdate.count !== 1) {
-        throw new BidError(
-          'Another bid was placed just before yours. Please try again.',
-          409,
-        )
-      }
+  if (carUpdate.count !== 1) {
+    throw new BidError('Another bid was placed just before yours. Please try again.', 409)
+  }
 
-      const bid = await tx.bid.create({
-        data: { carId, bidderId: userId, amount },
-        include: { bidder: { select: bidderSelect } },
-      })
+  const bid = await client.bid.create({
+    data: { carId, bidderId: userId, amount },
+    include: { bidder: { select: bidderSelect } },
+  })
 
-      // Anti-sniping: extend auction if placed within the snipe window
-      const now = new Date()
-      const snipeWindow = car.antiSnipingMinutes * 60 * 1000
-      if (car.auctionEndDate.getTime() - now.getTime() < snipeWindow) {
-        await tx.car.update({
-          where: { id: carId },
-          data: {
-            winnerBidId: bid.id,
-            auctionEndDate: new Date(now.getTime() + snipeWindow),
-          },
-        })
-      } else {
-        await tx.car.update({
-          where: { id: carId },
-          data: { winnerBidId: bid.id },
-        })
-      }
-
-      return { bid, car }
+  // Anti-sniping: extend auction if placed within the snipe window
+  const now = new Date()
+  const snipeWindow = car.antiSnipingMinutes * 60 * 1000
+  await client.car.update({
+    where: { id: carId },
+    data: {
+      winnerBidId: bid.id,
+      ...(car.auctionEndDate.getTime() - now.getTime() < snipeWindow && {
+        auctionEndDate: new Date(now.getTime() + snipeWindow),
+      }),
     },
-    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-  ).catch((err) => {
-    if (err instanceof PrismaClientKnownRequestError && err.code === 'P2034') {
-      throw new BidError('Another bid was placed just before yours. Please try again.', 409)
-    }
-    throw err
   })
 
   // ------------------------------------------------------------------
@@ -109,24 +86,22 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
     const increment = car.bidIncrement ?? 1
     const proxyAmount = Math.min(amount + increment, competingProxy.maxAmount)
     try {
-      await client.$transaction(async (tx) => {
-        const freshCar = await tx.car.findUnique({ where: { id: carId } })
-        if (!freshCar || freshCar.currentPrice >= competingProxy.maxAmount) return
-
-        const carUpdate = await tx.car.updateMany({
+      const freshCar = await client.car.findUnique({ where: { id: carId } })
+      if (freshCar && freshCar.currentPrice < competingProxy.maxAmount) {
+        const proxyUpdate = await client.car.updateMany({
           where: { id: carId, currentPrice: freshCar.currentPrice },
           data: { currentPrice: proxyAmount },
         })
-        if (carUpdate.count !== 1) return
-
-        const proxyBidRecord = await tx.bid.create({
-          data: { carId, bidderId: competingProxy.bidderId, amount: proxyAmount },
-        })
-        await tx.car.update({
-          where: { id: carId },
-          data: { winnerBidId: proxyBidRecord.id },
-        })
-      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+        if (proxyUpdate.count === 1) {
+          const proxyBidRecord = await client.bid.create({
+            data: { carId, bidderId: competingProxy.bidderId, amount: proxyAmount },
+          })
+          await client.car.update({
+            where: { id: carId },
+            data: { winnerBidId: proxyBidRecord.id },
+          })
+        }
+      }
     } catch {
       // proxy bid failure is non-fatal
     }
@@ -154,10 +129,13 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
 
       const previousBids = await client.bid.findMany({
         where: { carId, bidderId: { not: userId } },
-        distinct: ['bidderId'],
-        select: { bidderId: true, bidder: { select: { email: true } } },
+        select: { bidderId: true },
       })
-      const outbidUserIds = previousBids.map((b) => b.bidderId)
+      const outbidUserIds = [...new Set(previousBids.map((b) => b.bidderId))]
+      const outbidBidders = await client.user.findMany({
+        where: { id: { in: outbidUserIds } },
+        select: { id: true, email: true },
+      })
 
       type NotifTarget = { userId: string; type: string; message: string }
       const targets: NotifTarget[] = [
@@ -174,14 +152,14 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
       })
 
       for (const t of targets) {
-        emitToUser(t.userId, 'newNotification', { type: t.type, message: t.message, carId })
+        emitToUser(t.userId, 'new-notification', { type: t.type, message: t.message, carId })
       }
 
       await Promise.allSettled(
-        previousBids
-          .filter((b) => b.bidder.email)
+        outbidBidders
+          .filter((b) => b.email)
           .map((b) => sendOutbidNotification({
-            to: b.bidder.email!,
+            to: b.email!,
             carTitle,
             newBidAmount: amount,
             carId,

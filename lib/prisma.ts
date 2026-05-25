@@ -1,4 +1,4 @@
-import { PrismaNeonHttp } from '@prisma/adapter-neon'
+import { PrismaNeon } from '@prisma/adapter-neon'
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as {
@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function makePrisma() {
-  const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {})
+  const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! })
   return new PrismaClient({ adapter })
 }
 
