@@ -75,7 +75,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     return () => clearInterval(interval)
   }, [car?.status])
 
-  const isOwner = session?.user?.id === car?.owner?.id
+  const isOwner = !!session?.user?.id && session.user.id === car?.owner?.id
 
   // Load bid log for owner; mark car bids read once loaded
   useEffect(() => {
