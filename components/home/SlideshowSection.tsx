@@ -5,15 +5,21 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SP, SPX } from './constants'
+import { useDict } from '@/lib/i18n/context'
 import type { TopCar } from '../HomeClient'
 
-const VISIBLE = 3
-const GAP     = 20
-const TICK    = 10_000
+const GAP  = 16
+const TICK = 10_000
 
-function timeLeft(iso: string): { label: string; urgent: boolean } {
+function visibleForWidth(w: number) {
+  if (w < 640)  return 1
+  if (w < 1024) return 2
+  return 3
+}
+
+function timeLeft(iso: string, endedLabel: string): { label: string; urgent: boolean } {
   const ms = new Date(iso).getTime() - Date.now()
-  if (ms <= 0) return { label: 'Ended', urgent: false }
+  if (ms <= 0) return { label: endedLabel, urgent: false }
   const d = Math.floor(ms / 86_400_000)
   const h = Math.floor((ms % 86_400_000) / 3_600_000)
   const m = Math.floor((ms % 3_600_000) / 60_000)
@@ -22,21 +28,30 @@ function timeLeft(iso: string): { label: string; urgent: boolean } {
   return { label: `${m}m`, urgent: true }
 }
 
-function SlideCard({ car, locale, cw, idx }: { car: TopCar; locale: string; cw: number; idx: number }) {
-  const tl = timeLeft(car.auctionEndDate)
+function SlideCard({ car, locale, cw, idx, labels }: {
+  car: TopCar; locale: string; cw: number; idx: number
+  labels: { currentBid: string; endsIn: string; ended: string; bids: string }
+}) {
+  const tl = timeLeft(car.auctionEndDate, labels.ended)
   return (
     <motion.div
       className="shrink-0 overflow-hidden rounded-2xl"
-      style={{ width: cw > 0 ? cw : '33%', backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 14px rgba(0,0,0,0.09)' }}
+      style={{ width: cw, backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 14px rgba(0,0,0,0.09)' }}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...SP, delay: idx * 0.04 }}
-      whileHover={{ y: -5, boxShadow: '0 10px 32px rgba(0,0,0,0.15)' }}
+      whileHover={{ y: -4, boxShadow: '0 10px 32px rgba(0,0,0,0.15)' }}
     >
       <Link href={`/${locale}/cars/${car.id}`} className="block">
-        <div className="relative overflow-hidden" style={{ aspectRatio: '16/10', backgroundColor: 'rgba(8,41,36,0.08)' }}>
+        <div className="relative overflow-hidden" style={{ aspectRatio: '16/10', backgroundColor: 'rgba(18,37,53,0.08)' }}>
           {car.images[0] ? (
-            <Image src={car.images[0]} alt={`${car.year} ${car.brand} ${car.model}`} fill className="object-cover transition-transform duration-500" sizes="33vw" />
+            <Image
+              src={car.images[0]}
+              alt={`${car.year} ${car.brand} ${car.model}`}
+              fill
+              className="object-cover transition-transform duration-500"
+              sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <svg className="h-14 w-20 text-white/30" viewBox="0 0 120 48" fill="currentColor">
@@ -46,20 +61,28 @@ function SlideCard({ car, locale, cw, idx }: { car: TopCar; locale: string; cw: 
             </div>
           )}
           <div className="absolute right-3 top-3 rounded px-2 py-0.5 text-xs font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-            {car.bidCount} bids
+            {car.bidCount} {labels.bids}
           </div>
         </div>
         <div className="p-4">
-          <p className="truncate text-sm font-black" style={{ color: 'var(--text-body)' }}>{car.year} {car.brand} {car.model}</p>
-          {car.subModel && <p className="mt-0.5 truncate text-xs" style={{ color: 'var(--text-muted)' }}>{car.subModel}</p>}
+          <p className="truncate text-sm font-black" style={{ color: 'var(--text-body)' }}>
+            {car.year} {car.brand} {car.model}
+          </p>
+          {car.subModel && (
+            <p className="mt-0.5 truncate text-xs" style={{ color: 'var(--text-muted)' }}>{car.subModel}</p>
+          )}
           <div className="mt-3 flex items-end justify-between">
             <div>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Current Bid</p>
-              <p className="text-base font-bold" style={{ color: 'var(--copper)' }}>{car.currentPrice.toLocaleString('da-DK')} kr</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{labels.currentBid}</p>
+              <p className="text-base font-bold" style={{ color: 'var(--copper)' }}>
+                {car.currentPrice.toLocaleString('da-DK')} kr
+              </p>
             </div>
             <div className="text-right">
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Ends in</p>
-              <p className="text-sm font-semibold" style={{ color: tl.urgent ? '#DC2626' : 'var(--text-muted)' }}>{tl.label}</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{labels.endsIn}</p>
+              <p className="text-sm font-semibold" style={{ color: tl.urgent ? '#DC2626' : 'var(--text-muted)' }}>
+                {tl.label}
+              </p>
             </div>
           </div>
         </div>
@@ -71,35 +94,64 @@ function SlideCard({ car, locale, cw, idx }: { car: TopCar; locale: string; cw: 
 interface Props { topCars: TopCar[]; locale: string }
 
 export function SlideshowSection({ topCars, locale }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [cw, setCw]         = useState(0)
-  const [offset, setOffset] = useState(0)
-  const maxOffset = Math.max(0, topCars.length - VISIBLE)
+  const dict = useDict().home.slideshow
+  const containerRef              = useRef<HTMLDivElement>(null)
+  const [cw,      setCw]         = useState(0)
+  const [visible, setVisible]    = useState(3)
+  const [offset,  setOffset]     = useState(0)
+
+  const maxOffset = Math.max(0, topCars.length - visible)
 
   const recalc = useCallback(() => {
-    if (containerRef.current) setCw((containerRef.current.offsetWidth - GAP * (VISIBLE - 1)) / VISIBLE)
+    if (!containerRef.current) return
+    const w = containerRef.current.offsetWidth
+    const v = visibleForWidth(w)
+    setVisible(v)
+    setCw((w - GAP * (v - 1)) / v)
+    setOffset(0)
   }, [])
 
-  useEffect(() => { recalc(); window.addEventListener('resize', recalc); return () => window.removeEventListener('resize', recalc) }, [recalc])
   useEffect(() => {
-    if (topCars.length <= VISIBLE) return
+    recalc()
+    window.addEventListener('resize', recalc)
+    return () => window.removeEventListener('resize', recalc)
+  }, [recalc])
+
+  useEffect(() => {
+    if (topCars.length <= visible) return
     const id = setInterval(() => setOffset(p => (p >= maxOffset ? 0 : p + 1)), TICK)
     return () => clearInterval(id)
-  }, [topCars.length, maxOffset])
+  }, [topCars.length, visible, maxOffset])
 
   if (topCars.length === 0) return null
 
   return (
-    <section className="min-h-screen flex flex-col justify-center py-16 sm:py-20" style={{ backgroundColor: 'var(--page-bg)' }}>
-      <div className="mx-auto max-w-7xl px-6 sm:px-10">
-        <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={SPX} className="mb-10 flex items-end justify-between">
+    <section
+      className="min-h-screen flex flex-col justify-center overflow-hidden py-16 sm:py-20"
+      style={{ backgroundColor: 'var(--page-bg)' }}
+    >
+      <div className="mx-auto w-full max-w-7xl px-6 sm:px-10">
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={SPX}
+          className="mb-10 flex items-end justify-between"
+        >
           <div>
-            <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>Most Active</p>
-            <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-body)' }}>Highest Bid Activity</h2>
+            <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
+              {dict.label}
+            </p>
+            <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-body)' }}>
+              {dict.heading}
+            </h2>
           </div>
-          <Link href={`/${locale}/cars`} className="hidden text-sm font-bold sm:block" style={{ color: 'var(--copper)' }}>View All →</Link>
+          <Link href={`/${locale}/cars`} className="hidden text-sm font-bold sm:block" style={{ color: 'var(--copper)' }}>
+            {dict.viewAll}
+          </Link>
         </motion.div>
 
+        {/* clip strip — overflow-hidden here prevents x-scroll bleed */}
         <div className="overflow-hidden" ref={containerRef}>
           <motion.div
             className="flex"
@@ -107,18 +159,24 @@ export function SlideshowSection({ topCars, locale }: Props) {
             animate={{ x: cw > 0 ? -(offset * (cw + GAP)) : 0 }}
             transition={{ type: 'spring', stiffness: 190, damping: 36, mass: 1.1 }}
           >
-            {topCars.map((car, i) => <SlideCard key={car.id} car={car} locale={locale} cw={cw} idx={i} />)}
+            {topCars.map((car, i) => (
+              <SlideCard key={car.id} car={car} locale={locale} cw={cw} idx={i} labels={dict} />
+            ))}
           </motion.div>
         </div>
 
-        {topCars.length > VISIBLE && (
+        {/* dots — only show when there are more cards than fit */}
+        {topCars.length > visible && (
           <div className="mt-8 flex justify-center gap-2">
             {Array.from({ length: maxOffset + 1 }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setOffset(i)}
                 className="h-1.5 rounded-full transition-all duration-300"
-                style={{ width: i === offset ? 22 : 6, backgroundColor: i === offset ? 'var(--copper)' : 'rgba(75,75,75,0.16)' }}
+                style={{
+                  width: i === offset ? 22 : 6,
+                  backgroundColor: i === offset ? 'var(--copper)' : 'rgba(75,75,75,0.16)',
+                }}
                 aria-label={`Slide ${i + 1}`}
               />
             ))}

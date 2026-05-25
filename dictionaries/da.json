@@ -26,7 +26,11 @@
       "title": "Find din næste bil",
       "subtitle": "Realtidsauktioner · Verificerede sælgere · Sikre betalinger",
       "browse": "Se auktioner",
-      "sell": "Sæt til salg"
+      "sell": "Sæt til salg",
+      "phrase1": "Registrer",
+      "phrase2": "Afgiv bud",
+      "phrase3": "Vind din drømmebil",
+      "listCar": "Opret bil"
     },
     "activeAuctions": "Aktive auktioner",
     "viewAll": "Se alle",
@@ -46,6 +50,59 @@
         "title": "Sikre betalinger",
         "body": "Drevet af Stripe for sikre og garanterede transaktioner"
       }
+    },
+    "welcome": {
+      "label": "Eksklusive auktioner",
+      "heading": "Det foretrukne marked for exceptionelle biler",
+      "body": "Opdag et kureret udvalg af luksus-, klassiske og højtydende køretøjer. Vores platform forbinder kræsne købere med verificerede sælgere i Skandinavien — med live-budgivning, gennemsigtig prissætning og fuld køber-beskyttelse.",
+      "cta": "Udforsk auktioner"
+    },
+    "brands": {
+      "label": "Førende mærker",
+      "heading": "De fineste mærker på markedet"
+    },
+    "slideshow": {
+      "label": "Mest aktive",
+      "heading": "Højeste budaktivitet",
+      "viewAll": "Se alle →",
+      "currentBid": "Aktuelt bud",
+      "endsIn": "Slutter om",
+      "ended": "Afsluttet",
+      "bids": "bud"
+    },
+    "workflow": {
+      "label": "Sådan fungerer det",
+      "heading": "Fire trin til din næste bil",
+      "cta": "Start budgivning i dag",
+      "step1label": "Registrer",
+      "step1desc": "Opret din gratis konto på få minutter",
+      "step2label": "Vælg",
+      "step2desc": "Gennemse og find dit drømmekøretøj",
+      "step3label": "Byd",
+      "step3desc": "Afgiv realtids konkurrencedygtige bud",
+      "step4label": "Vind",
+      "step4desc": "Sikre dit vindende køretøj"
+    },
+    "newsletter": {
+      "label": "Hold dig opdateret",
+      "heading": "Eksklusive opdateringer, først",
+      "body": "Modtag tidlig adgang til premium-opslag, auktionsadvarsler og nordiske bilnyheder.",
+      "placeholder": "E-mailadresse",
+      "subscribe": "Tilmeld",
+      "subscribing": "Tilmelder…",
+      "subscribed": "Tilmeldt — vi er i kontakt."
+    },
+    "footer": {
+      "tagline": "Specialiseret i salg af eksklusive køretøjer hjemme og i udlandet. Vi forbinder passionerede købere med exceptionelle biler siden 2024.",
+      "browse": "Se biler",
+      "signIn": "Log ind",
+      "register": "Registrer",
+      "listCar": "Opret bil",
+      "certified": "Certificeret platform",
+      "copyright": "© 2026 Automotive Auctions. Alle rettigheder forbeholdes.",
+      "privacy": "Privatlivspolitik",
+      "terms": "Vilkår og betingelser",
+      "faq": "FAQ"
     }
   },
   "cars": {

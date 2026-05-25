@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SP, SPX } from './constants'
+import { useDict } from '@/lib/i18n/context'
 
 const BRANDS_PER_PAGE = 12
 
@@ -15,12 +16,6 @@ const cardVariants = {
 const badgeVariants = {
   idle:  { scale: 0.90, y: 0  },
   hover: { scale: 1.10, y: -2 },
-}
-
-interface Props {
-  locale: string
-  brandCounts: Record<string, number>
-  activeBrands: string[]
 }
 
 function BrandCard({ name, count, locale }: { name: string; count: number; locale: string }) {
@@ -62,7 +57,14 @@ function BrandCard({ name, count, locale }: { name: string; count: number; local
   )
 }
 
+interface Props {
+  locale: string
+  brandCounts: Record<string, number>
+  activeBrands: string[]
+}
+
 export function BrandCarousel({ locale, brandCounts, activeBrands }: Props) {
+  const t = useDict().home.brands
   const [page, setPage] = useState(0)
   const totalPages = Math.max(1, Math.ceil(activeBrands.length / BRANDS_PER_PAGE))
   const pageBrands  = activeBrands.slice(page * BRANDS_PER_PAGE, (page + 1) * BRANDS_PER_PAGE)
@@ -70,8 +72,8 @@ export function BrandCarousel({ locale, brandCounts, activeBrands }: Props) {
   return (
     <section className="min-h-screen w-full overflow-hidden flex flex-col items-center justify-center py-16 sm:py-20" style={{ backgroundColor: 'var(--dark-section)' }}>
       <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={SPX} className="mb-10 w-full max-w-7xl px-4 sm:px-8 text-center">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>Leading Marques</p>
-        <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-light)' }}>The Finest Brands on the Market</h2>
+        <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>{t.label}</p>
+        <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-light)' }}>{t.heading}</h2>
       </motion.div>
 
       <div className="w-full max-w-7xl px-4 sm:px-8">

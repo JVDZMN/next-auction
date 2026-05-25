@@ -26,7 +26,11 @@
       "title": "Buy Your Dream Car",
       "subtitle": "Real-time bidding · Verified sellers · Secure transactions",
       "browse": "Browse Auctions",
-      "sell": "Start Selling"
+      "sell": "Start Selling",
+      "phrase1": "Register",
+      "phrase2": "Place a Bid",
+      "phrase3": "Win Your Dream Car",
+      "listCar": "List a Car"
     },
     "activeAuctions": "Active Auctions",
     "viewAll": "View all",
@@ -46,6 +50,59 @@
         "title": "Secure Payments",
         "body": "Powered by Stripe for safe and guaranteed transactions"
       }
+    },
+    "welcome": {
+      "label": "Exclusive Auctions",
+      "heading": "The Premier Marketplace for Exceptional Automobiles",
+      "body": "Discover a curated selection of luxury, classic, and high-performance vehicles. Our platform connects discerning buyers with verified sellers across Scandinavia — with live bidding, transparent pricing, and complete buyer protection.",
+      "cta": "Explore Auctions"
+    },
+    "brands": {
+      "label": "Leading Marques",
+      "heading": "The Finest Brands on the Market"
+    },
+    "slideshow": {
+      "label": "Most Active",
+      "heading": "Highest Bid Activity",
+      "viewAll": "View All →",
+      "currentBid": "Current Bid",
+      "endsIn": "Ends in",
+      "ended": "Ended",
+      "bids": "bids"
+    },
+    "workflow": {
+      "label": "How It Works",
+      "heading": "Four Steps to Your Next Car",
+      "cta": "Start Bidding Today",
+      "step1label": "Register",
+      "step1desc": "Create your free account in minutes",
+      "step2label": "Select",
+      "step2desc": "Browse and find your dream vehicle",
+      "step3label": "Bid",
+      "step3desc": "Place real-time competitive bids",
+      "step4label": "Win",
+      "step4desc": "Secure your winning vehicle"
+    },
+    "newsletter": {
+      "label": "Stay Informed",
+      "heading": "Exclusive Updates, First",
+      "body": "Receive early access to premium listings, auction alerts, and Nordic automotive news.",
+      "placeholder": "Email address",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing…",
+      "subscribed": "Subscribed — we'll be in touch."
+    },
+    "footer": {
+      "tagline": "Specialized in the sale of exclusive vehicles at home and abroad. Connecting passionate buyers with exceptional automobiles since 2024.",
+      "browse": "Browse Cars",
+      "signIn": "Sign In",
+      "register": "Register",
+      "listCar": "List a Car",
+      "certified": "Certified Platform",
+      "copyright": "© 2026 Automotive Auctions. All rights reserved.",
+      "privacy": "Privacy Statement",
+      "terms": "Terms and Conditions",
+      "faq": "FAQ"
     }
   },
   "cars": {

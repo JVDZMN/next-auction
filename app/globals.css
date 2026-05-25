@@ -62,51 +62,51 @@
 
 :root {
   /* ── Brand Palette — edit these 10 values to retheme the entire project ── */
-  --page-bg:      #f6f3f5;   /* warm off-white — page & light sections  */
-  --section-alt:  #ede8eb;   /* alternate light section background       */
-  --dark-section: #082924;   /* near-black green — dark sections         */
+  --page-bg:      #f3f0ec;   /* warm cream — page & light sections       */
+  --section-alt:  #e8e3dc;   /* warm light grey — alternate sections     */
+  --dark-section: #122535;   /* deep navy — header & dark sections       */
   --card-bg:      #ffffff;   /* white card surfaces                      */
-  --text-body:    #4b4b4b;   /* dark charcoal body text                  */
-  --text-muted:   #888888;   /* muted grey text                          */
+  --text-body:    #2c2c2c;   /* near-black body text                     */
+  --text-muted:   #8a8a8a;   /* muted grey text                          */
   --text-light:   #ffffff;   /* white text on dark surfaces              */
-  --brand:        #005c4e;   /* forest green primary                     */
-  --brand-mid:    #016959;   /* mid teal green accents & borders         */
-  --copper:       #91644a;   /* copper — CTA buttons & accent            */
+  --brand:        #1e5f74;   /* deep teal primary                        */
+  --brand-mid:    #277a96;   /* mid teal — accents & borders             */
+  --copper:       #c47d3a;   /* warm amber — CTA buttons & accent        */
   /* ────────────────────────────────────────────────────────────────── */
 
   /* shadcn base tokens — driven by the palette above */
-  --background:                 #f6f3f5;
-  --foreground:                 #4b4b4b;
+  --background:                 #f3f0ec;
+  --foreground:                 #2c2c2c;
   --card:                       #ffffff;
-  --card-foreground:            #4b4b4b;
+  --card-foreground:            #2c2c2c;
   --popover:                    #ffffff;
-  --popover-foreground:         #4b4b4b;
-  --primary:                    #005c4e;
+  --popover-foreground:         #2c2c2c;
+  --primary:                    #1e5f74;
   --primary-foreground:         #ffffff;
-  --secondary:                  #ede8eb;
-  --secondary-foreground:       #4b4b4b;
-  --muted:                      #ede8eb;
-  --muted-foreground:           #888888;
-  --accent:                     #ede8eb;
-  --accent-foreground:          #005c4e;
+  --secondary:                  #e8e3dc;
+  --secondary-foreground:       #2c2c2c;
+  --muted:                      #e8e3dc;
+  --muted-foreground:           #8a8a8a;
+  --accent:                     #e8e3dc;
+  --accent-foreground:          #1e5f74;
   --destructive:                oklch(0.577 0.245 27.325);
-  --border:                     #d0cece;
-  --input:                      #d0cece;
-  --ring:                       #005c4e;
-  --chart-1:                    #005c4e;
-  --chart-2:                    #016959;
-  --chart-3:                    #91644a;
-  --chart-4:                    #4b4b4b;
-  --chart-5:                    #888888;
+  --border:                     #d5d0c8;
+  --input:                      #d5d0c8;
+  --ring:                       #1e5f74;
+  --chart-1:                    #1e5f74;
+  --chart-2:                    #277a96;
+  --chart-3:                    #c47d3a;
+  --chart-4:                    #2c2c2c;
+  --chart-5:                    #8a8a8a;
   --radius:                     0.625rem;
-  --sidebar:                    #f6f3f5;
-  --sidebar-foreground:         #4b4b4b;
-  --sidebar-primary:            #005c4e;
+  --sidebar:                    #f3f0ec;
+  --sidebar-foreground:         #2c2c2c;
+  --sidebar-primary:            #1e5f74;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent:             #ede8eb;
-  --sidebar-accent-foreground:  #005c4e;
-  --sidebar-border:             #d0cece;
-  --sidebar-ring:               #005c4e;
+  --sidebar-accent:             #e8e3dc;
+  --sidebar-accent-foreground:  #1e5f74;
+  --sidebar-border:             #d5d0c8;
+  --sidebar-ring:               #1e5f74;
 }
 
 .dark {

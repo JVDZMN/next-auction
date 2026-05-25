@@ -3,38 +3,42 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { useLocale } from '@/lib/i18n/context'
 import { locales, type Locale } from '@/lib/i18n'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
-const labels: Record<Locale, string> = { da: 'DA', en: 'EN' }
+const FLAGS: Record<Locale, string> = { da: '🇩🇰', en: '🇬🇧' }
+const TITLES: Record<Locale, string> = { da: 'Dansk', en: 'English' }
 
 export function LanguageSwitcher() {
-  const locale = useLocale()
+  const locale   = useLocale()
   const pathname = usePathname()
-  const router = useRouter()
+  const router   = useRouter()
 
   function switchTo(next: Locale) {
-    if (!next || next === locale) return
+    if (next === locale) return
     const stripped = pathname?.replace(new RegExp(`^/${locale}`), '') || '/'
     document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`
     router.push(`/${next}${stripped}`)
   }
 
   return (
-    <ToggleGroup
-      value={[locale]}
-      onValueChange={(v) => { if (v.length > 0) switchTo(v[0] as Locale) }}
-      className="h-8 rounded-md border bg-background p-0.5 gap-0"
+    <div
+      className="flex items-center gap-0.5 rounded p-0.5"
+      style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
     >
       {locales.map((l) => (
-        <ToggleGroupItem
+        <button
           key={l}
-          value={l}
-          size="sm"
-          className="h-6 px-2 text-xs font-semibold data-[state=on]:bg-foreground data-[state=on]:text-background rounded-sm"
+          onClick={() => switchTo(l)}
+          title={TITLES[l]}
+          aria-label={TITLES[l]}
+          className="flex h-7 w-8 items-center justify-center rounded text-base leading-none transition-colors"
+          style={{
+            backgroundColor: l === locale ? 'rgba(255,255,255,0.18)' : 'transparent',
+            opacity: l === locale ? 1 : 0.45,
+          }}
         >
-          {labels[l]}
-        </ToggleGroupItem>
+          {FLAGS[l]}
+        </button>
       ))}
-    </ToggleGroup>
+    </div>
   )
 }

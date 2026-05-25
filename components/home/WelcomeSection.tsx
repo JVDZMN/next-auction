@@ -4,29 +4,30 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { SP, SPX } from './constants'
+import { useDict } from '@/lib/i18n/context'
 
 interface Props { locale: string; showcaseImage: string | null }
 
 export function WelcomeSection({ locale, showcaseImage }: Props) {
+  const t = useDict().home.welcome
+
   return (
     <section className="min-h-screen flex flex-col justify-center py-16 sm:py-20" style={{ backgroundColor: 'var(--page-bg)' }}>
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 sm:px-10 md:grid-cols-2 lg:gap-24">
 
         <motion.div initial={{ x: -48, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true, margin: '-80px' }} transition={SPX}>
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
-            Exclusive Auctions
+            {t.label}
           </p>
           <h2 className="mb-5 text-4xl font-black leading-tight sm:text-5xl" style={{ color: 'var(--text-body)' }}>
-            The Premier Marketplace for Exceptional Automobiles
+            {t.heading}
           </h2>
           <p className="mb-8 text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            Discover a curated selection of luxury, classic, and high-performance vehicles.
-            Our platform connects discerning buyers with verified sellers across Scandinavia —
-            with live bidding, transparent pricing, and complete buyer protection.
+            {t.body}
           </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={SP} className="inline-block">
             <Link href={`/${locale}/cars`} className="inline-flex items-center gap-2 rounded px-7 py-3.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-              Explore Auctions
+              {t.cta}
               <svg width="16" height="16" viewBox="0 0 15 15" fill="none">
                 <path d="M3 7.5h9M8 3l4.5 4.5L8 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

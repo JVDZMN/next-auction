@@ -4,27 +4,32 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SP } from './constants'
-
-const PHRASES = ['Register', 'Place a Bid', 'Win Your Dream Car']
+import { useDict } from '@/lib/i18n/context'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 interface Props { locale: string; isSignedIn: boolean }
 
 export function HeroSection({ locale, isSignedIn }: Props) {
+  const dict   = useDict()
+  const t      = dict.home.hero
+  const nav    = dict.nav
+  const phrases = [t.phrase1, t.phrase2, t.phrase3]
+
   const [idx, setIdx] = useState(0)
-  const done = idx === PHRASES.length - 1
+  const done = idx === phrases.length - 1
 
   useEffect(() => {
-    if (idx >= PHRASES.length - 1) return
-    const t = setTimeout(() => setIdx(i => i + 1), 1500)
-    return () => clearTimeout(t)
-  }, [idx])
+    if (idx >= phrases.length - 1) return
+    const timer = setTimeout(() => setIdx(i => i + 1), 1500)
+    return () => clearTimeout(timer)
+  }, [idx, phrases.length])
 
   return (
     <section className="relative flex h-screen flex-col overflow-hidden">
       <video autoPlay muted loop playsInline className="absolute inset-0 h-full w-full object-cover" aria-hidden>
         <source src="/videos/hero.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0" style={{ background: `linear-gradient(145deg, ${'var(--dark-section)'} 0%, rgba(8,41,36,0.7) 55%, ${'var(--dark-section)'} 100%)`, opacity: 0.88 }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, var(--dark-section) 0%, rgba(18,37,53,0.72) 55%, var(--dark-section) 100%)', opacity: 0.88 }} />
       <div className="absolute inset-0 bg-black/35" />
 
       <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-12">
@@ -33,14 +38,17 @@ export function HeroSection({ locale, isSignedIn }: Props) {
             Next<span style={{ color: 'var(--copper)' }}>Auction</span>
           </Link>
         </motion.div>
-        <div className="flex items-center gap-3 sm:gap-6">
-          <Link href={`/${locale}/cars`} className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white sm:block">Browse</Link>
-          <Link href={isSignedIn ? `/${locale}/dashboard` : `/${locale}/auth/signin`} className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white sm:block">
-            {isSignedIn ? 'Dashboard' : 'Sign In'}
+        <div className="flex items-center gap-3 sm:gap-5">
+          <Link href={`/${locale}/cars`} className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white sm:block">
+            {nav.browse}
           </Link>
+          <Link href={isSignedIn ? `/${locale}/dashboard` : `/${locale}/auth/signin`} className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white sm:block">
+            {isSignedIn ? nav.dashboard : nav.signIn}
+          </Link>
+          <LanguageSwitcher />
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} transition={SP}>
             <Link href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`} className="rounded px-4 py-2 text-sm font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-              {isSignedIn ? 'List a Car' : 'Register'}
+              {isSignedIn ? t.listCar : t.phrase1}
             </Link>
           </motion.div>
         </div>
@@ -58,7 +66,7 @@ export function HeroSection({ locale, isSignedIn }: Props) {
               className="font-black leading-none text-white"
               style={{ fontSize: 'clamp(2rem, 7vw, 5.5rem)', textShadow: '0 2px 24px rgba(0,0,0,0.5)' }}
             >
-              {PHRASES[idx]}
+              {phrases[idx]}
             </motion.h1>
           </AnimatePresence>
         </div>
@@ -66,7 +74,7 @@ export function HeroSection({ locale, isSignedIn }: Props) {
         <AnimatePresence>
           {done && (
             <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, ...SP }} className="mt-5 text-base text-white/65 sm:text-lg">
-              Real-time bidding · Verified sellers · Secure transactions
+              {t.subtitle}
             </motion.p>
           )}
         </AnimatePresence>
@@ -76,12 +84,12 @@ export function HeroSection({ locale, isSignedIn }: Props) {
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, ...SP }} className="mt-8 flex gap-4">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} transition={SP}>
                 <Link href={`/${locale}/cars`} className="rounded px-7 py-3.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-                  Browse Auctions
+                  {t.browse}
                 </Link>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} transition={SP}>
                 <Link href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`} className="rounded border px-7 py-3.5 text-sm font-bold text-white" style={{ borderColor: 'rgba(255,255,255,0.28)', backgroundColor: 'rgba(255,255,255,0.08)' }}>
-                  Start Selling
+                  {t.sell}
                 </Link>
               </motion.div>
             </motion.div>
