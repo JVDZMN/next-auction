@@ -1,25 +1,19 @@
-import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaNeonHttp } from '@prisma/adapter-neon'
 import { PrismaClient } from '@prisma/client'
-import { Pool } from 'pg'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
-  pool: Pool | undefined
 }
 
-const pool = globalForPrisma.pool ?? new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 1,                        // one connection per serverless function instance
-  connectionTimeoutMillis: 10_000, // wait up to 10 s for Neon to wake from sleep
-  idleTimeoutMillis: 10_000,
-})
+function makePrisma() {
+  const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {})
+  return new PrismaClient({ adapter })
+}
 
-const adapter = new PrismaPg(pool)
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
+export const prisma = globalForPrisma.prisma ?? makePrisma()
 
-// Always cache — on Vercel, globalThis persists across warm invocations in the same instance
+// Cache on globalThis so warm Vercel instances reuse the same client
 globalForPrisma.prisma = prisma
-globalForPrisma.pool = pool
 
 // Shared Prisma select/include fragments
 export const ownerSelect = {

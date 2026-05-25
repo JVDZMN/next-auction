@@ -24,6 +24,8 @@
     "@heroui/react": "^2.8.7",
     "@heroui/system": "^2.4.25",
     "@heroui/theme": "^2.4.25",
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^7.8.0",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "@sentry/nextjs": "^10.48.0",
