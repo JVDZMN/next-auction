@@ -3,7 +3,7 @@ import { prisma, bidderSelect } from '@/lib/prisma'
 import { validateBid } from '@/lib/bid-validation'
 import { BidError } from '@/lib/bid-error'
 import { sendBidNotification, sendOutbidNotification } from '@/lib/email'
-import { emitToUser } from '@/lib/socket-server'
+import { emitToUser, emitToCar } from '@/lib/socket-server'
 import { logger } from '@/lib/logger'
 
 export interface PlaceBidInput {
@@ -106,6 +106,9 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
       // proxy bid failure is non-fatal
     }
   }
+
+  // Broadcast new price to all viewers of this car page
+  emitToCar(carId, 'bid-placed', { currentPrice: amount, bidId: bid.id })
 
   logger.bid.placed({ userId, carId: car.id, amount })
 

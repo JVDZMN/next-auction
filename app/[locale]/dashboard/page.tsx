@@ -235,7 +235,10 @@ function DashboardContent() {
 
   const handleIncoming = useCallback((msg: ChatMessage) => {
     setChatMessages(prev => [...prev, msg])
-  }, [])
+    if (msg.senderId && activeChatUser?.id === msg.senderId) {
+      markSenderRead(msg.senderId)
+    }
+  }, [activeChatUser?.id, markSenderRead])
   useUserChatSocket(session?.user?.id ?? '', activeChatUser?.id ?? '', handleIncoming)
 
   async function sendMessage() {
@@ -422,6 +425,20 @@ function DashboardContent() {
                                 onClick={e => { e.stopPropagation(); router.push(`/${locale}/cars/${car.id}/edit`) }}>
                                 Edit
                               </Button>
+                              {car.isDraft && (
+                                <Button size="sm" variant="outline" className="h-7 px-2 text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                                  onClick={async e => {
+                                    e.stopPropagation()
+                                    const res = await fetch(`/api/cars/${car.id}`, {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ isDraft: false }),
+                                    })
+                                    if (res.ok) fetchUser()
+                                  }}>
+                                  Publish
+                                </Button>
+                              )}
                               {isExpanded
                                 ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                 : <ChevronRight className="h-4 w-4 text-muted-foreground" />}

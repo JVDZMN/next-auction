@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import { BiddingSection } from '@/components/BiddingSection'
@@ -26,6 +26,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { BadgeCheck, Eye, Pencil, Copy, XCircle, CalendarClock, CheckCircle2 } from 'lucide-react'
+import { getPusherClient } from '@/lib/pusher-client'
 
 interface BidEntry {
   id: string
@@ -91,7 +92,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOwner, id])
 
-  const fetchCar = async () => {
+  const fetchCar = useCallback(async () => {
     try {
       const response = await fetch(`/api/cars/${id}`)
       if (!response.ok) throw new Error('Failed to fetch car')
@@ -101,7 +102,18 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  // Real-time price updates when anyone places a bid
+  useEffect(() => {
+    const pusher  = getPusherClient()
+    const channel = pusher.subscribe(`car-${id}`)
+    channel.bind('bid-placed', fetchCar)
+    return () => {
+      channel.unbind('bid-placed', fetchCar)
+      pusher.unsubscribe(`car-${id}`)
+    }
+  }, [id, fetchCar])
 
   if (loading) return <LoadingPage />
   if (error || !car) return <ErrorPage message={error || 'Car not found'} />
