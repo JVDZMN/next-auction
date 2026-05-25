@@ -14,7 +14,6 @@ graph TD
         direction TB
         Pages["Pages\n/  /cars  /cars/[id]  /cars/create\n/dashboard  /admin  /auth"]
         API["API Routes\n/api/cars · /api/bids · /api/messages\n/api/upload · /api/admin · /api/cron\n/api/auth · /api/mitid · /api/motorapi"]
-        WS["Socket.io\npages/api/socketio"]
     end
 
     subgraph data["Data Layer"]
@@ -23,6 +22,7 @@ graph TD
     end
 
     subgraph external["External Services"]
+        Pusher["Pusher Channels\nReal-time Events"]
         Cloudinary["Cloudinary\nImage Storage"]
         Resend["Resend\nTransactional Email"]
         MotorDK["MotorAPI.dk\nVehicle Registry"]
@@ -35,13 +35,14 @@ graph TD
 
     Browser -- "HTTP" --> Pages
     Browser -- "HTTP" --> API
-    Browser -- "WebSocket" --> WS
     Browser -- "address autocomplete" --> DAWA
 
     Pages --> API
     API --> Prisma
     Prisma --> DB
 
+    API -- "trigger events" --> Pusher
+    Pusher -- "bid-placed · new-message · new-notification" --> Browser
     API -- "store images" --> Cloudinary
     API -- "bid / outbid / alert emails" --> Resend
     API -- "plate & VIN lookup (proxied)" --> MotorDK
@@ -49,7 +50,6 @@ graph TD
     API -- "identity verification" --> MitID
     API -- "unhandled errors" --> Sentry
     API -- "payments" --> Stripe
-    WS -- "new bid · outbid · notification" --> Browser
 ```
 
 ## Tech Stack
@@ -60,7 +60,7 @@ graph TD
 | Database | PostgreSQL + Prisma ORM |
 | Auth | NextAuth.js (Google OAuth + credentials) |
 | Identity verification | MitID via Criipto / Idura broker |
-| Real-time | Polling (15 s interval on active auctions) |
+| Real-time | Pusher Channels (sub-second push on bid, message, notification) |
 | Email | Resend |
 | Image upload | Cloudinary |
 | Error tracking | Sentry |
@@ -85,9 +85,9 @@ graph TD
 - **Saved search alerts** — Users with matching saved searches are emailed when a new listing is published
 
 ### Bidding
-- **Live updates** — Car detail page polls every 15 seconds; price and bid history update automatically for all viewers
-- **Race condition protection** — Prisma `$transaction` with Serializable isolation ensures two concurrent bids can never both win
-- **Rate limiting** — 5 bids / 10 s per user; 10 messages / 60 s per user (sliding-window, in-memory)
+- **Live updates** — Pusher `bid-placed` event pushes new price to every open car page the instant a bid lands; no polling
+- **Race condition protection** — Optimistic lock via `car.updateMany({ where: { currentPrice: snapshot } })`; if another bid landed first, `count === 0` and a 409 is returned immediately
+- **Rate limiting** — 5 bids / 10 s per user; 10 messages / 60 s per user (Upstash Redis sliding-window; in-memory fallback for local dev)
 - **Proxy bidding** — Set a maximum bid; system auto-bids up to that amount
 - **Anti-sniping** — Last-minute bids extend the auction end time by a configurable number of minutes
 - **Reserve price** — Owner sets a hidden minimum; auction closes as `reserve_not_met` if not reached
@@ -127,13 +127,13 @@ graph TD
 ### Concurrent bid safety
 Two users submitting the same bid amount at the same millisecond is the classic auction race condition. The solution uses two layers of defence:
 
-1. **Serializable isolation** — `prisma.$transaction(..., { isolationLevel: 'Serializable' })` tells Postgres to abort any transaction whose result would differ if the reads were re-executed. If two transactions read the same `currentPrice` concurrently, Postgres aborts one of them with a `P2034` serialization failure, which the service converts to a retryable `409`.
-2. **Optimistic lock** — `car.updateMany({ where: { id, currentPrice: snapshot } })` acts as a second check: if the price moved between the read and the write, `count === 0` and the bid is rejected immediately without waiting for Postgres to detect the conflict.
+1. **Optimistic lock** — `car.updateMany({ where: { id, currentPrice: snapshot } })`: if the price changed between the read and the write, `count === 0` and the bid returns a 409 immediately. This is the primary guard and works correctly across all Postgres drivers without requiring serializable transactions.
+2. **Input validation** — `validateBid()` rejects bids below the minimum increment, from the car's owner, or after auction end before any DB write occurs.
 
-Both layers are covered by integration tests that fire 20 concurrent bids and assert exactly one commits.
+The optimistic lock is covered by unit tests and an integration test that fires 20 concurrent bids and asserts exactly one succeeds.
 
 ### Fire-and-forget side effects
-Post-bid work (outbid emails, in-app notifications, socket events) runs in a `void (async () => { ... })()` block after the transaction commits. The bid response is returned immediately without waiting for emails to send. Failures in this block are caught, logged to Sentry, and do not affect the bid result. This keeps p99 bid latency low even when Resend is slow.
+Post-bid work (outbid emails, in-app notifications, Pusher events) runs in a `void (async () => { ... })()` block after the bid is written. The bid response is returned immediately without waiting for emails to send. Failures in this block are caught, logged to Sentry, and do not affect the bid result. This keeps p99 bid latency low even when Resend is slow.
 
 ### MotorAPI proxy
 The Danish vehicle registry (MotorAPI.dk) requires an API token that must not be exposed to the browser. `/api/motorapi` proxies the request server-side, maps the raw response fields (fuel type, gear type, dates, engine volume in cc → litres) to the form's field names, and returns only what the form needs. The browser never sees the token.
@@ -150,7 +150,7 @@ The Danish vehicle registry (MotorAPI.dk) requires an API token that must not be
 | Authentication | NextAuth.js — session cookie (httpOnly, sameSite=lax) |
 | Authorisation | Every mutating route checks `requireAuth()` or `requireAdmin()` before touching the DB |
 | Input validation | Zod schemas on all POST/PATCH bodies; Prisma parameterised queries prevent SQL injection |
-| Rate limiting | 5 bids / 10 s and 10 messages / 60 s per user (sliding window) |
+| Rate limiting | 5 bids / 10 s and 10 messages / 60 s per user (Upstash Redis sliding window) |
 | Owner self-bid | Validated in `bid-validation.ts` — returns 403 before the transaction opens |
 | API token exposure | MotorAPI token never leaves the server; proxied via `/api/motorapi` |
 | Env vars at startup | Missing required variables throw at boot, not at request time |
@@ -227,6 +227,14 @@ GOOGLE_CLIENT_SECRET
 CRIIPTO_CLIENT_ID        # MitID via Idura broker (optional)
 CRIIPTO_CLIENT_SECRET
 CRIIPTO_DOMAIN
+PUSHER_APP_ID
+PUSHER_KEY
+PUSHER_SECRET
+PUSHER_CLUSTER
+NEXT_PUBLIC_PUSHER_KEY
+NEXT_PUBLIC_PUSHER_CLUSTER
+UPSTASH_REDIS_REST_URL   # optional — falls back to in-memory rate limiter if absent
+UPSTASH_REDIS_REST_TOKEN
 NEXT_PUBLIC_SENTRY_DSN   # optional
 SENTRY_DSN               # optional
 ```
@@ -418,7 +426,7 @@ npm run test:integration
 
 What the integration tests prove:
 
-- Serializable transaction isolation prevents two concurrent bids both winning
+- Optimistic locking (`updateMany WHERE currentPrice = snapshot`) prevents two concurrent bids both winning
 - Under a 20-bid storm, exactly one bid commits and the rest get clean 400/409 errors
 - `winnerBidId` on the car always points to the single committed bid
 - Invalid bids (expired auction, owner self-bid, non-existent car, amount too low) are rejected with the correct HTTP status and leave the database unchanged
