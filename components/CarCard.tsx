@@ -6,6 +6,7 @@ import { LikeButton } from '@/components/LikeButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLocale } from '@/lib/i18n/context'
+import { cloudinaryBlurUrl } from '@/lib/cloudinary'
 
 type CarCardProps = {
   id: string
@@ -23,6 +24,7 @@ type CarCardProps = {
   auctionEndDate: string | Date
   bidCount: number
   isLiked?: boolean
+  priority?: boolean
   owner: { name: string | null }
 }
 
@@ -37,7 +39,7 @@ function getTimeRemaining(endDate: string | Date): { label: string; urgent: bool
   return { label: `${mins}m`, urgent: true }
 }
 
-export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false }: CarCardProps) {
+export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, priority = false }: CarCardProps) {
   const locale = useLocale()
   const { label, urgent } = getTimeRemaining(auctionEndDate)
 
@@ -57,6 +59,10 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
               alt={`${year} ${brand} ${model}`}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
+              sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+              priority={priority}
+              placeholder="blur"
+              blurDataURL={cloudinaryBlurUrl(images[0])}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No image</div>

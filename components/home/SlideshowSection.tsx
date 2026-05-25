@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { SP, SPX } from './constants'
 import { useDict } from '@/lib/i18n/context'
 import type { TopCar } from '../HomeClient'
+import { cloudinaryBlurUrl } from '@/lib/cloudinary'
 
 const GAP  = 16
 const TICK = 10_000
@@ -28,8 +29,8 @@ function timeLeft(iso: string, endedLabel: string): { label: string; urgent: boo
   return { label: `${m}m`, urgent: true }
 }
 
-function SlideCard({ car, locale, cw, idx, labels }: {
-  car: TopCar; locale: string; cw: number; idx: number
+function SlideCard({ car, locale, cw, idx, labels, priority }: {
+  car: TopCar; locale: string; cw: number; idx: number; priority?: boolean
   labels: { currentBid: string; endsIn: string; ended: string; bids: string }
 }) {
   const tl = timeLeft(car.auctionEndDate, labels.ended)
@@ -51,6 +52,9 @@ function SlideCard({ car, locale, cw, idx, labels }: {
               fill
               className="object-cover transition-transform duration-500"
               sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw"
+              priority={priority}
+              placeholder="blur"
+              blurDataURL={cloudinaryBlurUrl(car.images[0])}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
@@ -160,7 +164,7 @@ export function SlideshowSection({ topCars, locale }: Props) {
             transition={{ type: 'spring', stiffness: 190, damping: 36, mass: 1.1 }}
           >
             {topCars.map((car, i) => (
-              <SlideCard key={car.id} car={car} locale={locale} cw={cw} idx={i} labels={dict} />
+              <SlideCard key={car.id} car={car} locale={locale} cw={cw} idx={i} labels={dict} priority={i < 3} />
             ))}
           </motion.div>
         </div>

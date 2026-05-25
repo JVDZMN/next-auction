@@ -316,8 +316,8 @@ export default function CarsPage() {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {data?.cars.map(car => (
-                    <CarCard key={car.id} {...car} bidCount={car._count.bids} />
+                  {data?.cars.map((car, i) => (
+                    <CarCard key={car.id} {...car} bidCount={car._count.bids} priority={i < 3} />
                   ))}
                 </div>
 

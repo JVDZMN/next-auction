@@ -70,12 +70,6 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     fetch(`/api/cars/${id}/view`, { method: 'POST' }).catch(() => {})
   }, [id])
 
-  useEffect(() => {
-    if (!car || car.status !== 'active') return
-    const interval = setInterval(fetchCar, 15000)
-    return () => clearInterval(interval)
-  }, [car?.status])
-
   const isOwner = !!session?.user?.id && session.user.id === car?.owner?.id
 
   // Load bid log for owner; mark car bids read once loaded

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
+import { cloudinaryBlurUrl } from '@/lib/cloudinary'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,8 @@ export function CarImageGallery({ images, alt }: Props) {
           className="object-cover transition-opacity duration-200"
           priority={active === 0}
           sizes="(min-width: 1280px) 840px, (min-width: 768px) 65vw, 100vw"
+          placeholder="blur"
+          blurDataURL={cloudinaryBlurUrl(images[active])}
         />
 
         {images.length > 1 && (
