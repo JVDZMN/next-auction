@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 import { locales, defaultLocale, type Locale } from '@/lib/i18n'
 
 const COOKIE = 'NEXT_LOCALE'
@@ -22,14 +23,36 @@ function negotiateLocale(acceptLanguage: string | null): Locale {
   return (preferred as Locale | undefined) ?? defaultLocale
 }
 
-export function middleware(request: NextRequest) {
+function requiresAuth(pathname: string): boolean {
+  return locales.some(
+    locale =>
+      pathname.startsWith(`/${locale}/dashboard`) ||
+      pathname === `/${locale}/cars/create`,
+  )
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // ── 1. Pass through paths that should never be locale-prefixed ──────────
   const pathnameHasLocale = locales.some(
     locale => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   )
-  if (pathnameHasLocale) return NextResponse.next()
+
+  if (pathnameHasLocale) {
+    // ── 1a. Auth guard for protected pages ─────────────────────────────────
+    if (requiresAuth(pathname)) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+      if (!token) {
+        const locale = (locales.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? defaultLocale) as Locale
+        const url = request.nextUrl.clone()
+        url.pathname = `/${locale}/auth/signin`
+        url.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(url)
+      }
+    }
+    return NextResponse.next()
+  }
 
   // ── 2. Determine locale: cookie → Accept-Language → default ─────────────
   const cookieLocale = request.cookies.get(COOKIE)?.value
