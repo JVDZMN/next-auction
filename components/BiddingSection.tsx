@@ -114,8 +114,15 @@ export function BiddingSection({
 
   // Pusher: patch price and prepend to history directly — no fetchCar, no polling
   useEffect(() => {
+    console.log('BiddingSection mounted, carId:', carId)
     const pusher  = getPusherClient()
+
+    pusher.connection.bind('connected', () => console.log('✅ Pusher connected'))
+    pusher.connection.bind('error',     (err: unknown) => console.log('❌ Pusher error:', err))
+
     const channel = pusher.subscribe(`car-${carId}`)
+    console.log('Subscribed to channel:', `car-${carId}`)
+
     channel.bind('bid-placed', (data: {
       currentPrice: number
       bidCount:     number
@@ -124,6 +131,7 @@ export function BiddingSection({
       bidId:        string
       timestamp:    string
     }) => {
+      console.log('🔴 BID RECEIVED:', data)
       setLivePrice(data.currentPrice)
       onPriceUpdate?.(data.currentPrice)
       if (canSeeBidHistory) {
@@ -136,6 +144,7 @@ export function BiddingSection({
       }
     })
     return () => {
+      console.log('BiddingSection cleanup — unsubscribing car-' + carId)
       channel.unbind_all()
       pusher.unsubscribe(`car-${carId}`)
     }
