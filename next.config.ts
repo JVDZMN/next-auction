@@ -13,6 +13,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https://res.cloudinary.com data: blob:",
+      "media-src 'self' https://res.cloudinary.com",
       "font-src 'self' https://fonts.gstatic.com",
       "connect-src 'self' https://*.pusher.com wss://*.pusher.com https://vitals.vercel-insights.com",
       "frame-src 'none'",

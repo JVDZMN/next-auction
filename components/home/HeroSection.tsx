@@ -25,28 +25,28 @@ export function HeroSection({ locale, isSignedIn }: Props) {
 
   return (
     <section className="relative flex h-screen flex-col overflow-hidden">
-      {/* Mobile: static poster image — avoids loading 7.4MB video on slow connections */}
+      {/* Mobile: static poster — no video download on mobile */}
       <div className="md:hidden absolute inset-0">
         <Image
-          src="/images/hero-poster.jpg"
+          src="https://res.cloudinary.com/datuwakbu/video/upload/q_auto,f_auto,so_0/v1780002950/lta1rscjlaoe9bg9rpxc.jpg"
           alt=""
           fill
           className="object-cover"
           priority
         />
       </div>
-      {/* Desktop: video, deferred until browser is ready */}
+      {/* Desktop: Cloudinary video with automatic quality/format optimisation */}
       <video
         autoPlay
         muted
         loop
         playsInline
         preload="none"
-        poster="/images/hero-poster.jpg"
+        poster="https://res.cloudinary.com/datuwakbu/video/upload/q_auto,f_auto,so_0/v1780002950/lta1rscjlaoe9bg9rpxc.jpg"
         className="hidden md:block absolute inset-0 h-full w-full object-cover"
         aria-hidden
       >
-        <source src="/videos/hero.mp4" type="video/mp4" />
+        <source src="https://res.cloudinary.com/datuwakbu/video/upload/q_auto,f_auto/v1780002950/lta1rscjlaoe9bg9rpxc.mp4" type="video/mp4" />
       </video>
       <div className="absolute inset-0" style={{ background: 'linear-gradient(145deg, var(--dark-section) 0%, rgba(18,37,53,0.72) 55%, var(--dark-section) 100%)', opacity: 0.88 }} />
       <div className="absolute inset-0 bg-black/35" />
