@@ -56,19 +56,12 @@ export function HeroSection({ locale, isSignedIn }: Props) {
 
       <div className="relative z-20 flex flex-1 flex-col items-center justify-center px-4 text-center">
         <div className="overflow-hidden" style={{ height: 'clamp(56px, 10vw, 100px)' }}>
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={idx}
-              initial={{ y: '110%', opacity: 0, filter: 'blur(6px)' }}
-              animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
-              exit={{ y: '-110%', opacity: 0, filter: 'blur(6px)' }}
-              transition={{ type: 'spring', mass: 0.45, stiffness: 340, damping: 26 }}
-              className="font-black leading-none text-white"
-              style={{ fontSize: 'clamp(2rem, 7vw, 5.5rem)', textShadow: '0 2px 24px rgba(0,0,0,0.5)' }}
-            >
-              {phrases[idx]}
-            </motion.h1>
-          </AnimatePresence>
+          <h1
+            className="font-black leading-none text-white"
+            style={{ fontSize: 'clamp(2rem, 7vw, 5.5rem)', textShadow: '0 2px 24px rgba(0,0,0,0.5)' }}
+          >
+            {phrases[idx]}
+          </h1>
         </div>
 
         <AnimatePresence>
