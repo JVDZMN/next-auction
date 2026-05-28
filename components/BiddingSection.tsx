@@ -4,7 +4,6 @@ import { useState, useEffect, useLayoutEffect, useTransition, useCallback, useRe
 import { placeBid as placeBidAction, setProxyBid } from '@/app/actions/bids'
 import { getPusherClient } from '@/lib/pusher-client'
 import { useSession } from 'next-auth/react'
-import { Prisma } from '@prisma/client'
 import { toast } from 'sonner'
 import { PriceDisplay } from '@/components/PriceDisplay'
 import { AuctionCountdown } from '@/components/AuctionCountdown'
@@ -34,7 +33,12 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { CheckCircle2, AlertTriangle, XCircle, Info } from 'lucide-react'
 
-type BidWithBidder = Prisma.BidGetPayload<{ include: { bidder: true } }>
+interface BidEntry {
+  id: string
+  amount: number
+  createdAt: string | Date
+  bidder: { name: string | null; email: string }
+}
 
 interface BiddingSectionProps {
   carId: string
@@ -56,7 +60,7 @@ export function BiddingSection({
   const t = dict.bidding
 
   const [livePrice,   setLivePrice]   = useState(currentPrice)
-  const [bids,        setBids]        = useState<BidWithBidder[]>([])
+  const [bids,        setBids]        = useState<BidEntry[]>([])
   const [bidAmount,   setBidAmount]   = useState('')
   const [isPending,   startTransition] = useTransition()
   const [error,       setError]       = useState<string | null>(null)
@@ -107,20 +111,33 @@ export function BiddingSection({
     fetchBids()
   }, [carId, canSeeBidHistory, fetchBids])
 
-  // Pusher: update price + refresh bid history on every bid event
+  // Pusher: patch price and prepend to history directly — no fetchCar, no polling
   useEffect(() => {
     const pusher  = getPusherClient()
     const channel = pusher.subscribe(`car-${carId}`)
-    const handler = (data: { currentPrice: number; bidCount: number; bidderName: string; timestamp: string }) => {
+    channel.bind('bid-placed', (data: {
+      currentPrice: number
+      bidCount:     number
+      bidderId:     string
+      bidderName:   string
+      bidId:        string
+      timestamp:    string
+    }) => {
       setLivePrice(data.currentPrice)
-      if (canSeeBidHistory) fetchBids()
-    }
-    channel.bind('bid-placed', handler)
+      if (canSeeBidHistory) {
+        setBids(prev => [{
+          id:        data.bidId,
+          amount:    data.currentPrice,
+          createdAt: data.timestamp,
+          bidder:    { name: data.bidderName, email: '' },
+        }, ...prev])
+      }
+    })
     return () => {
-      channel.unbind('bid-placed', handler)
+      channel.unbind_all()
       pusher.unsubscribe(`car-${carId}`)
     }
-  }, [carId, canSeeBidHistory, fetchBids])
+  }, [carId, canSeeBidHistory])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

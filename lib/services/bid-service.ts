@@ -6,6 +6,14 @@ import { sendBidNotification, sendOutbidNotification } from '@/lib/email'
 import { emitToUser, emitToCar } from '@/lib/socket-server'
 import { logger } from '@/lib/logger'
 
+function maskName(raw: string): string {
+  if (raw.includes('@')) {
+    const [local, domain] = raw.split('@')
+    return `${local[0]}***@${domain}`
+  }
+  return raw.split(' ').map(p => p.length > 1 ? `${p[0]}***` : p).join(' ')
+}
+
 export interface PlaceBidInput {
   userId: string
   carId: string
@@ -114,7 +122,8 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
     currentPrice: amount,
     bidId:        bid.id,
     bidCount,
-    bidderName:  bid.bidder.name ?? bid.bidder.email,
+    bidderId:    userId,
+    bidderName:  maskName(bid.bidder.name ?? bid.bidder.email),
     timestamp:   new Date().toISOString(),
   })
 
