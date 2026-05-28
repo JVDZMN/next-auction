@@ -49,11 +49,12 @@ interface BiddingSectionProps {
   reservePrice?: number | null
   bidIncrement?: number | null
   onBidPlaced?: () => void
+  onPriceUpdate?: (price: number) => void
 }
 
 export function BiddingSection({
   carId, currentPrice, auctionEndDate, status, ownerId,
-  reservePrice, bidIncrement, onBidPlaced,
+  reservePrice, bidIncrement, onBidPlaced, onPriceUpdate,
 }: BiddingSectionProps) {
   const { data: session } = useSession()
   const dict = useDict()
@@ -124,6 +125,7 @@ export function BiddingSection({
       timestamp:    string
     }) => {
       setLivePrice(data.currentPrice)
+      onPriceUpdate?.(data.currentPrice)
       if (canSeeBidHistory) {
         setBids(prev => [{
           id:        data.bidId,

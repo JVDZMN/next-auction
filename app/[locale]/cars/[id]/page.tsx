@@ -26,7 +26,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { BadgeCheck, Eye, Pencil, Copy, XCircle, CalendarClock, CheckCircle2 } from 'lucide-react'
-import { getPusherClient } from '@/lib/pusher-client'
 
 interface BidEntry {
   id: string
@@ -98,19 +97,9 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     }
   }, [id])
 
-  // Real-time price updates — patch car state directly from event data, no refetch needed
-  useEffect(() => {
-    const pusher  = getPusherClient()
-    const channel = pusher.subscribe(`car-${id}`)
-    const handler = (data: { currentPrice: number }) => {
-      setCar(prev => prev ? { ...prev, currentPrice: data.currentPrice } : prev)
-    }
-    channel.bind('bid-placed', handler)
-    return () => {
-      channel.unbind('bid-placed', handler)
-      pusher.unsubscribe(`car-${id}`)
-    }
-  }, [id])
+  // Price updates come via BiddingSection's Pusher subscription (onPriceUpdate callback below).
+  // Keeping a second subscription here caused channel conflicts — both sides called
+  // pusher.unsubscribe() on cleanup, killing the channel for each other.
 
   if (loading) return <LoadingPage />
   if (error || !car) return <ErrorPage message={error || 'Car not found'} />
@@ -344,6 +333,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               reservePrice={car.reservePrice}
               bidIncrement={car.bidIncrement}
               onBidPlaced={fetchCar}
+              onPriceUpdate={(price) => setCar(prev => prev ? { ...prev, currentPrice: price } : prev)}
             />
 
             {isOwner && car.status === 'reserve_not_met' && car.bids.length > 0 && (
