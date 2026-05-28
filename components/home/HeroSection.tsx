@@ -77,14 +77,12 @@ export function HeroSection({ locale, isSignedIn }: Props) {
       </nav>
 
       <div className="relative z-20 flex flex-1 flex-col items-center justify-center px-4 text-center">
-        <div className="overflow-hidden" style={{ height: 'clamp(56px, 10vw, 100px)' }}>
-          <h1
-            className="font-black leading-none text-white"
-            style={{ fontSize: 'clamp(2rem, 7vw, 5.5rem)', textShadow: '0 2px 24px rgba(0,0,0,0.5)' }}
-          >
-            {phrases[idx]}
-          </h1>
-        </div>
+        <h1
+          className="font-black leading-none text-white"
+          style={{ fontSize: 'clamp(2rem, 7vw, 5.5rem)', textShadow: '0 2px 24px rgba(0,0,0,0.5)' }}
+        >
+          {phrases[idx]}
+        </h1>
 
         <p
           className={`mt-5 text-base text-white/65 sm:text-lg transition-all duration-500 ${done ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
