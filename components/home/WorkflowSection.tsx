@@ -48,10 +48,10 @@ export function WorkflowSection({ locale }: Props) {
   return (
     <section className="min-h-screen flex flex-col justify-center py-16 sm:py-20" style={{ backgroundColor: 'var(--dark-section)' }}>
       <div className="mx-auto max-w-6xl px-6 sm:px-10">
-        <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={SPX} className="mb-16 text-center">
+        <div className="mb-16 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>{t.label}</p>
           <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-light)' }}>{t.heading}</h2>
-        </motion.div>
+        </div>
 
         <div ref={ref} className="relative flex flex-col items-center gap-10 sm:flex-row sm:items-start sm:justify-between sm:gap-0">
           {steps.map((step, i) => (
@@ -67,14 +67,12 @@ export function WorkflowSection({ locale }: Props) {
                 className="z-10 flex flex-col items-center text-center"
                 style={{ width: 'clamp(100px, 22%, 150px)' }}
               >
-                <motion.div
-                  className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
-                  style={{ backgroundColor: 'var(--dark-section)', border: `2px solid ${'var(--copper)'}`, boxShadow: `0 0 0 0px ${'var(--dark-section)'}` }}
-                  whileHover={{ scale: 1.1, boxShadow: 'rgba(18,37,53,0.25) 0 0 0 10px' }}
-                  transition={SP}
+                <div
+                  className="mb-4 flex h-20 w-20 items-center justify-center rounded-full hover:scale-110 transition-transform duration-150"
+                  style={{ backgroundColor: 'var(--dark-section)', border: `2px solid ${'var(--copper)'}` }}
                 >
                   <step.Icon className="h-9 w-9 text-white" />
-                </motion.div>
+                </div>
                 <p className="mb-1 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--copper)' }}>0{step.id}</p>
                 <p className="mb-1.5 text-lg font-black" style={{ color: 'var(--text-light)' }}>{step.label}</p>
                 <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', maxWidth: 110 }}>{step.desc}</p>
@@ -100,16 +98,18 @@ export function WorkflowSection({ locale }: Props) {
           ))}
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ ...SPX, delay: 0.35 }} className="mt-16 text-center">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} transition={SP} className="inline-block">
-            <Link href={`/${locale}/auth/signup`} className="inline-flex items-center gap-2 rounded px-8 py-4 text-sm font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-              {t.cta}
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
-          </motion.div>
-        </motion.div>
+        <div className="mt-16 text-center">
+          <Link
+            href={`/${locale}/auth/signup`}
+            className="inline-flex items-center gap-2 rounded px-8 py-4 text-sm font-bold text-white hover:scale-105 active:scale-97 transition-transform duration-150"
+            style={{ backgroundColor: 'var(--copper)' }}
+          >
+            {t.cta}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </section>
   )

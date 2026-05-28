@@ -36,12 +36,11 @@ function SlideCard({ car, locale, cw, idx, labels, priority }: {
   const tl = timeLeft(car.auctionEndDate, labels.ended)
   return (
     <motion.div
-      className="shrink-0 overflow-hidden rounded-2xl"
+      className="shrink-0 overflow-hidden rounded-2xl hover:-translate-y-1 transition-transform duration-200"
       style={{ width: cw, backgroundColor: 'var(--card-bg)', boxShadow: '0 2px 14px rgba(0,0,0,0.09)' }}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...SP, delay: idx * 0.04 }}
-      whileHover={{ y: -4, boxShadow: '0 10px 32px rgba(0,0,0,0.15)' }}
     >
       <Link href={`/${locale}/cars/${car.id}`} className="block">
         <div className="relative overflow-hidden" style={{ aspectRatio: '16/10', backgroundColor: 'rgba(18,37,53,0.08)' }}>

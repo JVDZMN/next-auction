@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { AnimatePresence, motion } from 'framer-motion'
-import { SP } from './constants'
 import { useDict } from '@/lib/i18n/context'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 interface Props { locale: string; isSignedIn: boolean }
 
 export function HeroSection({ locale, isSignedIn }: Props) {
-  const dict   = useDict()
-  const t      = dict.home.hero
-  const nav    = dict.nav
+  const dict    = useDict()
+  const t       = dict.home.hero
+  const nav     = dict.nav
   const phrases = [t.phrase1, t.phrase2, t.phrase3]
 
   const [idx, setIdx] = useState(0)
@@ -33,11 +31,12 @@ export function HeroSection({ locale, isSignedIn }: Props) {
       <div className="absolute inset-0 bg-black/35" />
 
       <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-12">
-        <motion.div whileHover={{ scale: 1.04 }} transition={SP}>
-          <Link href={`/${locale}`} className="select-none text-xl font-black text-white tracking-tight">
-            Next<span style={{ color: 'var(--copper)' }}>Auction</span>
-          </Link>
-        </motion.div>
+        <Link
+          href={`/${locale}`}
+          className="select-none text-xl font-black text-white tracking-tight hover:scale-105 transition-transform duration-150 inline-block"
+        >
+          Next<span style={{ color: 'var(--copper)' }}>Auction</span>
+        </Link>
         <div className="flex items-center gap-3 sm:gap-5">
           <Link href={`/${locale}/cars`} className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white sm:block">
             {nav.browse}
@@ -46,11 +45,13 @@ export function HeroSection({ locale, isSignedIn }: Props) {
             {isSignedIn ? nav.dashboard : nav.signIn}
           </Link>
           <LanguageSwitcher />
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} transition={SP}>
-            <Link href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`} className="rounded px-4 py-2 text-sm font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-              {isSignedIn ? t.listCar : t.phrase1}
-            </Link>
-          </motion.div>
+          <Link
+            href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`}
+            className="rounded px-4 py-2 text-sm font-bold text-white hover:scale-105 active:scale-95 transition-transform duration-150 inline-block"
+            style={{ backgroundColor: 'var(--copper)' }}
+          >
+            {isSignedIn ? t.listCar : t.phrase1}
+          </Link>
         </div>
       </nav>
 
@@ -64,44 +65,42 @@ export function HeroSection({ locale, isSignedIn }: Props) {
           </h1>
         </div>
 
-        <AnimatePresence>
-          {done && (
-            <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, ...SP }} className="mt-5 text-base text-white/65 sm:text-lg">
-              {t.subtitle}
-            </motion.p>
-          )}
-        </AnimatePresence>
+        <p
+          className={`mt-5 text-base text-white/65 sm:text-lg transition-all duration-500 ${done ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+        >
+          {t.subtitle}
+        </p>
 
-        <AnimatePresence>
-          {done && (
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, ...SP }} className="mt-8 flex gap-4">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} transition={SP}>
-                <Link href={`/${locale}/cars`} className="rounded px-7 py-3.5 text-sm font-bold text-white" style={{ backgroundColor: 'var(--copper)' }}>
-                  {t.browse}
-                </Link>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }} transition={SP}>
-                <Link href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`} className="rounded border px-7 py-3.5 text-sm font-bold text-white" style={{ borderColor: 'rgba(255,255,255,0.28)', backgroundColor: 'rgba(255,255,255,0.08)' }}>
-                  {t.sell}
-                </Link>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div
+          className={`mt-8 flex gap-4 transition-all duration-500 delay-200 ${done ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+        >
+          <Link
+            href={`/${locale}/cars`}
+            className="rounded px-7 py-3.5 text-sm font-bold text-white hover:scale-105 active:scale-95 transition-transform duration-150 inline-block"
+            style={{ backgroundColor: 'var(--copper)' }}
+          >
+            {t.browse}
+          </Link>
+          <Link
+            href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`}
+            className="rounded border px-7 py-3.5 text-sm font-bold text-white hover:scale-105 active:scale-95 transition-transform duration-150 inline-block"
+            style={{ borderColor: 'rgba(255,255,255,0.28)', backgroundColor: 'rgba(255,255,255,0.08)' }}
+          >
+            {t.sell}
+          </Link>
+        </div>
       </div>
 
-      <AnimatePresence>
-        {done && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }} className="relative z-20 flex justify-center pb-7">
-            <motion.div animate={{ y: [0, 7, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">Scroll</span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-white/35">
-                <path d="M7 2v10M2 8l5 5 5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div
+        className={`relative z-20 flex justify-center pb-7 transition-opacity duration-700 delay-1000 ${done ? 'opacity-100' : 'opacity-0'}`}
+      >
+        <div className="flex flex-col items-center gap-1 animate-bounce">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">Scroll</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-white/35">
+            <path d="M7 2v10M2 8l5 5 5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
     </section>
   )
 }

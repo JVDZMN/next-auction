@@ -1,9 +1,6 @@
 'use client'
 
 import { useState, forwardRef } from 'react'
-import { motion } from 'framer-motion'
-
-const spring = { type: 'spring', mass: 0.5, stiffness: 380, damping: 26 } as const
 
 interface MotionTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   hasError?: boolean
@@ -14,18 +11,17 @@ export const MotionTextarea = forwardRef<HTMLTextAreaElement, MotionTextareaProp
     const [focused, setFocused] = useState(false)
 
     return (
-      <motion.div
-        layout
-        animate={{
-          scale:     focused ? 1.012 : 1,
+      <div
+        style={{
+          borderRadius: 6,
+          transform: focused ? 'scale(1.012)' : 'scale(1)',
           boxShadow: focused
             ? hasError
               ? '0 0 0 3px rgba(239,68,68,0.22), 0 2px 8px rgba(239,68,68,0.10)'
               : '0 0 0 3px rgba(59,130,246,0.22), 0 2px 8px rgba(59,130,246,0.08)'
             : '0 0 0 0px transparent, 0 1px 3px rgba(0,0,0,0.06)',
+          transition: 'transform 150ms ease, box-shadow 150ms ease',
         }}
-        transition={spring}
-        style={{ borderRadius: 6 }}
       >
         <textarea
           ref={ref}
@@ -41,7 +37,7 @@ export const MotionTextarea = forwardRef<HTMLTextAreaElement, MotionTextareaProp
             props.className ?? '',
           ].join(' ')}
         />
-      </motion.div>
+      </div>
     )
   }
 )

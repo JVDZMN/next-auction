@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { SP, SPX } from './constants'
 import { useDict } from '@/lib/i18n/context'
 
 interface Props { locale: string }
@@ -28,7 +27,7 @@ export function NewsletterAndFooter({ locale }: Props) {
     <div className="min-h-screen flex flex-col">
       {/* Newsletter */}
       <section className="flex-1 flex flex-col justify-center py-16 sm:py-20" style={{ backgroundColor: 'var(--page-bg)' }}>
-        <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={SPX} className="mx-auto max-w-lg px-6 text-center">
+        <div className="mx-auto max-w-lg px-6 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>{tn.label}</p>
           <h2 className="mb-3 text-3xl font-black" style={{ color: 'var(--text-body)' }}>{tn.heading}</h2>
           <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{tn.body}</p>
@@ -45,13 +44,13 @@ export function NewsletterAndFooter({ locale }: Props) {
                   className="flex-1 rounded border px-4 py-3 text-sm focus:outline-none"
                   style={{ borderColor: 'rgba(75,75,75,0.13)', color: 'var(--text-body)', backgroundColor: 'white' }}
                 />
-                <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} transition={SP} className="rounded px-6 py-3 text-sm font-bold text-white whitespace-nowrap" style={{ backgroundColor: 'var(--copper)', opacity: loading ? 0.7 : 1 }}>
+                <button type="submit" disabled={loading} className="rounded px-6 py-3 text-sm font-bold text-white whitespace-nowrap hover:scale-105 active:scale-95 transition-transform duration-150" style={{ backgroundColor: 'var(--copper)', opacity: loading ? 0.7 : 1 }}>
                   {loading ? tn.subscribing : tn.subscribe}
-                </motion.button>
+                </button>
               </motion.form>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </section>
 
       {/* Footer */}
