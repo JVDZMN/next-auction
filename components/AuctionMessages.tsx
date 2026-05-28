@@ -1,12 +1,8 @@
 "use client";
 import { useSocket } from '@/lib/useSocket';
-// Removed HeroUI Modal import
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
-
-
-// File was truncated. Re-adding a minimal valid AuctionMessages component to fix build error.
-
 import { useEffect, useState, useCallback } from 'react';
+import { sendMessage as sendMessageAction } from '@/app/actions/messages';
 
 interface Message {
   id: string;
@@ -60,17 +56,13 @@ export default function AuctionMessages({ carId, ownerId }: AuctionMessagesProps
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ carId, receiverId: ownerId, content: input }),
-      });
-      const data = await res.json();
-      if (data.message) {
-        setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]);
-        setInput('');
+      const result = await sendMessageAction({ carId, receiverId: ownerId, content: input });
+      if ('error' in result) {
+        setError(result.error);
       } else {
-        setError(data.error || 'Failed to send message');
+        const msg = (result as { message: Message }).message
+        setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
+        setInput('');
       }
     } catch {
       setError('Failed to send message');

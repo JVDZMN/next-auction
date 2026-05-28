@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSocket } from "@/lib/useSocket"
 import { cn } from "@/lib/utils"
+import { sendMessage as sendMessageAction } from "@/app/actions/messages"
 
 interface Message {
   id: string
@@ -65,17 +66,13 @@ export default function MessageSeller({ carId, ownerId, ownerName }: MessageSell
     const content = input.trim()
     setInput("")
     try {
-      const res = await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ carId, receiverId: ownerId, content }),
-      })
-      const data = await res.json()
-      if (data.message) {
-        setMessages(prev => prev.some(m => m.id === data.message.id) ? prev : [...prev, data.message])
-      } else {
-        setError(data.error || "Failed to send")
+      const result = await sendMessageAction({ carId, receiverId: ownerId, content })
+      if ('error' in result) {
+        setError(result.error)
         setInput(content)
+      } else {
+        const msg = (result as { message: Message }).message
+        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg])
       }
     } catch {
       setError("Failed to send")

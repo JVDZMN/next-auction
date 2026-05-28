@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from '@/lib/i18n/context'
 import { Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toggleLike } from '@/app/actions/cars'
 
 interface LikeButtonProps {
   carId: string
@@ -17,7 +18,7 @@ export function LikeButton({ carId, initialLiked }: LikeButtonProps) {
   const router = useRouter()
   const locale = useLocale()
   const [liked, setLiked] = useState(initialLiked)
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   async function toggle(e: React.MouseEvent) {
     e.preventDefault()
@@ -26,20 +27,19 @@ export function LikeButton({ carId, initialLiked }: LikeButtonProps) {
       router.push(`/${locale}/auth/signin`)
       return
     }
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/cars/${carId}/like`, { method: liked ? 'DELETE' : 'POST' })
-      if (res.ok) setLiked(!liked)
-    } finally {
-      setLoading(false)
-    }
+    const optimistic = !liked
+    setLiked(optimistic)
+    startTransition(async () => {
+      const result = await toggleLike(carId, liked)
+      if ('error' in result) setLiked(liked) // revert on error
+    })
   }
 
   return (
     <button
       type="button"
       onClick={toggle}
-      disabled={loading}
+      disabled={isPending}
       aria-label={liked ? 'Remove from favourites' : 'Add to favourites'}
       className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors disabled:opacity-50 shadow-sm"
     >

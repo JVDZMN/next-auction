@@ -8,6 +8,7 @@ import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout"
 import { useLocale } from "@/lib/i18n/context"
 import { useNotifications } from "@/lib/notification-context"
 import { useUserChatSocket } from "@/lib/useUserChatSocket"
+import { sendMessage as sendMessageAction } from "@/app/actions/messages"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -247,11 +248,7 @@ function DashboardContent() {
     setChatInput('')
     setChatMessages(prev => [...prev, { senderId: session.user.id, content }])
     if (activeChatCarId) {
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ carId: activeChatCarId, receiverId: activeChatUser.id, content }),
-      }).catch(() => {})
+      await sendMessageAction({ carId: activeChatCarId, receiverId: activeChatUser.id, content }).catch(() => {})
     }
   }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useCallback, useRef } from 'react'
+import { placeBid as placeBidAction, setProxyBid } from '@/app/actions/bids'
 import { useSession } from 'next-auth/react'
 import { Prisma } from '@prisma/client'
 import { toast } from 'sonner'
@@ -120,23 +121,16 @@ export function BiddingSection({
     setError(null)
     setSuccess(null)
     startTransition(async () => {
-      try {
-        const res  = await fetch('/api/bids', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ carId, amount }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to place bid')
+      const result = await placeBidAction(carId, amount)
+      if ('error' in result) {
+        setError(result.error)
+        toast.error(result.error)
+      } else {
         setSuccess(t.success)
         setBidAmount('')
         toast.success(t.success)
         fetchBids()
         onBidPlaced?.()
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Failed to place bid'
-        setError(msg)
-        toast.error(msg)
       }
     })
   }
@@ -152,21 +146,16 @@ export function BiddingSection({
     }
     setProxyPending(true)
     try {
-      const res  = await fetch('/api/proxy-bids', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ carId, maxAmount: max }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed')
-      const msg = t.proxyBid.success.replace('{amount}', max.toLocaleString('da-DK') + ' kr')
-      setProxySuccess(msg)
-      setProxyMax('')
-      toast.success(msg)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to set proxy bid'
-      setProxyError(msg)
-      toast.error(msg)
+      const result = await setProxyBid(carId, max)
+      if ('error' in result) {
+        setProxyError(result.error)
+        toast.error(result.error)
+      } else {
+        const msg = t.proxyBid.success.replace('{amount}', max.toLocaleString('da-DK') + ' kr')
+        setProxySuccess(msg)
+        setProxyMax('')
+        toast.success(msg)
+      }
     } finally {
       setProxyPending(false)
     }

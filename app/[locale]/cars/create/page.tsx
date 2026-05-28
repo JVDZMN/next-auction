@@ -13,6 +13,7 @@ import { CarSpecsSection } from '@/components/car-create/CarSpecsSection'
 import { CarAuctionSection } from '@/components/car-create/CarAuctionSection'
 import { CarDocsSection } from '@/components/car-create/CarDocsSection'
 import { useLocale } from '@/lib/i18n/context'
+import { createCar } from '@/app/actions/cars'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -165,37 +166,33 @@ export default function CreateCarPage() {
     }
 
     try {
-      const response = await fetch('/api/cars', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          images: uploadedImages,
-          km: parseInt(formData.km),
-          lastInspectionKm: formData.lastInspectionKm ? parseInt(formData.lastInspectionKm) : null,
-          year: parseInt(formData.year),
-          power: parseInt(formData.power),
-          startingPrice: parseFloat(formData.startingPrice),
-          reservePrice: formData.reservePrice ? parseFloat(formData.reservePrice) : null,
-          auctionEndDate: new Date(formData.auctionEndDate).toISOString(),
-          auctionStartDate: formData.auctionStartDate ? new Date(formData.auctionStartDate).toISOString() : null,
-          engineSize: formData.engineSize ? parseFloat(formData.engineSize) : null,
-          seats: formData.seats ? parseInt(formData.seats) : null,
-          weight: formData.weight ? parseInt(formData.weight) : null,
-          bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : null,
-          firstRegistration: formData.firstRegistration ? new Date(formData.firstRegistration).toISOString() : null,
-          lastInspection: formData.lastInspection ? new Date(formData.lastInspection).toISOString() : null,
-          nextInspection: formData.nextInspection ? new Date(formData.nextInspection).toISOString() : null,
-          serviceHistoryUrls,
-          isDraft,
-        }),
+      const result = await createCar({
+        ...formData,
+        images: uploadedImages,
+        km: parseInt(formData.km),
+        lastInspectionKm: formData.lastInspectionKm ? parseInt(formData.lastInspectionKm) : null,
+        year: parseInt(formData.year),
+        power: parseInt(formData.power),
+        startingPrice: parseFloat(formData.startingPrice),
+        reservePrice: formData.reservePrice ? parseFloat(formData.reservePrice) : null,
+        auctionEndDate: new Date(formData.auctionEndDate).toISOString(),
+        auctionStartDate: formData.auctionStartDate ? new Date(formData.auctionStartDate).toISOString() : null,
+        engineSize: formData.engineSize ? parseFloat(formData.engineSize) : null,
+        seats: formData.seats ? parseInt(formData.seats) : null,
+        weight: formData.weight ? parseInt(formData.weight) : null,
+        bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : null,
+        firstRegistration: formData.firstRegistration ? new Date(formData.firstRegistration).toISOString() : null,
+        lastInspection: formData.lastInspection ? new Date(formData.lastInspection).toISOString() : null,
+        nextInspection: formData.nextInspection ? new Date(formData.nextInspection).toISOString() : null,
+        serviceHistoryUrls,
+        isDraft,
       })
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to create auction')
+      if ('error' in result) {
+        setError(result.error)
+        shakeButtons()
+      } else {
+        router.push(`/${locale}/cars/${result.carId}`)
       }
-      const car = await response.json()
-      router.push(`/${locale}/cars/${car.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       shakeButtons()
