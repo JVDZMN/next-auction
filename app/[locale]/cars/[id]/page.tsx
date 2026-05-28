@@ -98,16 +98,19 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     }
   }, [id])
 
-  // Real-time price updates when anyone places a bid
+  // Real-time price updates — patch car state directly from event data, no refetch needed
   useEffect(() => {
     const pusher  = getPusherClient()
     const channel = pusher.subscribe(`car-${id}`)
-    channel.bind('bid-placed', fetchCar)
+    const handler = (data: { currentPrice: number }) => {
+      setCar(prev => prev ? { ...prev, currentPrice: data.currentPrice } : prev)
+    }
+    channel.bind('bid-placed', handler)
     return () => {
-      channel.unbind('bid-placed', fetchCar)
+      channel.unbind('bid-placed', handler)
       pusher.unsubscribe(`car-${id}`)
     }
-  }, [id, fetchCar])
+  }, [id])
 
   if (loading) return <LoadingPage />
   if (error || !car) return <ErrorPage message={error || 'Car not found'} />

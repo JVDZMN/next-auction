@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useTransition, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useTransition, useCallback, useRef } from 'react'
 import { placeBid as placeBidAction, setProxyBid } from '@/app/actions/bids'
+import { getPusherClient } from '@/lib/pusher-client'
 import { useSession } from 'next-auth/react'
 import { Prisma } from '@prisma/client'
 import { toast } from 'sonner'
@@ -54,6 +55,7 @@ export function BiddingSection({
   const dict = useDict()
   const t = dict.bidding
 
+  const [livePrice,   setLivePrice]   = useState(currentPrice)
   const [bids,        setBids]        = useState<BidWithBidder[]>([])
   const [bidAmount,   setBidAmount]   = useState('')
   const [isPending,   startTransition] = useTransition()
@@ -84,9 +86,12 @@ export function BiddingSection({
   const isAdmin         = session?.user?.role === 'Admin'
   const canSeeBidHistory = isOwner || isAdmin
 
+  // Keep livePrice in sync if the parent re-renders with a fresh prop (e.g. on page load)
+  useLayoutEffect(() => { setLivePrice(currentPrice) }, [currentPrice])
+
   const minNextBid = bidIncrement && bidIncrement > 0
-    ? currentPrice + bidIncrement
-    : currentPrice + 1
+    ? livePrice + bidIncrement
+    : livePrice + 1
 
   const fetchBids = useCallback(async () => {
     try {
@@ -96,11 +101,25 @@ export function BiddingSection({
     finally { setIsLoading(false) }
   }, [carId])
 
+  // Initial load for owner/admin bid history
   useEffect(() => {
     if (!canSeeBidHistory) return
     fetchBids()
-    const id = setInterval(fetchBids, 5_000)
-    return () => clearInterval(id)
+  }, [carId, canSeeBidHistory, fetchBids])
+
+  // Pusher: update price + refresh bid history on every bid event
+  useEffect(() => {
+    const pusher  = getPusherClient()
+    const channel = pusher.subscribe(`car-${carId}`)
+    const handler = (data: { currentPrice: number; bidCount: number; bidderName: string; timestamp: string }) => {
+      setLivePrice(data.currentPrice)
+      if (canSeeBidHistory) fetchBids()
+    }
+    channel.bind('bid-placed', handler)
+    return () => {
+      channel.unbind('bid-placed', handler)
+      pusher.unsubscribe(`car-${carId}`)
+    }
   }, [carId, canSeeBidHistory, fetchBids])
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -140,8 +159,8 @@ export function BiddingSection({
     setProxyError(null)
     setProxySuccess(null)
     const max = parseFloat(proxyMax)
-    if (isNaN(max) || max <= currentPrice) {
-      setProxyError(`${t.minimumBid}: ${currentPrice.toLocaleString('da-DK')} kr`)
+    if (isNaN(max) || max <= livePrice) {
+      setProxyError(`${t.minimumBid}: ${livePrice.toLocaleString('da-DK')} kr`)
       return
     }
     setProxyPending(true)
@@ -191,7 +210,7 @@ export function BiddingSection({
         {/* Current bid panel */}
         <div className="rounded-xl border p-5">
           <div className="flex items-start justify-between gap-4">
-            <PriceDisplay price={currentPrice} label={t.currentBid} size="lg" />
+            <PriceDisplay price={livePrice} label={t.currentBid} size="lg" />
             {isAuctionActive && <AuctionCountdown endDate={auctionEndDate} className="mt-1" />}
           </div>
 
@@ -267,7 +286,7 @@ export function BiddingSection({
                 min={minNextBid}
                 value={proxyMax}
                 onChange={e => setProxyMax(e.target.value)}
-                placeholder={`${t.proxyBid.placeholder} (> ${currentPrice.toLocaleString('da-DK')} kr)`}
+                placeholder={`${t.proxyBid.placeholder} (> ${livePrice.toLocaleString('da-DK')} kr)`}
                 required
               />
               <Button type="submit" variant="secondary" disabled={proxyPending}>
