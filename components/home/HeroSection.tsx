@@ -14,7 +14,9 @@ export function HeroSection({ locale, isSignedIn }: Props) {
   const nav     = dict.nav
   const phrases = [t.phrase1, t.phrase2, t.phrase3]
 
-  const [idx, setIdx] = useState(0)
+  // Start at the final phrase so SSR and first paint show the real headline.
+  // Cycling would show "Register" as the LCP element — wrong text, wrong signal to Google.
+  const [idx, setIdx] = useState(phrases.length - 1)
   const done = idx === phrases.length - 1
 
   useEffect(() => {
