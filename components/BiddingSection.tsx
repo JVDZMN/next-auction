@@ -117,8 +117,15 @@ export function BiddingSection({
     console.log('BiddingSection mounted, carId:', carId)
     const pusher  = getPusherClient()
 
-    pusher.connection.bind('connected', () => console.log('✅ Pusher connected'))
-    pusher.connection.bind('error',     (err: unknown) => console.log('❌ Pusher error:', err))
+    console.log('Pusher key:', process.env.NEXT_PUBLIC_PUSHER_KEY ?? 'MISSING')
+    console.log('Pusher cluster:', process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? 'MISSING')
+    pusher.connection.bind('state_change', (states: { current: string; previous: string }) =>
+      console.log('Pusher state:', states.previous, '→', states.current)
+    )
+    pusher.connection.bind('connected',   () => console.log('✅ Pusher connected'))
+    pusher.connection.bind('error',       (err: unknown) => console.log('❌ Pusher error:', err))
+    pusher.connection.bind('failed',      () => console.log('❌ Pusher failed'))
+    pusher.connection.bind('unavailable', () => console.log('⚠️ Pusher unavailable'))
 
     const channel = pusher.subscribe(`car-${carId}`)
     console.log('Subscribed to channel:', `car-${carId}`)
