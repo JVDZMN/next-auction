@@ -42,7 +42,7 @@ vi.mock('@/lib/email', () => ({
   sendBidNotification:  vi.fn().mockResolvedValue(undefined),
   sendOutbidNotification: vi.fn().mockResolvedValue(undefined),
 }))
-vi.mock('@/lib/socket-server', () => ({ emitToUser: vi.fn() }))
+vi.mock('@/lib/socket-server', () => ({ emitToUser: vi.fn(), emitToCar: vi.fn() }))
 vi.mock('@/lib/logger', () => ({
   logger: {
     bid: { placed: vi.fn(), rateLimited: vi.fn(), attempted: vi.fn(), rejected: vi.fn(), failed: vi.fn() },
