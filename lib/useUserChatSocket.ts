@@ -19,7 +19,6 @@ export function useUserChatSocket<T = unknown>(
     channel.bind('new-message', handler)
     return () => {
       channel.unbind('new-message', handler)
-      pusher.unsubscribe(`user-${userId}`)
     }
   }, [userId])
 

@@ -15,7 +15,6 @@ export function useSocket<T = unknown>(carId: string, onMessage: (msg: T) => voi
     channel.bind('new-message', handler)
     return () => {
       channel.unbind('new-message', handler)
-      pusher.unsubscribe(`car-${carId}`)
     }
   }, [carId])
 

@@ -140,8 +140,7 @@ export function BiddingSection({
       console.log('[Pusher] state updates dispatched')
     })
     return () => {
-      channel.unbind_all()
-      pusher.unsubscribe(`car-${carId}`)
+      channel.unbind('bid-placed')
     }
   }, [carId, canSeeBidHistory, onPriceUpdate])
 

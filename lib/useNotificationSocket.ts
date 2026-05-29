@@ -26,7 +26,6 @@ export function useNotificationSocket(
     channel.bind('new-notification', handler)
     return () => {
       channel.unbind('new-notification', handler)
-      pusher.unsubscribe(`user-${userId}`)
     }
   }, [userId])
 }
