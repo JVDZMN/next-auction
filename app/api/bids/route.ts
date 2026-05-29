@@ -72,20 +72,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'carId is required' }, { status: 400 })
     }
 
-    const session = await requireAuth()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const isAdmin = session.user.role === 'Admin'
-
-    if (!isAdmin) {
-      const car = await prisma.car.findUnique({ where: { id: carId }, select: { ownerId: true } })
-      if (!car || car.ownerId !== session.user.id) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
-    }
-
     const bids = await prisma.bid.findMany({
       where: { carId },
       orderBy: { createdAt: 'desc' },
