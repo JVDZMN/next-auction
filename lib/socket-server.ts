@@ -6,8 +6,8 @@ export function emitToUser(userId: string, event: string, data: unknown) {
   })
 }
 
-export function emitToCar(carId: string, event: string, data: unknown) {
-  pusherServer.trigger(`car-${carId}`, event, data).catch((err) => {
+export async function emitToCar(carId: string, event: string, data: unknown): Promise<void> {
+  await pusherServer.trigger(`car-${carId}`, event, data).catch((err) => {
     console.error('[Pusher] emitToCar failed', { carId, event, err })
   })
 }

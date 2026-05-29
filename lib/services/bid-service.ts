@@ -118,7 +118,7 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
   const bidCount = await client.bid.count({ where: { carId } })
 
   // Broadcast new price to all viewers of this car page
-  emitToCar(carId, 'bid-placed', {
+  await emitToCar(carId, 'bid-placed', {
     currentPrice: amount,
     bidId:        bid.id,
     bidCount,
