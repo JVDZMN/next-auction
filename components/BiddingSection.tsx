@@ -110,6 +110,7 @@ export function BiddingSection({
   useEffect(() => {
     if (!canSeeBidHistory) return
     fetchBids()
+    console.log('fetching bids for car', carId)
   }, [carId, canSeeBidHistory, fetchBids])
 
   // Pusher: patch price and prepend to history directly — no fetchCar, no polling
