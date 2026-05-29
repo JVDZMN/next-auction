@@ -126,6 +126,7 @@ export function BiddingSection({
       bidId:        string
       timestamp:    string
     }) => {
+      console.log('[Pusher] bid-placed received', data)
       setLivePrice(data.currentPrice)
       onPriceUpdate?.(data.currentPrice)
       if (canSeeBidHistory) {
@@ -136,6 +137,7 @@ export function BiddingSection({
           bidder:    { name: data.bidderName, email: '' },
         }, ...prev])
       }
+      console.log('[Pusher] state updates dispatched')
     })
     return () => {
       channel.unbind_all()
