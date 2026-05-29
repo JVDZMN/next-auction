@@ -83,6 +83,7 @@ export function BiddingSection({
         toast.warning(t.antiSnipe.title, { description: t.antiSnipe.body, duration: 5_000 })
       }
       prevEndDate.current = auctionEndDate
+      console.log('auction end date changed from', prev, 'to', next)  
     }
   }, [auctionEndDate, t.antiSnipe.title, t.antiSnipe.body])
 
@@ -168,6 +169,7 @@ export function BiddingSection({
         setSuccess(t.success)
         setBidAmount('')
         toast.success(t.success)
+        console.log('bid placed successfully, refetching bids...')
         fetchBids()
         onBidPlaced?.()
       }
