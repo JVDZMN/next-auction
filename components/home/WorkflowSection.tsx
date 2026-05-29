@@ -3,7 +3,7 @@
 import { Fragment, useRef } from 'react'
 import Link from 'next/link'
 import { motion, useInView } from 'framer-motion'
-import { SP, SPX } from './constants'
+import { SP } from './constants'
 import { useDict } from '@/lib/i18n/context'
 
 type IconFC = (p: { className?: string }) => React.ReactNode

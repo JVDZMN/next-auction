@@ -85,6 +85,10 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOwner, id])
 
+  const handlePriceUpdate = useCallback((price: number) => {
+    setCar(prev => prev ? { ...prev, currentPrice: price } : prev)
+  }, [])
+
   const fetchCar = useCallback(async () => {
     try {
       const response = await fetch(`/api/cars/${id}`)
@@ -333,7 +337,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               reservePrice={car.reservePrice}
               bidIncrement={car.bidIncrement}
               onBidPlaced={fetchCar}
-              onPriceUpdate={(price) => setCar(prev => prev ? { ...prev, currentPrice: price } : prev)}
+              onPriceUpdate={handlePriceUpdate}
             />
 
             {isOwner && car.status === 'reserve_not_met' && car.bids.length > 0 && (

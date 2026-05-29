@@ -19,6 +19,7 @@ const {
   mockCarUpdateMany,
   mockCarUpdate,
   mockBidCreate,
+  mockBidCount,
   mockProxyBidFindFirst,
   mockBidFindMany,
   mockUserFindMany,
@@ -28,6 +29,7 @@ const {
   mockCarUpdateMany:        vi.fn(),
   mockCarUpdate:            vi.fn(),
   mockBidCreate:            vi.fn(),
+  mockBidCount:             vi.fn(),
   mockProxyBidFindFirst:    vi.fn(),
   mockBidFindMany:          vi.fn(),
   mockUserFindMany:         vi.fn(),
@@ -60,6 +62,7 @@ vi.mock('@/lib/prisma', () => ({
     bid: {
       create:   mockBidCreate,
       findMany: mockBidFindMany,
+      count:    mockBidCount,
     },
     proxyBid:     { findFirst: mockProxyBidFindFirst },
     user:         { findMany: mockUserFindMany },
@@ -106,6 +109,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockProxyBidFindFirst.mockResolvedValue(null)
   mockBidFindMany.mockResolvedValue([])
+  mockBidCount.mockResolvedValue(1)
   mockUserFindMany.mockResolvedValue([])
   mockNotificationCreateMany.mockResolvedValue({})
   mockCarUpdate.mockImplementation(async ({ data }: { data: unknown }) => data)

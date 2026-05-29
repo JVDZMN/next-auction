@@ -114,22 +114,8 @@ export function BiddingSection({
 
   // Pusher: patch price and prepend to history directly — no fetchCar, no polling
   useEffect(() => {
-    console.log('BiddingSection mounted, carId:', carId)
     const pusher  = getPusherClient()
-
-    console.log('Pusher key:', process.env.NEXT_PUBLIC_PUSHER_KEY ?? 'MISSING')
-    console.log('Pusher cluster:', process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? 'MISSING')
-    pusher.connection.bind('state_change', (states: { current: string; previous: string }) =>
-      console.log('Pusher state:', states.previous, '→', states.current)
-    )
-    pusher.connection.bind('connected',   () => console.log('✅ Pusher connected'))
-    pusher.connection.bind('error',       (err: unknown) => console.log('❌ Pusher error:', err))
-    pusher.connection.bind('failed',      () => console.log('❌ Pusher failed'))
-    pusher.connection.bind('unavailable', () => console.log('⚠️ Pusher unavailable'))
-
     const channel = pusher.subscribe(`car-${carId}`)
-    console.log('Subscribed to channel:', `car-${carId}`)
-
     channel.bind('bid-placed', (data: {
       currentPrice: number
       bidCount:     number
@@ -138,7 +124,6 @@ export function BiddingSection({
       bidId:        string
       timestamp:    string
     }) => {
-      console.log('🔴 BID RECEIVED:', data)
       setLivePrice(data.currentPrice)
       onPriceUpdate?.(data.currentPrice)
       if (canSeeBidHistory) {
@@ -151,11 +136,10 @@ export function BiddingSection({
       }
     })
     return () => {
-      console.log('BiddingSection cleanup — unsubscribing car-' + carId)
       channel.unbind_all()
       pusher.unsubscribe(`car-${carId}`)
     }
-  }, [carId, canSeeBidHistory])
+  }, [carId, canSeeBidHistory, onPriceUpdate])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -257,7 +241,7 @@ export function BiddingSection({
 
           {reservePrice != null && isAuctionActive && (
             <div className="mt-3 pl-4">
-              {currentPrice >= reservePrice ? (
+              {livePrice >= reservePrice ? (
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
                   {t.reserveMet}
                 </Badge>
