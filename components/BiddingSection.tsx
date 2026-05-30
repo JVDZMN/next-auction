@@ -72,11 +72,16 @@ export function BiddingSection({
   const [proxySuccess,setProxySuccess]= useState<string | null>(null)
   const [proxyError,  setProxyError]  = useState<string | null>(null)
   const [pendingAmount, setPendingAmount] = useState<number | null>(null)
-  const [isEnded,      setIsEnded]       = useState(() => new Date() > new Date(auctionEndDate))
+  const [isEnded,      setIsEnded]       = useState(() => {
+    const ended = new Date() > new Date(auctionEndDate)
+    console.log('[BiddingSection] isEnded init — auctionEndDate:', auctionEndDate, '| parsed:', new Date(auctionEndDate).toISOString(), '| isEnded:', ended)
+    return ended
+  })
 
   // Client-side end timer — disables bidding the moment auctionEndDate is reached
   useEffect(() => {
     const timeLeft = new Date(auctionEndDate).getTime() - Date.now()
+    console.log('[BiddingSection] timer effect — auctionEndDate:', auctionEndDate, '| timeLeft ms:', timeLeft)
     if (timeLeft <= 0) { setIsEnded(true); return }
     const timer = setTimeout(() => setIsEnded(true), timeLeft)
     return () => clearTimeout(timer)
@@ -97,6 +102,7 @@ export function BiddingSection({
   }, [auctionEndDate, t.antiSnipe.title, t.antiSnipe.body])
 
   const isAuctionActive = status === 'active' && new Date(auctionEndDate) > new Date()
+  console.log('[BiddingSection] isAuctionActive — status:', status, '| auctionEndDate:', auctionEndDate, '| isAuctionActive:', isAuctionActive, '| isEnded:', isEnded)
   const isOwner         = Boolean(session?.user?.id && ownerId === session.user.id)
   const isAdmin         = session?.user?.role === 'Admin'
   const canSeeBidHistory = isOwner || isAdmin
