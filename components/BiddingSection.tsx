@@ -72,17 +72,14 @@ export function BiddingSection({
   const [proxySuccess,setProxySuccess]= useState<string | null>(null)
   const [proxyError,  setProxyError]  = useState<string | null>(null)
   const [pendingAmount, setPendingAmount] = useState<number | null>(null)
-  const [isEnded,      setIsEnded]       = useState(() => {
-    const ended = new Date() > new Date(auctionEndDate)
-    console.log('[BiddingSection] isEnded init — auctionEndDate:', auctionEndDate, '| parsed:', new Date(auctionEndDate).toISOString(), '| isEnded:', ended)
-    return ended
-  })
+  const [isEnded, setIsEnded] = useState(() => new Date() > new Date(auctionEndDate))
 
-  // Client-side end timer — disables bidding the moment auctionEndDate is reached
+  // Client-side end timer — disables bidding the moment auctionEndDate is reached.
+  // setTimeout max is 2^31-1 ms (~24.8 days); skip the timer for distant end dates.
   useEffect(() => {
     const timeLeft = new Date(auctionEndDate).getTime() - Date.now()
-    console.log('[BiddingSection] timer effect — auctionEndDate:', auctionEndDate, '| timeLeft ms:', timeLeft)
     if (timeLeft <= 0) { setIsEnded(true); return }
+    if (timeLeft > 2_147_483_647) return
     const timer = setTimeout(() => setIsEnded(true), timeLeft)
     return () => clearTimeout(timer)
   }, [auctionEndDate])
@@ -97,12 +94,10 @@ export function BiddingSection({
         toast.warning(t.antiSnipe.title, { description: t.antiSnipe.body, duration: 5_000 })
       }
       prevEndDate.current = auctionEndDate
-      console.log('auction end date changed from', prev, 'to', next)  
     }
   }, [auctionEndDate, t.antiSnipe.title, t.antiSnipe.body])
 
   const isAuctionActive = status === 'active' && new Date(auctionEndDate) > new Date()
-  console.log('[BiddingSection] isAuctionActive — status:', status, '| auctionEndDate:', auctionEndDate, '| isAuctionActive:', isAuctionActive, '| isEnded:', isEnded)
   const isOwner         = Boolean(session?.user?.id && ownerId === session.user.id)
   const isAdmin         = session?.user?.role === 'Admin'
   const canSeeBidHistory = isOwner || isAdmin
@@ -126,7 +121,6 @@ export function BiddingSection({
   useEffect(() => {
     if (!canSeeBidHistory) return
     fetchBids()
-    console.log('fetching bids for car', carId)
   }, [carId, canSeeBidHistory, fetchBids])
 
   // Pusher: patch price and prepend to history directly — no fetchCar, no polling
@@ -142,7 +136,6 @@ export function BiddingSection({
       bidId:        string
       timestamp:    string
     }) => {
-      console.log('[Pusher] bid-placed received', data)
       setLivePrice(data.currentPrice)
       onPriceUpdate?.(data.currentPrice)
       if (canSeeBidHistory) {
@@ -153,7 +146,6 @@ export function BiddingSection({
           bidder:    { name: data.bidderName, email: '' },
         }, ...prev])
       }
-      console.log('[Pusher] state updates dispatched')
     })
     return () => {
       channel.unbind('bid-placed')
