@@ -436,6 +436,19 @@ The test database runs on port **5433** (dev DB is on 5434) using an in-memory `
 
 ---
 
+## Load Test Results (k6)
+
+| Metric | Result |
+|--------|--------|
+| Concurrent users | 50 |
+| Total requests | 754 |
+| Error rate | 0% |
+| Average response | 273ms |
+| p99 response | 718ms |
+| Threshold (p99 < 2s) | ✅ passed |
+
+---
+
 ## Scripts
 
 ```bash
