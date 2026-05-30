@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { sendAuctionWonEmail, sendAuctionClosedSellerEmail, sendEmail } from '@/lib/email'
+import { emitToCar } from '@/lib/socket-server'
 
 /**
  * Status rules (runs on ended auctions):
@@ -50,6 +51,11 @@ export async function updateAuctionStatuses() {
         status: newStatus,
         ...(newStatus === 'completed' ? { winnerBidId: highestBid!.id } : {}),
       },
+    })
+
+    await emitToCar(car.id, 'auction-ended', {
+      status: newStatus,
+      finalPrice: highestBid?.amount ?? null,
     })
 
     if (newStatus === 'completed' && highestBid) {

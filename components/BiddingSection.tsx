@@ -72,6 +72,15 @@ export function BiddingSection({
   const [proxySuccess,setProxySuccess]= useState<string | null>(null)
   const [proxyError,  setProxyError]  = useState<string | null>(null)
   const [pendingAmount, setPendingAmount] = useState<number | null>(null)
+  const [isEnded,      setIsEnded]       = useState(() => new Date() > new Date(auctionEndDate))
+
+  // Client-side end timer — disables bidding the moment auctionEndDate is reached
+  useEffect(() => {
+    const timeLeft = new Date(auctionEndDate).getTime() - Date.now()
+    if (timeLeft <= 0) { setIsEnded(true); return }
+    const timer = setTimeout(() => setIsEnded(true), timeLeft)
+    return () => clearTimeout(timer)
+  }, [auctionEndDate])
 
   // Anti-snipe: detect extension
   const prevEndDate = useRef(auctionEndDate)
@@ -118,6 +127,7 @@ export function BiddingSection({
   useEffect(() => {
     const pusher  = getPusherClient()
     const channel = pusher.subscribe(`car-${carId}`)
+    channel.bind('auction-ended', () => setIsEnded(true))
     channel.bind('bid-placed', (data: {
       currentPrice: number
       bidCount:     number
@@ -141,6 +151,7 @@ export function BiddingSection({
     })
     return () => {
       channel.unbind('bid-placed')
+      channel.unbind('auction-ended')
     }
   }, [carId, canSeeBidHistory, onPriceUpdate])
 
@@ -288,7 +299,13 @@ export function BiddingSection({
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">{t.submit}</Button>
+              {isEnded && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>{t.auctionEnded}</AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" className="w-full" disabled={isEnded}>{t.submit}</Button>
             </form>
           </div>
         )}
@@ -312,7 +329,7 @@ export function BiddingSection({
                 placeholder={`${t.proxyBid.placeholder} (> ${livePrice.toLocaleString('da-DK')} kr)`}
                 required
               />
-              <Button type="submit" variant="secondary" disabled={proxyPending}>
+              <Button type="submit" variant="secondary" disabled={proxyPending || isEnded}>
                 {proxyPending ? <Spinner className="h-4 w-4" /> : t.proxyBid.submit}
               </Button>
             </form>
