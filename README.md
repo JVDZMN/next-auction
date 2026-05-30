@@ -4,6 +4,48 @@
 
 A full-stack car auction platform built with Next.js 15, Prisma, and PostgreSQL. Users can list cars for auction, bid in real time, and track results — with the full auction lifecycle handled automatically.
 
+## Performance
+
+Measured with PageSpeed Insights:
+
+| Metric | Mobile | Desktop |
+|--------|--------|---------|
+| Performance | 91 / 100 | 99 / 100 |
+| Accessibility | 92 / 100 | 92 / 100 |
+| Best Practices | 100 / 100 | 100 / 100 |
+| SEO | 92 / 100 | 92 / 100 |
+| LCP | 3.8s | 0.7s |
+| FCP | 1.2s | 0.3s |
+| TBT | 20ms | 0ms |
+
+## Vercel Speed Insights (Real Users)
+
+| Metric | Score |
+|--------|-------|
+| Real Experience Score | 100 / 100 |
+| LCP | 1.32s |
+| FCP | 1.1s |
+| INP | 16ms |
+| CLS | 0 |
+| TTFB | 0.63s |
+
+All routes scored 100/100. Measured from real user visits.
+
+## Load Test (k6)
+
+50 concurrent users, 40 seconds:
+
+| Metric | Result |
+|--------|--------|
+| Total requests | 754 |
+| Error rate | 0% |
+| Average response | 273ms |
+| p90 response | 336ms |
+| p99 response | 718ms |
+| Threshold (p99 < 2s) | ✅ passed |
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -60,7 +102,7 @@ graph TD
 | Database | PostgreSQL + Prisma ORM |
 | Auth | NextAuth.js (Google OAuth + credentials) |
 | Identity verification | MitID via Criipto / Idura broker |
-| Real-time | Pusher Channels (sub-second push on bid, message, notification) |
+| Real-time | Pusher Channels — sub-second bid updates (< 1s measured, Vercel production) |
 | Email | Resend |
 | Image upload | Cloudinary |
 | Error tracking | Sentry |
@@ -433,19 +475,6 @@ What the integration tests prove:
 - Anti-sniping extension fires only when a bid lands inside the configured window
 
 The test database runs on port **5433** (dev DB is on 5434) using an in-memory `tmpfs` mount for maximum speed.
-
----
-
-## Load Test Results (k6)
-
-| Metric | Result |
-|--------|--------|
-| Concurrent users | 50 |
-| Total requests | 754 |
-| Error rate | 0% |
-| Average response | 273ms |
-| p99 response | 718ms |
-| Threshold (p99 < 2s) | ✅ passed |
 
 ---
 
