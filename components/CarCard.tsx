@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLocale } from '@/lib/i18n/context'
 import { cloudinaryBlurUrl } from '@/lib/cloudinary'
+import { CarCardLivePrice } from '@/components/CarCardLivePrice'
 
 type CarCardProps = {
   id: string
@@ -104,13 +105,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
             </p>
           )}
 
-          <div className="flex items-end justify-between border-t pt-3 mt-2">
-            <div>
-              <p className="text-xs text-muted-foreground">Current bid</p>
-              <p className="text-lg font-bold text-copper">{currentPrice.toLocaleString('da-DK')} kr</p>
-            </div>
-            <p className="text-xs text-muted-foreground">{bidCount} {bidCount === 1 ? 'bid' : 'bids'}</p>
-          </div>
+          <CarCardLivePrice carId={id} initialPrice={currentPrice} initialBidCount={bidCount} />
         </CardContent>
       </Card>
       </Link>

@@ -154,3 +154,32 @@
     @apply font-sans;
   }
 }
+
+@keyframes urgentPulse {
+  0%, 100% {
+    background-color: rgb(254, 202, 202);
+    color: rgb(185, 28, 28);
+    font-weight: 700;
+  }
+  50% {
+    background-color: rgb(185, 28, 28);
+    color: rgb(255, 255, 255);
+    font-weight: 400;
+  }
+}
+
+.auction-urgent {
+  animation: urgentPulse 1s ease-in-out infinite;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+@keyframes priceFlash {
+  0% { background-color: transparent; }
+  30% { background-color: rgb(220, 252, 231); }
+  100% { background-color: transparent; }
+}
+
+.price-flash {
+  animation: priceFlash 0.8s ease-out;
+}

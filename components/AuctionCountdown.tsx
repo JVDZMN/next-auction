@@ -23,9 +23,9 @@ function compute(endDate: string | Date): TimeLeft {
 type Urgency = 'normal' | 'warning' | 'critical'
 
 function urgency(ms: number): Urgency {
-  if (ms <= 0)            return 'normal'
-  if (ms <  5 * 60_000)  return 'critical'
-  if (ms < 60 * 60_000)  return 'warning'
+  if (ms <= 0)                   return 'normal'
+  if (ms <  5 * 60_000)          return 'critical'
+  if (ms < 24 * 60 * 60_000)     return 'warning'
   return 'normal'
 }
 
@@ -66,9 +66,10 @@ export function AuctionCountdown({ endDate, showSeconds = true, className }: Pro
     <Badge
       variant="outline"
       className={cn(
-        'tabular-nums transition-colors duration-700 gap-1',
-        u === 'critical' && 'border-red-200 bg-red-50 text-red-700',
-        u === 'warning'  && 'border-amber-200 bg-amber-50 text-amber-700',
+        'tabular-nums gap-1',
+        u !== 'critical' && 'transition-colors duration-700',
+        u === 'critical' && 'auction-urgent border-transparent',
+        u === 'warning'  && 'border-red-200 bg-red-50 text-red-500',
         u === 'normal'   && 'border-stone-200 bg-stone-50 text-stone-500',
         className,
       )}
