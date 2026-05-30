@@ -7,6 +7,8 @@ import { NotificationProvider } from '@/lib/notification-context'
 import { getDictionary, toLocale, locales } from '@/lib/i18n'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/react'
 import '../globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -56,6 +58,8 @@ export default async function LocaleLayout({
             </NotificationProvider>
           </DictionaryProvider>
         </SessionProvider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )
