@@ -401,7 +401,6 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
               </>
             )}
           </div>
-        </div>
         </div>{/* end inner flex: filter sidebar + car grid */}
         </div>{/* end left column */}
 
@@ -411,8 +410,7 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
             <CarsMap cars={carsWithCoords} locale={locale} />
           </div>
         </div>
-
-        </div>{/* end outer flex */}
+      </div>{/* end outer flex */}
       </main>
     </div>
   )

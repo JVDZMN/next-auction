@@ -47,9 +47,13 @@ export default function CarLocationPicker({ onLocationChange, onClear, externalP
       prevExtRef.current?.[0] === externalPosition[0] &&
       prevExtRef.current?.[1] === externalPosition[1]
     ) return
-    prevExtRef.current = externalPosition
-    setPosition(externalPosition)
-    setFlyTarget({ lat: externalPosition[0], lng: externalPosition[1] })
+    const pos = externalPosition
+    prevExtRef.current = pos
+    const id = setTimeout(() => {
+      setPosition(pos)
+      setFlyTarget({ lat: pos[0], lng: pos[1] })
+    }, 0)
+    return () => clearTimeout(id)
   }, [externalPosition])
 
   const handleLocationChange = (lat: number, lng: number) => {

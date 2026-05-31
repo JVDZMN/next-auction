@@ -48,9 +48,13 @@ export function CarAddressSection({ formData, onChange, onAddressSelect, onCoord
     }
 
     const q = formData.streetName.trim()
-    if (q.length < 2) { setSuggestions([]); setOpen(false); return }
 
     debounceRef.current = setTimeout(async () => {
+      if (q.length < 2) {
+        setSuggestions([])
+        setOpen(false)
+        return
+      }
       try {
         const res = await fetch(
           `https://api.dataforsyningen.dk/adresser/autocomplete?q=${encodeURIComponent(q)}&per_side=8`
@@ -63,7 +67,7 @@ export function CarAddressSection({ formData, onChange, onAddressSelect, onCoord
         setSuggestions([])
         setOpen(false)
       }
-    }, 300)
+    }, q.length < 2 ? 0 : 300)
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [formData.streetName])
