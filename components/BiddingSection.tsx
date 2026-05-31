@@ -77,11 +77,18 @@ export function BiddingSection({
   // Client-side end timer — disables bidding the moment auctionEndDate is reached.
   // setTimeout max is 2^31-1 ms (~24.8 days); skip the timer for distant end dates.
   useEffect(() => {
-    const timeLeft = new Date(auctionEndDate).getTime() - Date.now()
-    if (timeLeft <= 0) { setIsEnded(true); return }
-    if (timeLeft > 2_147_483_647) return
-    const timer = setTimeout(() => setIsEnded(true), timeLeft)
-    return () => clearTimeout(timer)
+    const checkStatus = () => {
+      const timeLeft = new Date(auctionEndDate).getTime() - Date.now()
+      if (timeLeft <= 0) {
+        setIsEnded(true)
+      } else {
+        // Re-check periodically to handle sleep/wake or long durations
+        const nextCheck = Math.min(timeLeft, 60000) // check at least every minute
+        const timer = setTimeout(checkStatus, nextCheck)
+        return () => clearTimeout(timer)
+      }
+    }
+    return checkStatus()
   }, [auctionEndDate])
 
   // Anti-snipe: detect extension
@@ -150,6 +157,7 @@ export function BiddingSection({
     return () => {
       channel.unbind('bid-placed')
       channel.unbind('auction-ended')
+      pusher.unsubscribe(`car-${carId}`)
     }
   }, [carId, canSeeBidHistory, onPriceUpdate])
 

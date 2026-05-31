@@ -20,6 +20,11 @@ const OPTIONAL_WITH_WARNING = [
 ] as const
 
 function validateEnv() {
+  // Only validate server-side secrets when running on the server.
+  // Client-side execution (e.g. in the browser) will not have access 
+  // to these variables by design.
+  if (typeof window !== 'undefined') return
+
   const missing = REQUIRED.filter((k) => !process.env[k])
 
   if (missing.length > 0) {

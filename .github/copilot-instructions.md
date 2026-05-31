@@ -1,7 +1,7 @@
 # Next-Auction AI Coding Agent Instructions
 
 ## Project Overview
-A real-time car auction platform built with Next.js 16 (App Router), TypeScript, Prisma ORM (PostgreSQL), NextAuth.js, Stripe payments, and Socket.IO for real-time bidding.
+A real-time car auction platform built with Next.js 15 (App Router), TypeScript, Prisma ORM (PostgreSQL), NextAuth.js, Stripe payments, and Pusher Channels for real-time bidding.
 
 ## Architecture & Key Components
 
@@ -93,8 +93,8 @@ Critical indexes are defined for query performance:
 - React 19 JSX runtime (`react-jsx`)
 - Target ES2017 for compatibility
 
-## Socket.IO Real-time Pattern
-Both `socket.io` (server) and `socket.io-client` are installed - implement real-time bid updates using Socket.IO events. Structure server handlers carefully to broadcast bid updates to all connected clients watching a specific car auction.
+## Pusher Real-time Pattern
+Pusher is used for sub-second updates. Server-side triggers are in `lib/socket-server.ts`. Client-side subscriptions are handled via `getPusherClient()` and custom hooks like `useSocket` or `useNotificationSocket`. Always ensure subscriptions are unsubscribed on component unmount.
 
 ## Testing & Quality
 - ESLint configured with Next.js recommended rules
