@@ -1,26 +1,24 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { motion, AnimatePresence, useAnimate } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { PageLayout } from '@/components/PageLayout'
 import { CarImageUpload } from '@/components/CarImageUpload'
-import { getAllBrands, getModelsByBrand, getSubModelsByBrandModel } from '@/lib/car-brands'
-import { VehicleLookupPanel, VehicleLookupResult } from '@/components/car-create/VehicleLookupPanel'
+import { VehicleLookupPanel } from '@/components/car-create/VehicleLookupPanel'
 import { CarAddressSection } from '@/components/car-create/CarAddressSection'
 import { CarVehicleSection } from '@/components/car-create/CarVehicleSection'
 import { CarSpecsSection } from '@/components/car-create/CarSpecsSection'
 import { CarAuctionSection } from '@/components/car-create/CarAuctionSection'
 import { CarDocsSection } from '@/components/car-create/CarDocsSection'
 import { useLocale } from '@/lib/i18n/context'
-import { createCar } from '@/app/actions/cars'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
+import { useCreateCarForm } from '@/hooks/useCreateCarForm'
 
 const CarLocationPicker = dynamic(
   () => import('@/components/car-create/CarLocationPicker'),
@@ -43,174 +41,32 @@ const sectionItem = {
   show:   { opacity: 1, y: 0,  scale: 1, transition: sectionSpring },
 }
 
-// ── Initial form state ─────────────────────────────────────────────────────────
-const initialFormData = {
-  brand: '', model: '', subModel: '', variant: '', bodyType: '', category: '',
-  engineSize: '', seats: '', weight: '', licensePlate: '', use: '',
-  description: '', specs: '', condition: 'excellent',
-  km: '', lastInspectionKm: '', year: '', power: '', fuel: 'Benzin', gearType: '',
-  firstRegistration: '', lastInspection: '', nextInspection: '',
-  startingPrice: '', reservePrice: '', auctionEndDate: '', auctionStartDate: '',
-  streetName: '', houseNumber: '', zipcode: '', city: '',
-  vin: '', inspectionReportUrl: '', bidIncrement: '',
-}
-
 export default function CreateCarPage() {
   const router = useRouter()
-  const locale = useLocale()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError]               = useState<string | null>(null)
-  const [formData, setFormData]         = useState(initialFormData)
-  const [latitude,   setLatitude]        = useState<number | null>(null)
-  const [longitude,  setLongitude]      = useState<number | null>(null)
-  const [dawaCoords, setDawaCoords]     = useState<[number, number] | null>(null)
-  const [isDraft, setIsDraft]           = useState(false)
-  const [uploadedImages, setUploadedImages]         = useState<string[]>([])
-  const [serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
-  const [availableModels, setAvailableModels]       = useState<string[]>([])
-  const [availableSubModels, setAvailableSubModels] = useState<string[]>([])
 
-  const brands = getAllBrands()
-
-  // ── Imperative submit-button shake ─────────────────────────────────────────
-  const [buttonRowRef, animateButtonRow] = useAnimate()
-
-  const shakeButtons = () =>
-    void animateButtonRow(buttonRowRef.current, { x: [0, -8, 8, -6, 6, -2, 0] }, { duration: 0.4 })
-
-  // ── Field handlers ──────────────────────────────────────────────────────────
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    if (name === 'brand') {
-      setAvailableModels(getModelsByBrand(value))
-      setAvailableSubModels([])
-      setFormData(prev => ({ ...prev, brand: value, model: '', subModel: '' }))
-    } else if (name === 'model') {
-      setAvailableSubModels(getSubModelsByBrandModel(formData.brand, value))
-      setFormData(prev => ({ ...prev, model: value, subModel: '' }))
-    } else if (name === 'firstRegistration') {
-      const extractedYear = value ? String(new Date(value).getFullYear()) : ''
-      setFormData(prev => ({ ...prev, firstRegistration: value, year: extractedYear || prev.year }))
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }))
-    }
-  }
-
-  const handleLookupResult = (v: VehicleLookupResult) => {
-    const matchedBrand = brands.find(b => b.toLowerCase() === (v.make ?? '').toLowerCase()) ?? ''
-    let newModels: string[] = []
-    let matchedModel = ''
-    let matchedSubModel = ''
-    let newSubModels: string[] = []
-
-    if (matchedBrand) {
-      newModels = getModelsByBrand(matchedBrand)
-      const apiModelStr = (v.model ?? '').trim()
-      const exact = newModels.find(m => m.toLowerCase() === apiModelStr.toLowerCase())
-      if (exact) {
-        matchedModel = exact
-        newSubModels = getSubModelsByBrandModel(matchedBrand, exact)
-      } else {
-        for (const m of newModels) {
-          if (apiModelStr.toLowerCase().startsWith(m.toLowerCase() + ' ')) {
-            const remainder = apiModelStr.slice(m.length).trim()
-            const subs = getSubModelsByBrandModel(matchedBrand, m)
-            const foundSub = subs.find(s => s.toLowerCase() === remainder.toLowerCase())
-            if (foundSub) { matchedModel = m; matchedSubModel = foundSub; newSubModels = subs; break }
-          }
-        }
-        if (!matchedModel && apiModelStr) { newModels = [apiModelStr, ...newModels]; matchedModel = apiModelStr }
-      }
-    }
-    setAvailableModels(newModels)
-    setAvailableSubModels(newSubModels)
-
-    setFormData(prev => ({
-      ...prev,
-      ...(matchedBrand && { brand: matchedBrand }),
-      ...(matchedModel && { model: matchedModel }),
-      ...(matchedSubModel && { subModel: matchedSubModel }),
-      ...(v.year && v.year > 0 && { year: String(v.year) }),
-      ...(v.fuelType && { fuel: v.fuelType }),
-      ...(v.hp != null && { power: String(v.hp) }),
-      ...(v.vin && { vin: v.vin }),
-      ...(v.transmission && { gearType: v.transmission }),
-      ...(v.firstRegistration && { firstRegistration: v.firstRegistration }),
-      ...(v.lastInspection && { lastInspection: v.lastInspection }),
-      ...(v.nextInspection && { nextInspection: v.nextInspection }),
-      ...(v.km != null && { lastInspectionKm: String(v.km) }),
-      ...(v.bodyType && { bodyType: v.bodyType }),
-      ...(v.category && { category: v.category }),
-      ...(v.licensePlate && { licensePlate: v.licensePlate }),
-      ...(v.engineSize != null && { engineSize: String(v.engineSize) }),
-      ...(v.seats != null && { seats: String(v.seats) }),
-      ...(v.weight != null && { weight: String(v.weight) }),
-      ...(v.use && { use: v.use }),
-      ...(v.variant && { variant: v.variant }),
-    }))
-  }
-
-  // ── Submit ──────────────────────────────────────────────────────────────────
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
-
-    if (formData.auctionEndDate) {
-      const end   = new Date(formData.auctionEndDate)
-      const start = formData.auctionStartDate ? new Date(formData.auctionStartDate) : new Date()
-      const ms    = end.getTime() - start.getTime()
-      if (ms <= 0) {
-        setError('End date must be after the start date.')
-        shakeButtons()
-        setIsSubmitting(false)
-        return
-      }
-      if (ms < 24 * 60 * 60 * 1000) {
-        setError('Auction must run for at least 24 hours.')
-        shakeButtons()
-        setIsSubmitting(false)
-        return
-      }
-    }
-
-    try {
-      const result = await createCar({
-        ...formData,
-        images: uploadedImages,
-        km: parseInt(formData.km),
-        lastInspectionKm: formData.lastInspectionKm ? parseInt(formData.lastInspectionKm) : null,
-        year: parseInt(formData.year),
-        power: parseInt(formData.power),
-        startingPrice: parseFloat(formData.startingPrice),
-        reservePrice: formData.reservePrice ? parseFloat(formData.reservePrice) : null,
-        auctionEndDate: new Date(formData.auctionEndDate).toISOString(),
-        auctionStartDate: formData.auctionStartDate ? new Date(formData.auctionStartDate).toISOString() : null,
-        engineSize: formData.engineSize ? parseFloat(formData.engineSize) : null,
-        seats: formData.seats ? parseInt(formData.seats) : null,
-        weight: formData.weight ? parseInt(formData.weight) : null,
-        bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : null,
-        firstRegistration: formData.firstRegistration ? new Date(formData.firstRegistration).toISOString() : null,
-        lastInspection: formData.lastInspection ? new Date(formData.lastInspection).toISOString() : null,
-        nextInspection: formData.nextInspection ? new Date(formData.nextInspection).toISOString() : null,
-        serviceHistoryUrls,
-        isDraft,
-        latitude,
-        longitude,
-      })
-      if ('error' in result) {
-        setError(result.error)
-        shakeButtons()
-      } else {
-        router.push(`/${locale}/cars/${result.carId}`)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      shakeButtons()
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const {
+    formData,
+    setFormData,
+    error,
+    setError,
+    isSubmitting,
+    uploadedImages,
+    setUploadedImages,
+    dawaCoords,
+    setDawaCoords,
+    setLatitude,
+    setLongitude,
+    availableModels,
+    availableSubModels,
+    brands,
+    isDraft,
+    setIsDraft,
+    setServiceHistoryUrls,
+    buttonRowRef,
+    handleChange,
+    handleLookupResult,
+    handleSubmit,
+  } = useCreateCarForm()
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
