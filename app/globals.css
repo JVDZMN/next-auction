@@ -183,3 +183,14 @@
 .price-flash {
   animation: priceFlash 0.8s ease-out;
 }
+
+.car-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.car-popup .leaflet-popup-content {
+  margin: 0;
+  width: 220px !important;
+}

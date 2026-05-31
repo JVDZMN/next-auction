@@ -3,6 +3,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import dynamic from 'next/dynamic'
+import type { CarsMapProps } from '@/components/CarsMap'
+
+const CarsMap = dynamic<CarsMapProps>(
+  () => import('@/components/CarsMap').then(m => ({ default: m.CarsMap })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center text-gray-400 text-sm">
+        Loading map...
+      </div>
+    ),
+  }
+)
 import { Header } from '@/components/Header'
 import { CarCard } from '@/components/CarCard'
 import { CarCardSkeleton } from '@/components/CarCardSkeleton'
@@ -41,6 +55,7 @@ interface CarListing {
   currentPrice: number; images: string[]; fuel: string | null; km: number
   city: string | null; bodyType: string | null; condition: string
   auctionEndDate: string; _count: { bids: number }; owner: { name: string | null }
+  latitude: number | null; longitude: number | null
 }
 export interface CarsResponse { cars: CarListing[]; total: number; page: number; pageSize: number; totalPages: number }
 
@@ -72,9 +87,15 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
   ])
 
   // Start with server-fetched data — no skeleton on first load
-  const [data,    setData]    = useState<CarsResponse | null>(initialData)
-  const [loading, setLoading] = useState(false)
+  const [data,       setData]       = useState<CarsResponse | null>(initialData)
+  const [loading,    setLoading]    = useState(false)
+  const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
   const availableModels = brand ? getModelsByBrand(brand) : []
+
+  const carsWithCoords = (data?.cars ?? []).filter(
+    (c): c is typeof c & { latitude: number; longitude: number } =>
+      c.latitude != null && c.longitude != null
+  )
 
   const buildParams = useCallback((overrides: Record<string, string | number> = {}) => {
     const p: Record<string, string> = {}
@@ -244,7 +265,9 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-400 mx-auto px-4 lg:px-6 py-6">
+        <div className="flex gap-6">
+        <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-4 gap-3">
           <div>
             <h1 className="text-2xl font-bold">Cars for Auction</h1>
@@ -285,7 +308,26 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
           </div>
         </div>
 
-        <div className="flex gap-6">
+        {/* Mobile: list / map toggle */}
+        <div className="flex lg:hidden gap-2 mb-4 p-1 bg-gray-100 rounded-lg w-fit">
+          <button
+            onClick={() => setMobileView('list')}
+            className={mobileView === 'list' ? 'px-4 py-2 rounded-md bg-white shadow text-sm font-semibold' : 'px-4 py-2 rounded-md text-sm text-gray-500'}
+          >📋 List</button>
+          <button
+            onClick={() => setMobileView('map')}
+            className={mobileView === 'map' ? 'px-4 py-2 rounded-md bg-white shadow text-sm font-semibold' : 'px-4 py-2 rounded-md text-sm text-gray-500'}
+          >🗺️ Map</button>
+        </div>
+
+        {/* Mobile map view */}
+        {mobileView === 'map' && (
+          <div className="lg:hidden h-[70vh] rounded-xl overflow-hidden border mb-4">
+            <CarsMap cars={carsWithCoords} locale={locale} />
+          </div>
+        )}
+
+        <div className={`flex gap-6 ${mobileView === 'map' ? 'hidden lg:flex' : 'flex'}`}>
           <aside className="hidden md:block w-56 shrink-0">
             <div className="rounded-xl border bg-card p-4 sticky top-20">
               <div className="flex items-center justify-between mb-4">
@@ -360,6 +402,17 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
             )}
           </div>
         </div>
+        </div>{/* end inner flex: filter sidebar + car grid */}
+        </div>{/* end left column */}
+
+        {/* Desktop sticky map */}
+        <div className="hidden lg:block w-105 shrink-0">
+          <div className="sticky top-4 h-[calc(100vh-2rem)] rounded-xl overflow-hidden border">
+            <CarsMap cars={carsWithCoords} locale={locale} />
+          </div>
+        </div>
+
+        </div>{/* end outer flex */}
       </main>
     </div>
   )
