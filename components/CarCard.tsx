@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { LikeButton } from '@/components/LikeButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -42,6 +43,7 @@ function getTimeRemaining(endDate: string | Date): { label: string; urgent: bool
 
 export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, priority = false }: CarCardProps) {
   const locale = useLocale()
+  const router = useRouter()
   const { label, urgent } = getTimeRemaining(auctionEndDate)
 
   return (
@@ -95,6 +97,26 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
               {year} {brand} {model}{subModel ? ` ${subModel}` : ''}
             </h3>
             <Badge variant="outline" className="shrink-0 text-xs capitalize">{condition}</Badge>
+          </div>
+
+          <div className="flex items-center gap-1 mb-1">
+            <button
+              type="button"
+              onClick={e => { e.preventDefault(); e.stopPropagation(); router.push(`/${locale}/cars?brand=${encodeURIComponent(brand)}`) }}
+              className="text-xs hover:underline transition-colors"
+              style={{ color: 'var(--copper)' }}
+            >
+              {brand}
+            </button>
+            <span className="text-xs text-muted-foreground">·</span>
+            <button
+              type="button"
+              onClick={e => { e.preventDefault(); e.stopPropagation(); router.push(`/${locale}/cars?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`) }}
+              className="text-xs hover:underline transition-colors"
+              style={{ color: 'var(--copper)' }}
+            >
+              {model}
+            </button>
           </div>
 
           {(km != null || city) && (

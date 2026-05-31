@@ -26,6 +26,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { BadgeCheck, Eye, Pencil, Copy, XCircle, CalendarClock, CheckCircle2 } from 'lucide-react'
+import { Breadcrumb } from '@/components/Breadcrumb'
 
 interface BidEntry {
   id: string
@@ -164,8 +165,30 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     }).catch(() => {})
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://next-auction-iota.vercel.app'
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Cars', item: `${baseUrl}/${locale}/cars` },
+      { '@type': 'ListItem', position: 2, name: car.brand, item: `${baseUrl}/${locale}/cars?brand=${encodeURIComponent(car.brand)}` },
+      { '@type': 'ListItem', position: 3, name: car.model, item: `${baseUrl}/${locale}/cars?brand=${encodeURIComponent(car.brand)}&model=${encodeURIComponent(car.model)}` },
+      { '@type': 'ListItem', position: 4, name: `${car.year} ${car.brand} ${car.model}` },
+    ],
+  }
+
   return (
     <PageLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <Breadcrumb items={[
+        { label: 'Cars', href: `/${locale}/cars` },
+        { label: car.brand, href: `/${locale}/cars?brand=${encodeURIComponent(car.brand)}` },
+        { label: car.model, href: `/${locale}/cars?brand=${encodeURIComponent(car.brand)}&model=${encodeURIComponent(car.model)}` },
+        { label: `${car.year} ${car.brand} ${car.model}` },
+      ]} />
       <div className="space-y-6">
         {/* Images + title */}
         <Card className="overflow-hidden">
