@@ -3,9 +3,7 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 import { cloudinaryBlurUrl } from '@/lib/cloudinary'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
 
 interface Props {
   images: string[]
@@ -13,21 +11,23 @@ interface Props {
 }
 
 export function CarImageGallery({ images, alt }: Props) {
-  const [active, setActive] = useState(0)
+  const [active,   setActive]   = useState(0)
   const [lightbox, setLightbox] = useState(false)
 
-  const prev = useCallback(() => setActive(i => (i - 1 + images.length) % images.length), [images.length])
-  const next = useCallback(() => setActive(i => (i + 1) % images.length), [images.length])
+  const prev  = useCallback(() => setActive(i => (i - 1 + images.length) % images.length), [images.length])
+  const next  = useCallback(() => setActive(i => (i + 1) % images.length), [images.length])
+  const close = useCallback(() => setLightbox(false), [])
 
   useEffect(() => {
     if (!lightbox) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft')  prev()
       if (e.key === 'ArrowRight') next()
+      if (e.key === 'Escape')     close()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [lightbox, prev, next])
+  }, [lightbox, prev, next, close])
 
   if (images.length === 0) {
     return (
@@ -39,7 +39,7 @@ export function CarImageGallery({ images, alt }: Props) {
 
   return (
     <>
-      {/* Main image */}
+      {/* Main gallery image */}
       <div
         className="relative aspect-video bg-stone-100 overflow-hidden rounded-lg cursor-zoom-in"
         onClick={() => setLightbox(true)}
@@ -88,47 +88,63 @@ export function CarImageGallery({ images, alt }: Props) {
         </div>
       )}
 
-      {/* Lightbox — shadcn Dialog */}
-      <Dialog open={lightbox} onOpenChange={setLightbox}>
-        <DialogContent className="max-w-5xl w-full bg-black/95 border-0 p-0 [&>button]:text-white [&>button]:hover:bg-white/20">
-          <div className="relative w-full aspect-video">
+      {/* Fullscreen lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={close}
+        >
+          {/* Image container — click inside doesn't close */}
+          <div
+            className="relative"
+            style={{ width: 'calc(100vw - 96px)', height: 'calc(100vh - 96px)' }}
+            onClick={e => e.stopPropagation()}
+          >
             <Image
               src={images[active]}
               alt={`${alt} — image ${active + 1}`}
               fill
               className="object-contain"
               sizes="100vw"
+              priority
             />
-
-            {images.length > 1 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Previous"
-                  onClick={prev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Next"
-                  onClick={next}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </>
-            )}
-
-            <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-sm tabular-nums pointer-events-none">
-              {active + 1} / {images.length}
-            </span>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          {/* Close button */}
+          <button
+            aria-label="Close"
+            onClick={close}
+            className="absolute top-4 right-4 z-10 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {/* Navigation arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                aria-label="Previous"
+                onClick={e => { e.stopPropagation(); prev() }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white bg-black/50 rounded-full p-3 hover:bg-black/80 transition-colors"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                aria-label="Next"
+                onClick={e => { e.stopPropagation(); next() }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white bg-black/50 rounded-full p-3 hover:bg-black/80 transition-colors"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+
+          {/* Counter */}
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm tabular-nums pointer-events-none">
+            {active + 1} / {images.length}
+          </span>
+        </div>
+      )}
     </>
   )
 }
