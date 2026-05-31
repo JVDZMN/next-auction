@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Car" ADD COLUMN     "latitude" DOUBLE PRECISION,
+ADD COLUMN     "longitude" DOUBLE PRECISION;

@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useAnimate } from 'framer-motion'
 import { PageLayout } from '@/components/PageLayout'
 import { CarImageUpload } from '@/components/CarImageUpload'
@@ -20,6 +21,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
+
+const CarLocationPicker = dynamic(
+  () => import('@/components/car-create/CarLocationPicker'),
+  { ssr: false }
+)
 
 // ── Spring presets ─────────────────────────────────────────────────────────────
 const cardSpring   = { type: 'spring', mass: 0.8, stiffness: 240, damping: 30 } as const
@@ -55,6 +61,9 @@ export default function CreateCarPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError]               = useState<string | null>(null)
   const [formData, setFormData]         = useState(initialFormData)
+  const [latitude,   setLatitude]        = useState<number | null>(null)
+  const [longitude,  setLongitude]      = useState<number | null>(null)
+  const [dawaCoords, setDawaCoords]     = useState<[number, number] | null>(null)
   const [isDraft, setIsDraft]           = useState(false)
   const [uploadedImages, setUploadedImages]         = useState<string[]>([])
   const [serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
@@ -186,6 +195,8 @@ export default function CreateCarPage() {
         nextInspection: formData.nextInspection ? new Date(formData.nextInspection).toISOString() : null,
         serviceHistoryUrls,
         isDraft,
+        latitude,
+        longitude,
       })
       if ('error' in result) {
         setError(result.error)
@@ -250,6 +261,19 @@ export default function CreateCarPage() {
                     formData={formData}
                     onChange={handleChange as React.ChangeEventHandler<HTMLInputElement>}
                     onAddressSelect={addr => setFormData(prev => ({ ...prev, ...addr }))}
+                    onCoordinates={(lat, lng) => {
+                      setLatitude(lat)
+                      setLongitude(lng)
+                      setDawaCoords([lat, lng])
+                    }}
+                  />
+                </motion.div>
+
+                <motion.div variants={sectionItem}>
+                  <CarLocationPicker
+                    externalPosition={dawaCoords}
+                    onLocationChange={(lat, lng) => { setLatitude(lat); setLongitude(lng) }}
+                    onClear={() => { setLatitude(null); setLongitude(null); setDawaCoords(null) }}
                   />
                 </motion.div>
 

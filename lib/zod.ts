@@ -38,6 +38,8 @@ export const CarCreateSchema = z.object({
   serviceHistoryUrls: z.array(z.string()).optional(),
   bidIncrement: z.union([z.string(), z.number()]).optional().nullable(),
   isDraft: z.boolean().optional(),
+  latitude:  z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
 });
 
 export const ProxyBidSchema = z.object({

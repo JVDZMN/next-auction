@@ -81,6 +81,8 @@ export async function createCar(input: unknown): Promise<CreateCarResult> {
       houseNumber:         data.houseNumber || null,
       zipcode:             data.zipcode || null,
       city:                data.city || null,
+      latitude:            data.latitude  ?? null,
+      longitude:           data.longitude ?? null,
     },
     include: { owner: { select: { id: true, name: true, email: true } } },
   })

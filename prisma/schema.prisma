@@ -125,6 +125,8 @@ model Car {
   houseNumber         String?
   zipcode             String?
   city                String?
+  latitude            Float?
+  longitude           Float?
   images              String[]
   startingPrice       Float
   currentPrice        Float
