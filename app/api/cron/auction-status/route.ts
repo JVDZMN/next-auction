@@ -13,10 +13,13 @@ import { emitToCar } from '@/lib/socket-server'
  *  cancelled        → auction ended with zero bids
  */
 export async function updateAuctionStatuses() {
+  const now = new Date()
+  console.log('[cron] updateAuctionStatuses running — UTC now:', now.toISOString())
+
   const endedCars = await prisma.car.findMany({
     where: {
       status: 'active',
-      auctionEndDate: { lte: new Date() },
+      auctionEndDate: { lte: now },
     },
     include: {
       bids: {
@@ -28,9 +31,12 @@ export async function updateAuctionStatuses() {
     },
   })
 
+  console.log('[cron] Found', endedCars.length, 'ended auctions to process')
+
   const results = []
 
   for (const car of endedCars) {
+    console.log('[cron] Processing car:', car.id, '| endDate:', car.auctionEndDate.toISOString(), '| bids:', car.bids.length)
     const highestBid = car.bids[0] ?? null
 
     let newStatus: 'completed' | 'cancelled' | 'reserve_not_met'

@@ -1,15 +1,12 @@
-FROM node:20-alpine
+FROM alpine:3.19
 
-WORKDIR /app
-
-COPY . .
-
-RUN npm install --legacy-peer-deps
-
-# Install cron (Alpine's built-in crond, not dcron)
 RUN apk add --no-cache curl bash
 
-# Add cron job: run every minute
-RUN echo '* * * * * cd /app && node --loader ts-node/esm -r tsconfig-paths/register app/api/cron/auction-status.ts >> /app/cron.log 2>&1' > /etc/crontabs/root
+# Calls the deployed Vercel endpoint every 5 minutes using CRON_SECRET env var.
+# Usage: docker run -e CRON_SECRET=xxx -e APP_URL=https://next-auction-iota.vercel.app cron-image
+RUN echo '*/5 * * * * curl -s -X GET \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  "$APP_URL/api/cron/auction-status" \
+  >> /var/log/cron.log 2>&1' > /etc/crontabs/root
 
 CMD ["crond", "-f", "-l", "2"]
