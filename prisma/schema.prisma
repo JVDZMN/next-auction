@@ -1,8 +1,9 @@
 enum CarStatus {
   active
   completed
-  cancelled
+  no_bid
   reserve_not_met
+  cancelled
 }
 
 generator client {
@@ -34,6 +35,11 @@ enum FuelType {
   Electric
 }
 
+enum UserType {
+  PRIVATE
+  BUSINESS
+}
+
 model User {
   id             String    @id @default(cuid())
   name           String?
@@ -43,6 +49,11 @@ model User {
   password       String?
   googleId       String?   @unique
   role           Role      @default(User)
+  userType       UserType  @default(PRIVATE)
+  cvrNumber      String?   @unique
+  skatDisclaimerAccepted Boolean @default(false)
+  acceptedAt     DateTime?
+  isApprovedByAdmin Boolean @default(false)
   mitIdVerified  Boolean   @default(false)
   sellerVerified Boolean   @default(false)
   createdAt      DateTime  @default(now())

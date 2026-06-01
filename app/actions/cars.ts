@@ -30,6 +30,39 @@ export async function createCar(input: unknown): Promise<CreateCarResult> {
   const session = await requireAuth()
   if (!session) return { error: 'Unauthorized' }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { userType: true, skatDisclaimerAccepted: true, isApprovedByAdmin: true }
+  })
+  if (!user) return { error: 'User not found' }
+
+  if (user.userType === 'PRIVATE') {
+    if (!user.skatDisclaimerAccepted) {
+      return { error: 'You must accept the SKAT disclaimer before listing a car.' }
+    }
+
+    const currentYear = new Date().getFullYear()
+    const startOfYear = new Date(currentYear, 0, 1)
+
+    const carsCreatedThisYear = await prisma.car.count({
+      where: {
+        ownerId: session.user.id,
+        createdAt: {
+          gte: startOfYear
+        }
+      }
+    })
+
+    if (carsCreatedThisYear >= 2) {
+      return { error: 'Grænse nået! Som privatbruger kan du maksimalt sætte 2 biler til salg om året på grund af SKATs regler. Opgrader til en Erhvervskonto (CVR).' }
+    }
+  }
+
+  // 2. B2B Gatekeeper: Ensure BUSINESS users are approved by an admin
+  if (user.userType === 'BUSINESS' && !user.isApprovedByAdmin) {
+    return { error: 'Din erhvervskonto afventer godkendelse fra en administrator.' }
+  }
+
   const parse = CarCreateSchema.safeParse(input)
   if (!parse.success) return { error: 'Invalid input' }
   const data = parse.data

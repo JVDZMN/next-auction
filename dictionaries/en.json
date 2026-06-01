@@ -48,7 +48,7 @@
       },
       "secure": {
         "title": "Secure Payments",
-        "body": "Powered by Stripe for safe and guaranteed transactions"
+        "body": "100% free to use for private sellers and buyers with no hidden fees"
       }
     },
     "welcome": {
@@ -269,5 +269,13 @@
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?"
+  },
+  "skat": {
+    "title": "SKAT Compliance",
+    "disclaimer": "I confirm that I am selling this vehicle as a private individual (C2C) and have prepared a manual contract (slutseddel). I acknowledge that this platform is not an auctioneer and bears no liability for the vehicle's condition.",
+    "accept": "Accept Disclaimer",
+    "privateUser": "Private User",
+    "businessUser": "Business User",
+    "upgradeRequired": "Upgrade to Business (CVR) to list more than 2 cars per year."
   }
 }

@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { BadgeCheck, Eye, Pencil, Copy, XCircle, CalendarClock, CheckCircle2 } from 'lucide-react'
 import { Breadcrumb } from '@/components/Breadcrumb'
+import { PaymentSection } from '@/components/PaymentSection'
+import { DisputeSection } from '@/components/DisputeSection'
 
 interface BidEntry {
   id: string
@@ -36,10 +38,17 @@ interface BidEntry {
 }
 
 const statusVariant: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  completed: 'bg-blue-100 text-blue-800 border-blue-200',
+  active:          'bg-green-100 text-green-800 border-green-200',
+  pending_payment: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  completed:       'bg-blue-100 text-blue-800 border-blue-200',
+  confirmed:       'bg-emerald-100 text-emerald-800 border-emerald-200',
+  payment_overdue: 'bg-orange-100 text-orange-800 border-orange-200',
+  second_chance:   'bg-purple-100 text-purple-800 border-purple-200',
+  disputed:        'bg-red-100 text-red-800 border-red-200',
+  cancelled:       'bg-red-100 text-red-800 border-red-200',
+  no_bid:          'bg-gray-100 text-gray-600 border-gray-200',
   reserve_not_met: 'bg-amber-100 text-amber-800 border-amber-200',
-  cancelled: 'bg-red-100 text-red-800 border-red-200',
+  relisted:        'bg-sky-100 text-sky-800 border-sky-200',
 }
 
 export default function CarDetailPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
@@ -384,11 +393,29 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               </div>
             )}
 
+            {/* Payment section — shown to winner when pending_payment or second_chance */}
+            {session && !isOwner && ['pending_payment', 'second_chance'].includes(car.status) && (
+              <PaymentSection
+                carId={car.id}
+                amount={car.currentPrice}
+                deadline={(car as unknown as { paymentDeadline?: string | null }).paymentDeadline ?? null}
+                locale={locale}
+              />
+            )}
+
+            {/* Dispute section — shown to winner after payment, within dispute window */}
+            {session && !isOwner && car.status === 'completed' && (
+              <DisputeSection
+                carId={car.id}
+                disputeDeadline={(car as unknown as { disputeDeadline?: string | null }).disputeDeadline ?? null}
+              />
+            )}
+
             <MessageSeller carId={car.id} ownerId={car.owner.id} ownerName={car.owner.name || 'Seller'} />
 
             <Separator />
 
-            {isOwner && ['cancelled', 'reserve_not_met'].includes(car.status) && (
+            {isOwner && ['cancelled', 'no_bid', 'reserve_not_met'].includes(car.status) && (
               <div>
                 {showRelistForm ? (
                   <div className="space-y-3 p-4 border rounded-lg">

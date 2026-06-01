@@ -146,6 +146,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Fetch fresh user data to accurately check userType and SKAT compliance
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, userType: true, skatDisclaimerAccepted: true, isApprovedByAdmin: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // 1. C2C Gatekeeper: Check SKAT rules for PRIVATE users
+    if (user.userType === 'PRIVATE') {
+      if (!user.skatDisclaimerAccepted) {
+        return NextResponse.json(
+          { error: 'Du skal acceptere SKATs vilkår før du kan oprette en auktion.' },
+          { status: 403 }
+        );
+      }
+
+      const currentYear = new Date().getFullYear();
+      const startOfYear = new Date(currentYear, 0, 1);
+      const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
+
+      const listingsThisYear = await prisma.car.count({
+        where: {
+          ownerId: user.id,
+          createdAt: {
+            gte: startOfYear,
+            lte: endOfYear,
+          },
+        },
+      });
+
+      if (listingsThisYear >= 2) {
+        return NextResponse.json(
+          { error: 'Grænse nået! Som privatbruger kan du maksimalt sætte 2 biler til salg om året på grund af SKATs regler. Opgrader til en Erhvervskonto (CVR).' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 2. B2B Gatekeeper: Ensure BUSINESS users are approved by an admin
+    if (user.userType === 'BUSINESS' && !user.isApprovedByAdmin) {
+      return NextResponse.json(
+        { error: 'Din erhvervskonto afventer godkendelse fra en administrator.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { CarCreateSchema } = await import('@/lib/zod');
     const parseResult = CarCreateSchema.safeParse(body);
@@ -177,7 +226,7 @@ export async function POST(request: NextRequest) {
         reservePrice: data.reservePrice != null ? Number(data.reservePrice) : null,
         auctionEndDate: new Date(data.auctionEndDate),
         auctionStartDate: data.auctionStartDate ? new Date(data.auctionStartDate) : null,
-        status: isDraft ? 'active' : 'active',
+        status: 'active',
         isDraft,
         vin: data.vin || null,
         subModel: data.subModel || null,

@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ArrowLeft, Trophy } from 'lucide-react'
+import { ArrowLeft, Trophy, AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface AdminCar extends Omit<Car, 'bids'> {
   bids: Array<{
@@ -35,10 +36,17 @@ interface BidStats {
 }
 
 const statusVariant: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  completed: 'bg-blue-100 text-blue-800 border-blue-200',
+  active:          'bg-green-100 text-green-800 border-green-200',
+  pending_payment: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  completed:       'bg-blue-100 text-blue-800 border-blue-200',
+  confirmed:       'bg-emerald-100 text-emerald-800 border-emerald-200',
+  payment_overdue: 'bg-orange-100 text-orange-800 border-orange-200',
+  second_chance:   'bg-purple-100 text-purple-800 border-purple-200',
+  disputed:        'bg-red-100 text-red-800 border-red-200',
+  cancelled:       'bg-red-100 text-red-800 border-red-200',
+  no_bid:          'bg-gray-100 text-gray-600 border-gray-200',
   reserve_not_met: 'bg-amber-100 text-amber-800 border-amber-200',
-  cancelled: 'bg-red-100 text-red-800 border-red-200',
+  relisted:        'bg-sky-100 text-sky-800 border-sky-200',
 }
 
 export default function AdminCarDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -201,6 +209,51 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
             </CardContent>
           )}
         </Card>
+
+        {/* Dispute resolution */}
+        {car.status === 'disputed' && (
+          <Card className="border-red-200">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-red-700">
+                <AlertTriangle className="h-4 w-4" /> Dispute Filed
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert className="border-red-200 bg-red-50">
+                <AlertDescription className="text-red-800">
+                  <strong>Reason:</strong> {(car as unknown as { disputeReason?: string }).disputeReason ?? 'No reason provided'}
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    if (!confirm('Issue a full refund and relist the car?')) return
+                    const res = await fetch(`/api/admin/cars/${car.id}/refund`, { method: 'POST' })
+                    if (res.ok) fetchData()
+                    else alert('Refund failed')
+                  }}
+                >
+                  Refund &amp; Relist
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  size="sm"
+                  onClick={async () => {
+                    if (!confirm('Confirm the sale (dismiss dispute)?')) return
+                    const res = await fetch(`/api/admin/cars/${car.id}/confirm`, { method: 'POST' })
+                    if (res.ok) fetchData()
+                    else alert('Confirmation failed')
+                  }}
+                >
+                  Confirm Sale
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Specs */}
         <Card>

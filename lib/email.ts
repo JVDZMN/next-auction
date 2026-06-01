@@ -106,22 +106,26 @@ export async function sendAuctionWonEmail({
   carTitle,
   finalPrice,
   carId,
+  sellerEmail,
 }: {
   to: string
   winnerName: string
   carTitle: string
   finalPrice: number
   carId: string
+  sellerEmail?: string
 }) {
+  const listingUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/cars/${carId}`
   return sendEmail({
     to,
-    subject: `Congratulations! You won the auction for ${carTitle}`,
+    subject: `You won the auction — ${carTitle}`,
     html: `
-      <h2>You won the auction!</h2>
+      <h2>Congratulations! You won the auction.</h2>
       <p>Hi ${winnerName},</p>
-      <p>Your bid of <strong>${finalPrice.toLocaleString()} kr</strong> was the winning bid for <strong>${carTitle}</strong>.</p>
-      <p>The seller will be in touch to arrange payment and collection.</p>
-      <a href="${process.env.NEXT_PUBLIC_APP_URL}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+      <p>You placed the highest bid of <strong>${finalPrice.toLocaleString('da-DK')} kr</strong> for <strong>${carTitle}</strong>.</p>
+      <p>The seller will contact you within 48 hours to arrange viewing and transfer.</p>
+      ${sellerEmail ? `<p><strong>Seller contact:</strong> ${sellerEmail}</p>` : ''}
+      <a href="${listingUrl}" style="display:inline-block;padding:12px 24px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
         View Listing
       </a>
     `,
@@ -141,13 +145,14 @@ export async function sendAuctionClosedSellerEmail({
   sellerName: string
   carTitle: string
   carId: string
-  outcome: 'completed' | 'cancelled' | 'reserve_not_met'
+  outcome: 'completed' | 'cancelled' | 'no_bid' | 'reserve_not_met'
   finalPrice?: number
   winnerName?: string
 }) {
   const subjectMap = {
-    completed: `Your auction for ${carTitle} has a winner!`,
-    cancelled: `Your auction for ${carTitle} ended with no bids`,
+    completed:       `Your auction for ${carTitle} has a winner!`,
+    cancelled:       `Your auction for ${carTitle} was cancelled`,
+    no_bid:          `Your auction for ${carTitle} ended with no bids`,
     reserve_not_met: `Your auction for ${carTitle} ended — reserve not met`,
   }
 
@@ -155,10 +160,16 @@ export async function sendAuctionClosedSellerEmail({
     completed: `
       <h2>Your auction has sold!</h2>
       <p>Hi ${sellerName},</p>
-      <p><strong>${winnerName}</strong> won <strong>${carTitle}</strong> with a bid of <strong>${finalPrice?.toLocaleString()} kr</strong>.</p>
-      <p>Please contact the buyer to arrange payment and collection.</p>
+      <p><strong>${winnerName}</strong> won <strong>${carTitle}</strong> with a bid of <strong>${finalPrice?.toLocaleString('da-DK')} kr</strong>.</p>
+      <p>The buyer has been asked to pay within 48 hours. You will be notified once payment is confirmed.</p>
     `,
     cancelled: `
+      <h2>Auction cancelled</h2>
+      <p>Hi ${sellerName},</p>
+      <p>Your auction for <strong>${carTitle}</strong> was cancelled.</p>
+      <p>You can relist the car at any time.</p>
+    `,
+    no_bid: `
       <h2>Auction ended with no bids</h2>
       <p>Hi ${sellerName},</p>
       <p>Your auction for <strong>${carTitle}</strong> ended without receiving any bids.</p>
@@ -167,8 +178,8 @@ export async function sendAuctionClosedSellerEmail({
     reserve_not_met: `
       <h2>Reserve price not met</h2>
       <p>Hi ${sellerName},</p>
-      <p>Your auction for <strong>${carTitle}</strong> ended. The highest bid was <strong>${finalPrice?.toLocaleString()} kr</strong>, which did not meet your reserve price.</p>
-      <p>You may contact the highest bidder directly or relist the car.</p>
+      <p>Your auction for <strong>${carTitle}</strong> ended. The highest bid was <strong>${finalPrice?.toLocaleString('da-DK')} kr</strong>, which did not meet your reserve price.</p>
+      <p>You may accept the highest bid or relist the car.</p>
     `,
   }
 
@@ -180,6 +191,150 @@ export async function sendAuctionClosedSellerEmail({
       <a href="${process.env.NEXT_PUBLIC_APP_URL}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
         View Listing
       </a>
+    `,
+  })
+}
+
+export async function sendPaymentConfirmationEmail({
+  to,
+  winnerName,
+  carTitle,
+  finalPrice,
+  carId,
+  locale = 'en',
+}: {
+  to: string
+  winnerName: string
+  carTitle: string
+  finalPrice: number
+  carId: string
+  locale?: string
+}) {
+  return sendEmail({
+    to,
+    subject: `Payment confirmed for ${carTitle}`,
+    html: `
+      <h2>Payment received!</h2>
+      <p>Hi ${winnerName},</p>
+      <p>Your payment of <strong>${finalPrice.toLocaleString('da-DK')} kr</strong> for <strong>${carTitle}</strong> has been confirmed.</p>
+      <p>The seller will be in touch to arrange collection. You have 24 hours to file a dispute if anything is wrong.</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/${locale}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+        View Listing
+      </a>
+    `,
+  })
+}
+
+export async function sendSaleConfirmedSellerEmail({
+  to,
+  sellerName,
+  carTitle,
+  finalPrice,
+  carId,
+  locale = 'en',
+}: {
+  to: string
+  sellerName: string
+  carTitle: string
+  finalPrice: number
+  carId: string
+  locale?: string
+}) {
+  return sendEmail({
+    to,
+    subject: `Sale confirmed — ${carTitle}`,
+    html: `
+      <h2>Your sale is confirmed!</h2>
+      <p>Hi ${sellerName},</p>
+      <p>The buyer's payment for <strong>${carTitle}</strong> (${finalPrice.toLocaleString('da-DK')} kr) has cleared the dispute window and the sale is now confirmed.</p>
+      <p>Please arrange delivery or collection with the buyer.</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/${locale}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+        View Listing
+      </a>
+    `,
+  })
+}
+
+export async function sendSecondChanceEmail({
+  to,
+  bidderName,
+  carTitle,
+  bidAmount,
+  carId,
+  deadline,
+  locale = 'en',
+}: {
+  to: string
+  bidderName: string
+  carTitle: string
+  bidAmount: number
+  carId: string
+  deadline: Date
+  locale?: string
+}) {
+  const deadlineStr = deadline.toLocaleString('da-DK', { dateStyle: 'medium', timeStyle: 'short' })
+  return sendEmail({
+    to,
+    subject: `Second chance offer — ${carTitle}`,
+    html: `
+      <h2>You have a second chance!</h2>
+      <p>Hi ${bidderName},</p>
+      <p>The original winner did not complete payment for <strong>${carTitle}</strong>. As the second-highest bidder, you are being offered the car at your bid of <strong>${bidAmount.toLocaleString('da-DK')} kr</strong>.</p>
+      <p><strong>You must pay by ${deadlineStr}</strong> to secure the car.</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/${locale}/cars/${carId}" style="display:inline-block;padding:12px 24px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">
+        Accept & Pay
+      </a>
+    `,
+  })
+}
+
+export async function sendDisputeNotificationEmail({
+  to,
+  carTitle,
+  carId,
+  buyerName,
+  reason,
+  isAdmin = false,
+}: {
+  to: string
+  carTitle: string
+  carId: string
+  buyerName: string
+  reason: string
+  isAdmin?: boolean
+}) {
+  const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/en/admin/cars/${carId}`
+  return sendEmail({
+    to,
+    subject: `Dispute filed for ${carTitle}`,
+    html: `
+      <h2>A dispute has been filed</h2>
+      <p>${isAdmin ? 'Admin alert:' : 'Hi,'} <strong>${buyerName}</strong> has filed a dispute for <strong>${carTitle}</strong>.</p>
+      <p><strong>Reason:</strong> ${reason}</p>
+      ${isAdmin ? `<a href="${adminUrl}" style="display:inline-block;padding:12px 24px;background:#dc2626;color:#fff;border-radius:6px;text-decoration:none;font-weight:600">Review Dispute</a>` : '<p>An admin will review the dispute and contact you shortly.</p>'}
+    `,
+  })
+}
+
+export async function sendRefundEmail({
+  to,
+  buyerName,
+  carTitle,
+  refundAmount,
+}: {
+  to: string
+  buyerName: string
+  carTitle: string
+  refundAmount: number
+}) {
+  return sendEmail({
+    to,
+    subject: `Refund issued for ${carTitle}`,
+    html: `
+      <h2>Your refund has been issued</h2>
+      <p>Hi ${buyerName},</p>
+      <p>A refund of <strong>${refundAmount.toLocaleString('da-DK')} kr</strong> has been issued for <strong>${carTitle}</strong>.</p>
+      <p>It may take 5–10 business days to appear on your statement.</p>
     `,
   })
 }

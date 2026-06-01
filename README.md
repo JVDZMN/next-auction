@@ -72,7 +72,6 @@ graph TD
         GoogleOAuth["Google OAuth"]
         MitID["MitID · Criipto\nIdentity Verification"]
         Sentry["Sentry\nError Tracking"]
-        Stripe["Stripe\nPayments"]
     end
 
     Browser -- "HTTP" --> Pages
@@ -91,7 +90,6 @@ graph TD
     API -- "sign in" --> GoogleOAuth
     API -- "identity verification" --> MitID
     API -- "unhandled errors" --> Sentry
-    API -- "payments" --> Stripe
 ```
 
 ## Tech Stack
@@ -106,7 +104,6 @@ graph TD
 | Email | Resend |
 | Image upload | Cloudinary |
 | Error tracking | Sentry |
-| Payments | Stripe (integrated) |
 | Styling | Tailwind CSS |
 | Testing | Vitest (unit) + Vitest + Docker (integration) |
 
