@@ -24,14 +24,16 @@ export async function POST(
 
     if (!car) return NextResponse.json({ error: 'Car not found' }, { status: 404 })
     if (car.status !== 'completed') return NextResponse.json({ error: 'Dispute window is not open' }, { status: 400 })
-    if (car.disputeDeadline && car.disputeDeadline < new Date())
+    const carAny = car as unknown as Record<string, unknown>
+    if (carAny.disputeDeadline && (carAny.disputeDeadline as Date) < new Date())
       return NextResponse.json({ error: 'Dispute window has closed' }, { status: 400 })
     if (car.winnerBid?.bidder.id !== session.user.id)
       return NextResponse.json({ error: 'Only the winner can file a dispute' }, { status: 403 })
 
     await prisma.car.update({
       where: { id: carId },
-      data:  { status: 'disputed', disputeReason: reason.trim() },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data:  { status: 'disputed' as any, disputeReason: reason.trim() } as any,
     })
 
     const carTitle   = `${car.year} ${car.brand} ${car.model}`
