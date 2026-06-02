@@ -140,6 +140,7 @@ export async function sendAuctionClosedSellerEmail({
   outcome,
   finalPrice,
   winnerName,
+  winnerEmail,
 }: {
   to: string
   sellerName: string
@@ -148,6 +149,7 @@ export async function sendAuctionClosedSellerEmail({
   outcome: 'completed' | 'cancelled' | 'no_bid' | 'reserve_not_met'
   finalPrice?: number
   winnerName?: string
+  winnerEmail?: string
 }) {
   const subjectMap = {
     completed:       `Your auction for ${carTitle} has a winner!`,
