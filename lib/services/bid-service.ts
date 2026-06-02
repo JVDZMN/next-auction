@@ -31,12 +31,19 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
   // The updateMany where currentPrice = X acts as the lock: if another bid
   // landed first, count === 0 and we surface a 409 to the client.
   // ------------------------------------------------------------------
-  const car = await client.car.findUnique({
-    where: { id: carId },
-    include: { owner: { select: { id: true, email: true, name: true } } },
-  })
+  const [car, bidder] = await Promise.all([
+    client.car.findUnique({
+      where: { id: carId },
+      include: { owner: { select: { id: true, email: true, name: true, userType: true } } },
+    }),
+    client.user.findUnique({
+      where: { id: userId },
+      select: { userType: true, isApprovedByAdmin: true },
+    }),
+  ])
 
   if (!car) throw new BidError('Car not found', 404)
+  if (!bidder) throw new BidError('Bidder not found', 404)
 
   const validation = validateBid({
     amount,
@@ -46,6 +53,9 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
     ownerId: car.ownerId,
     bidderId: userId,
     bidIncrement: car.bidIncrement,
+    ownerUserType:    car.owner.userType,
+    bidderUserType:   bidder.userType,
+    bidderIsApproved: bidder.isApprovedByAdmin,
   })
 
   if (!validation.valid) throw new BidError(validation.error, validation.httpStatus)

@@ -6,6 +6,9 @@ export type BidValidationInput = {
   ownerId: string
   bidderId: string
   bidIncrement?: number | null
+  ownerUserType: 'PRIVATE' | 'BUSINESS'
+  bidderUserType: 'PRIVATE' | 'BUSINESS'
+  bidderIsApproved: boolean
 }
 
 export type BidValidationResult =
@@ -19,6 +22,24 @@ export function validateBid(input: BidValidationInput): BidValidationResult {
 
   if (input.auctionEndDate < new Date()) {
     return { valid: false, error: 'Auction has ended', httpStatus: 400 }
+  }
+
+  if (input.ownerUserType !== input.bidderUserType) {
+    return {
+      valid: false,
+      error: input.bidderUserType === 'PRIVATE'
+        ? 'Denne auktion er kun for erhvervsbrugere'
+        : 'Denne auktion er kun for private brugere',
+      httpStatus: 403,
+    }
+  }
+
+  if (input.bidderUserType === 'BUSINESS' && !input.bidderIsApproved) {
+    return {
+      valid: false,
+      error: 'Din erhvervskonto er endnu ikke godkendt af en administrator',
+      httpStatus: 403,
+    }
   }
 
   if (input.bidIncrement && input.bidIncrement > 0) {

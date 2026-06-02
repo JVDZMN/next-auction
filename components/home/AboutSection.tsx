@@ -3,11 +3,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useInView } from '@/lib/use-in-view'
-import type { TopCar } from '@/components/HomeClient'
+import type { AuctionCar } from './AuctionTypeSection'
 
 interface Props {
   locale: string
-  topCars: TopCar[]
+  topCars: AuctionCar[]
 }
 
 const CHECK_ITEMS = [
@@ -53,7 +53,7 @@ export function AboutSection({ locale, topCars }: Props) {
             {CHECK_ITEMS.map(item => (
               <li key={item} className="flex items-start gap-3">
                 <span
-                  className="mt-0.5 flex-shrink-0 text-base font-black"
+                  className="mt-0.5 shrink-0 text-base font-black"
                   style={{ color: 'var(--copper)' }}
                 >
                   ✓

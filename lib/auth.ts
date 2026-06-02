@@ -90,10 +90,12 @@ export const authOptions = {
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { mitIdVerified: true, emailVerified: true },
+          select: { mitIdVerified: true, emailVerified: true, userType: true, isApprovedByAdmin: true },
         });
-        token.mitIdVerified = dbUser?.mitIdVerified ?? false;
-        token.emailVerified = !!dbUser?.emailVerified;
+        token.mitIdVerified     = dbUser?.mitIdVerified     ?? false;
+        token.emailVerified     = !!dbUser?.emailVerified;
+        token.userType          = dbUser?.userType;
+        token.isApprovedByAdmin = dbUser?.isApprovedByAdmin ?? false;
       }
       return token;
     },
@@ -111,7 +113,9 @@ export const authOptions = {
           typeof token.role === 'string' && Object.values(Role).includes(token.role as Role)
             ? (token.role as Role)
             : Role.User;
-        session.user.mitIdVerified = (token.mitIdVerified as boolean) ?? false;
+        session.user.mitIdVerified     = (token.mitIdVerified as boolean) ?? false;
+        session.user.userType          = token.userType ?? 'PRIVATE';
+        session.user.isApprovedByAdmin = (token.isApprovedByAdmin as boolean) ?? false;
       }
       return session;
     },

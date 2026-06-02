@@ -366,6 +366,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               auctionEndDate={car.auctionEndDate}
               status={car.status}
               ownerId={car.owner.id}
+              ownerUserType={(car.owner as { userType?: 'PRIVATE' | 'BUSINESS' }).userType ?? 'PRIVATE'}
               reservePrice={car.reservePrice}
               bidIncrement={car.bidIncrement}
               onBidPlaced={fetchCar}

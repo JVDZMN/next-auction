@@ -54,7 +54,8 @@ interface CarListing {
   id: string; brand: string; model: string; subModel: string | null; year: number
   currentPrice: number; images: string[]; fuel: string | null; km: number
   city: string | null; bodyType: string | null; condition: string
-  auctionEndDate: string; _count: { bids: number }; owner: { name: string | null }
+  auctionEndDate: string; _count: { bids: number }
+  owner: { name: string | null; userType?: 'PRIVATE' | 'BUSINESS' }
   latitude: number | null; longitude: number | null
 }
 export interface CarsResponse { cars: CarListing[]; total: number; page: number; pageSize: number; totalPages: number }
@@ -80,6 +81,9 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
   const [synStatus,  setSynStatus] = useState(searchParams?.get('synStatus') ?? '')
   const [sortBy,     setSortBy]    = useState(searchParams?.get('sortBy')    ?? 'newest')
   const [likedOnly,  setLikedOnly] = useState(searchParams?.get('liked') === 'true')
+  const [segment,    setSegment]   = useState<'private' | 'business'>(
+    searchParams?.get('segment') === 'business' ? 'business' : 'private'
+  )
   const [page,       setPage]      = useState(Number(searchParams?.get('page') ?? 1))
   const [kmRange,    setKmRange]   = useState<[number, number]>([
     Number(searchParams?.get('minKm') ?? 0),
@@ -113,9 +117,10 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
     if (synStatus)           p.synStatus = synStatus
     if (likedOnly)           p.liked     = 'true'
     if (sortBy !== 'newest') p.sortBy    = sortBy
+    p.segment = segment
     p.page = String(page)
     return { ...p, ...Object.fromEntries(Object.entries(overrides).map(([k, v]) => [k, String(v)])) }
-  }, [brand, model, city, fuel, bodyType, minPrice, maxPrice, minYear, maxYear, kmRange, synStatus, likedOnly, sortBy, page])
+  }, [brand, model, city, fuel, bodyType, minPrice, maxPrice, minYear, maxYear, kmRange, synStatus, likedOnly, sortBy, segment, page])
 
   const fetchCars = useCallback(async () => {
     setLoading(true)
@@ -274,6 +279,21 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
             {data && !loading && (
               <p className="text-sm text-muted-foreground mt-0.5">{data.total.toLocaleString('da-DK')} listings</p>
             )}
+            {/* Segment tabs */}
+            <div className="flex gap-1 mt-3 p-1 rounded-lg w-fit" style={{ backgroundColor: 'var(--section-alt)' }}>
+              {(['private', 'business'] as const).map(seg => (
+                <button
+                  key={seg}
+                  onClick={() => { setSegment(seg); setPage(1) }}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-150"
+                  style={segment === seg
+                    ? { backgroundColor: 'var(--copper)', color: 'white' }
+                    : { color: 'var(--text-muted)', backgroundColor: 'transparent' }}
+                >
+                  {seg === 'private' ? '🏠 Private Auktioner' : '🏢 Erhvervsauktioner'}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Sheet>
@@ -361,7 +381,8 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {data?.cars.map((car, i) => (
-                    <CarCard key={car.id} {...car} bidCount={car._count.bids} priority={i < 3} />
+                    <CarCard key={car.id} {...car} bidCount={car._count.bids} priority={i < 3}
+                      ownerUserType={car.owner.userType} />
                   ))}
                 </div>
 

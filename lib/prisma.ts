@@ -20,6 +20,9 @@ export const ownerSelect = {
   id: true,
   name: true,
   email: true,
+  userType: true,
+  isApprovedByAdmin: true,
+  sellerVerified: true,
 } as const
 
 export const bidderSelect = {

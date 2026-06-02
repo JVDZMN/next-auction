@@ -22,6 +22,7 @@ const {
   mockBidCount,
   mockProxyBidFindFirst,
   mockBidFindMany,
+  mockUserFindUnique,
   mockUserFindMany,
   mockNotificationCreateMany,
 } = vi.hoisted(() => ({
@@ -32,6 +33,7 @@ const {
   mockBidCount:             vi.fn(),
   mockProxyBidFindFirst:    vi.fn(),
   mockBidFindMany:          vi.fn(),
+  mockUserFindUnique:       vi.fn(),
   mockUserFindMany:         vi.fn(),
   mockNotificationCreateMany: vi.fn(),
 }))
@@ -65,7 +67,7 @@ vi.mock('@/lib/prisma', () => ({
       count:    mockBidCount,
     },
     proxyBid:     { findFirst: mockProxyBidFindFirst },
-    user:         { findMany: mockUserFindMany },
+    user:         { findUnique: mockUserFindUnique, findMany: mockUserFindMany },
     notification: { createMany: mockNotificationCreateMany },
   },
 }))
@@ -90,7 +92,7 @@ function makeCar(currentPrice = 10_000) {
     auctionEndDate: FUTURE,
     antiSnipingMinutes: 2,
     bidIncrement: null,
-    owner: { id: 'owner-1', email: 'owner@example.com', name: 'Owner' },
+    owner: { id: 'owner-1', email: 'owner@example.com', name: 'Owner', userType: 'PRIVATE' as const },
   }
 }
 
@@ -110,6 +112,7 @@ beforeEach(() => {
   mockProxyBidFindFirst.mockResolvedValue(null)
   mockBidFindMany.mockResolvedValue([])
   mockBidCount.mockResolvedValue(1)
+  mockUserFindUnique.mockResolvedValue({ userType: 'PRIVATE', isApprovedByAdmin: true })
   mockUserFindMany.mockResolvedValue([])
   mockNotificationCreateMany.mockResolvedValue({})
   mockCarUpdate.mockImplementation(async ({ data }: { data: unknown }) => data)

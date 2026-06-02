@@ -1,7 +1,7 @@
 import { CarsClient, CarsResponse } from './CarsClient'
 import { prisma, ownerSelect, latestBidInclude } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { CarStatus, FuelType } from '@prisma/client'
+import { CarStatus, FuelType, UserType } from '@prisma/client'
 
 const KM_MAX = 500_000
 
@@ -19,6 +19,7 @@ async function fetchCars(params: Record<string, string>): Promise<CarsResponse> 
   const maxKm     = params.maxKm     ? Number(params.maxKm)    : undefined
   const synStatus = params.synStatus || undefined
   const likedOnly = params.liked === 'true'
+  const segment   = params.segment === 'business' ? 'BUSINESS' : params.segment === 'private' ? 'PRIVATE' : undefined
   const page      = Math.max(1, Number(params.page || 1))
   const pageSize  = 12
   const sortBy    = params.sortBy || 'newest'
@@ -64,6 +65,7 @@ async function fetchCars(params: Record<string, string>): Promise<CarsResponse> 
     ...(synStatus === 'valid'   && { nextInspection: { gt: new Date() } }),
     ...(synStatus === 'expired' && { nextInspection: { lte: new Date() } }),
     ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
+    ...(segment && { owner: { userType: segment as UserType } }),
   }
 
   const [total, cars] = await Promise.all([

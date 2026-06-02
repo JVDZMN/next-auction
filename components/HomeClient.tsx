@@ -7,49 +7,37 @@ import { AboutSection }         from './home/AboutSection'
 import { BuyersStepsSection }   from './home/BuyersStepsSection'
 import { SellersStepsSection }  from './home/SellersStepsSection'
 import { SellerTypeSection }    from './home/SellerTypeSection'
+import { AuctionTypeSection }   from './home/AuctionTypeSection'
+import type { AuctionCar }      from './home/AuctionTypeSection'
 import { FaqPreviewSection }    from './home/FaqPreviewSection'
 import { FinalCtaSection }      from './home/FinalCtaSection'
 
-// Below-fold sections loaded after above-the-fold paint
-const SlideshowSection    = dynamic(() => import('./home/SlideshowSection').then(m => ({ default: m.SlideshowSection })))
 const NewsletterAndFooter = dynamic(() => import('./home/NewsletterAndFooter').then(m => ({ default: m.NewsletterAndFooter })))
 
-export interface TopCar {
-  id: string
-  year: number
-  brand: string
-  model: string
-  subModel: string | null
-  images: string[]
-  currentPrice: number
-  auctionEndDate: string
-  bidCount: number
-}
+// Re-export for AboutSection (uses car images)
+export interface TopCar extends AuctionCar {}
 
 interface HomeClientProps {
   locale: string
   isSignedIn: boolean
-  topCars: TopCar[]
-  showcaseImage: string | null
-  brandCounts: Record<string, number>
-  activeBrands: string[]
+  privateCars: AuctionCar[]
+  businessCars: AuctionCar[]
 }
 
-export function HomeClient({
-  locale,
-  isSignedIn,
-  topCars,
-}: HomeClientProps) {
+export function HomeClient({ locale, isSignedIn, privateCars, businessCars }: HomeClientProps) {
+  // Merge all cars for the About section image grid
+  const allCars = [...privateCars, ...businessCars]
+
   return (
     <main>
-      {/* 1. Hero — dark navy + diagonal copper */}
+      {/* 1. Hero */}
       <HeroSection locale={locale} isSignedIn={isSignedIn} />
 
-      {/* 2. Feature boxes bar */}
+      {/* 2. Feature boxes */}
       <FeatureBoxesSection />
 
-      {/* 3. About — split layout */}
-      <AboutSection locale={locale} topCars={topCars} />
+      {/* 3. About */}
+      <AboutSection locale={locale} topCars={allCars} />
 
       {/* 4. How it works — Buyers */}
       <BuyersStepsSection locale={locale} />
@@ -57,16 +45,34 @@ export function HomeClient({
       {/* 5. How it works — Sellers */}
       <SellersStepsSection locale={locale} />
 
-      {/* 6. Private vs Business */}
+      {/* 6. Private vs Business cards */}
       <SellerTypeSection locale={locale} />
 
-      {/* 7. Active Auctions carousel */}
-      <SlideshowSection topCars={topCars} locale={locale} />
+      {/* 7. Private auctions */}
+      <AuctionTypeSection
+        locale={locale}
+        label="For Private"
+        heading="Private Auktioner"
+        subtext="Køb bil direkte fra private sælgere"
+        cars={privateCars}
+        viewAllHref={`/${locale}/cars?segment=private`}
+      />
 
-      {/* 8. FAQ accordion preview */}
+      {/* 8. Business auctions */}
+      <AuctionTypeSection
+        locale={locale}
+        label="For Erhverv"
+        heading="Erhvervsauktioner"
+        subtext="Professionelle forhandlere og virksomheder"
+        cars={businessCars}
+        viewAllHref={`/${locale}/cars?segment=business`}
+        dark
+      />
+
+      {/* 9. FAQ preview */}
       <FaqPreviewSection locale={locale} />
 
-      {/* 9. Final CTA */}
+      {/* 10. Final CTA */}
       <FinalCtaSection locale={locale} />
 
       {/* Footer */}

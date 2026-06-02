@@ -46,6 +46,7 @@ interface BiddingSectionProps {
   auctionEndDate: string
   status: string
   ownerId: string
+  ownerUserType: 'PRIVATE' | 'BUSINESS'
   reservePrice?: number | null
   bidIncrement?: number | null
   onBidPlaced?: () => void
@@ -53,10 +54,37 @@ interface BiddingSectionProps {
 }
 
 export function BiddingSection({
-  carId, currentPrice, auctionEndDate, status, ownerId,
+  carId, currentPrice, auctionEndDate, status, ownerId, ownerUserType,
   reservePrice, bidIncrement, onBidPlaced, onPriceUpdate,
 }: BiddingSectionProps) {
   const { data: session } = useSession()
+
+  // Show segment-mismatch block before anything else
+  if (session?.user && session.user.id !== ownerId) {
+    const bidderType = session.user.userType ?? 'PRIVATE'
+    if (bidderType !== ownerUserType) {
+      return (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {ownerUserType === 'BUSINESS'
+              ? 'Denne auktion er kun for erhvervsbrugere med CVR'
+              : 'Denne auktion er kun for private brugere'}
+          </AlertDescription>
+        </Alert>
+      )
+    }
+    if (bidderType === 'BUSINESS' && !session.user.isApprovedByAdmin) {
+      return (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Din erhvervskonto er endnu ikke godkendt af en administrator
+          </AlertDescription>
+        </Alert>
+      )
+    }
+  }
   const dict = useDict()
   const t = dict.bidding
 

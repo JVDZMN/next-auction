@@ -68,7 +68,10 @@ export const CarCreateSchema = z.object({
 // ── Bid schemas ───────────────────────────────────────────────────────────────
 export const BidCreateSchema = z.object({
   carId:  z.string().min(1),
-  amount: z.union([z.string(), z.number()]),
+  amount: z.union([
+    z.string().regex(/^\d+(\.\d+)?$/, 'Must be a positive number').transform(Number),
+    z.number(),
+  ]).pipe(z.number().positive()),
 })
 
 export const ProxyBidSchema = z.object({
