@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertTriangle } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 
 function GoogleIcon() {
   return (
@@ -91,6 +92,19 @@ export default function SignUpPage() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input id="confirmPassword" type="password" required minLength={6} placeholder="••••••••"
                 value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} />
+            </div>
+            <div className="flex items-start gap-2.5">
+              <Checkbox id="terms-consent" required className="mt-0.5 shrink-0" />
+              <Label htmlFor="terms-consent" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
+                Jeg accepterer{' '}
+                <Link href={`/${locale}/terms`} className="underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: 'var(--text-body)' }}>
+                  vilkår og betingelser
+                </Link>
+                {' '}og{' '}
+                <Link href={`/${locale}/privacy`} className="underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: 'var(--text-body)' }}>
+                  privatlivspolitik
+                </Link>
+              </Label>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Creating account…</> : 'Create Account'}

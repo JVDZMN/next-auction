@@ -22,7 +22,7 @@ Kontakt: support@next-auction.dk`,
 - **Kontaktoplysninger:** navn og e-mailadresse ved oprettelse af konto
 - **Profiloplysninger:** oplysninger du selv angiver i din profil
 - **Transaktionsdata:** oplysninger om dine bud og auktioner
-- **Tekniske data:** IP-adresse, browser, enhedstype og cookie-data til teknisk drift og sikkerhed
+- **Tekniske data:** IP-adresse, browser og enhedstype til teknisk drift og sikkerhed
 - **Kommunikation:** beskeder sendt via vores beskedsystem`,
   },
   {
@@ -38,7 +38,7 @@ Kontakt: support@next-auction.dk`,
   {
     id: '4',
     title: 'Opbevaring',
-    body: `Vi opbevarer dine oplysninger så længe din konto er aktiv, og i op til 5 år efter din konto er slettet i overensstemmelse med bogføringsloven.
+    body: `Vi opbevarer dine oplysninger så længe din konto er aktiv, og i op til 2 år efter inaktivitet.
 
 Tekniske logs slettes løbende og opbevares maksimalt i 90 dage.`,
   },

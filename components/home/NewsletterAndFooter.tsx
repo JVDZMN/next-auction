@@ -95,14 +95,18 @@ export function NewsletterAndFooter({ locale }: Props) {
         <div className="flex flex-col items-center justify-between gap-3 px-6 py-4 sm:flex-row sm:px-10" style={{ borderTop: '1px solid rgba(255,255,255,0.09)' }}>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.32)' }}>{tf.copyright}</p>
           <div className="flex gap-6">
-            {[tf.privacy, tf.terms, tf.faq].map(label => (
-              <a key={label} href="#" className="text-xs transition-colors"
+            {[
+              { label: tf.privacy, href: `/${locale}/privacy` },
+              { label: tf.terms,   href: `/${locale}/terms` },
+              { label: tf.faq,     href: `/${locale}/faq` },
+            ].map(({ label, href }) => (
+              <Link key={label} href={href} className="text-xs transition-colors"
                 style={{ color: 'rgba(255,255,255,0.32)' }}
                 onMouseEnter={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.80)')}
                 onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.32)')}
               >
                 {label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>

@@ -255,7 +255,7 @@ export function BiddingSection({
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{t.legalDialog.title}</DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed">
+            <DialogDescription className="text-sm leading-relaxed" style={{ whiteSpace: 'pre-line' }}>
               {t.legalDialog.body}
             </DialogDescription>
           </DialogHeader>

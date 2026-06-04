@@ -170,6 +170,13 @@ export default function CreateCarPage() {
                   />
                 </motion.div>
 
+                <motion.div variants={sectionItem} className="flex items-start gap-2.5">
+                  <Checkbox id="accuracy-confirm" required className="mt-0.5 shrink-0" />
+                  <Label htmlFor="accuracy-confirm" className="cursor-pointer text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    Jeg bekræfter at alle oplysninger er korrekte og sandfærdige. Jeg er ansvarlig for annoncens indhold.
+                  </Label>
+                </motion.div>
+
                 <motion.div variants={sectionItem} className="flex items-center gap-2">
                   <Checkbox id="isDraft" checked={isDraft} onCheckedChange={v => setIsDraft(!!v)} />
                   <Label htmlFor="isDraft" className="cursor-pointer text-sm">Save as draft (not visible to buyers)</Label>

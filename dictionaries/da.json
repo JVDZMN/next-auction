@@ -207,7 +207,7 @@
     "reserveNotMet": "Reservepris ikke nået endnu",
     "legalDialog": {
       "title": "Bekræft dit bud",
-      "body": "Dette bud er juridisk bindende i henhold til dansk Købelov. Ved at bekræfte accepterer du at købe køretøjet til denne pris, hvis du vinder auktionen.",
+      "body": "Dette bud er juridisk bindende i henhold til dansk Købelov. Ved at bekræfte forpligter du dig til at købe køretøjet til denne pris, hvis du vinder auktionen.\n\nNext Auction formidler alene kontakten mellem køber og sælger og er ikke part i handlen.",
       "confirm": "Bekræft bud",
       "cancel": "Annuller"
     },

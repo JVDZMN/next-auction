@@ -207,7 +207,7 @@
     "reserveNotMet": "Reserve not yet met",
     "legalDialog": {
       "title": "Confirm Your Bid",
-      "body": "This bid is legally binding under Danish Købeloven. By confirming, you agree to purchase the vehicle at this price if you win the auction.",
+      "body": "This bid is legally binding under Danish Købeloven. By confirming, you commit to purchasing the vehicle at this price if you win the auction.\n\nNext Auction solely facilitates contact between buyer and seller and is not a party to the transaction.",
       "confirm": "Confirm Bid",
       "cancel": "Cancel"
     },

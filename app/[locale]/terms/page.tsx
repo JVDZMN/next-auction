@@ -9,65 +9,72 @@ export const metadata = {
 const SECTIONS = [
   {
     id: '1',
-    title: 'Hvem er vi',
-    body: `Next Auction er en dansk digital auktionsplatform, der formidler køb og salg af motorkøretøjer mellem private og erhvervssælgere. Vi er ikke part i handlen og sælger ikke biler selv. Platformen understøtter både forbrugersalg (C2C) og erhvervssalg (B2B).`,
+    title: 'Om Next Auction',
+    body: `Next Auction er en digital formidlingsplatform for køb og salg af køretøjer. Vi er ikke part i handlen mellem køber og sælger.`,
   },
   {
     id: '2',
-    title: 'Brugertyper',
-    body: `Next Auction har to brugertyper:
+    title: 'Platformens rolle',
+    body: `Next Auction stiller alene en teknisk platform til rådighed. Alle handler indgås direkte mellem køber og sælger uden Next Auctions mellemkomst.
 
-**Private sælgere** kan sælge op til 2 køretøjer pr. kalenderår uden CVR-nummer. Salg ud over denne grænse kan betragtes som erhvervsmæssigt af SKAT, og det er sælgers eget ansvar at overholde gældende skatteregler.
-
-**Erhvervssælgere** skal opgive gyldigt CVR-nummer ved registrering. Erhvervssalg er underlagt særskilte regler og er synligt mærket på platformen, så køber altid kan identificere selgerens type.`,
+Next Auction påtager sig intet ansvar for:
+- Køretøjets stand, kilometerstand eller historik
+- Sælgers oplysningers rigtighed
+- Handelens gennemførelse
+- Eventuelle tvister mellem køber og sælger`,
   },
   {
     id: '3',
-    title: 'Budgivningsregler',
-    body: `Alle bud afgivet på Next Auction er juridisk bindende i henhold til dansk Købelov § 6. Ved at afgive et bud accepterer du at gennemføre købet til det afgivne beløb, såfremt du vinder auktionen og reserveprisen er nået.
+    title: 'Brugertyper',
+    body: `Private brugere kan sælge op til 2 biler pr. kalenderår i overensstemmelse med SKATs regler for private salg. Salg ud over denne grænse betragtes som erhvervsmæssigt af SKAT.
 
-Bud kan ikke tilbagetrækkes efter afgivelse. Afsluttede auktioner med opnået reservepris resulterer i en bindende aftale mellem køber og sælger.`,
+Erhvervsbrugere skal have gyldigt CVR-nummer og skal godkendes af en administrator inden adgang til erhvervsmarkedet.`,
   },
   {
     id: '4',
-    title: 'Sælgers ansvar',
-    body: `Sælger er eneansvarlig for, at oplysningerne i annoncen — herunder beskrivelse, kilometerstand, stand og billeder — er korrekte, retvisende og ikke vildledende.
+    title: 'Budgivningsregler',
+    body: `Afgivne bud er juridisk bindende i henhold til dansk Købelov § 6. Ved at afgive et bud forpligter budgiver sig til at købe køretøjet til den pågældende pris, hvis budet er det højeste ved auktionens afslutning.
 
-Sælger er ansvarlig for at oplyse om kendte fejl og mangler. Manglende oplysning kan udgøre en overtrædelse af markedsføringsloven og/eller købeloven.`,
+Bud kan ikke tilbagetrækkes efter afgivelse.`,
   },
   {
     id: '5',
-    title: 'Købers ansvar',
-    body: `Køber opfordres til at besigtige køretøjet inden budgivning. Next Auction anbefaler, at køber indhenter en professionel tilstandsrapport eller alternativt betinger handlen af en prøvetur og/eller syn.
-
-Bud afgives på eget ansvar. Køber kan ikke hæve et vundet bud med baggrund i forhold, der burde have været undersøgt inden budgivning.`,
+    title: 'Sælgers ansvar',
+    body: `Sælger er eneansvarlig for:
+- Annoncens indhold og rigtighed
+- Lovlig ejendomsret til køretøjet
+- Korrekt beskrivelse af køretøjets stand`,
   },
   {
     id: '6',
-    title: 'Next Auctions ansvar',
-    body: `Next Auction stiller en teknisk platform til rådighed og er ikke part i handlen mellem køber og sælger. Vi påtager os intet ansvar for:
+    title: 'Købers ansvar',
+    body: `Køber opfordres til at:
+- Besigtige køretøjet inden budafgivelse
+- Indhente uafhængig teknisk vurdering
+- Tjekke køretøjets historik (tjekbil.dk)
 
-- Køretøjets stand, beskrivelse eller pris
-- Eventuelle tvister mellem køber og sælger
-- Tab som følge af handler indgået via platformen
-
-Vi forbeholder os ret til at slette annoncer eller suspendere brugere, der overtræder disse vilkår.`,
+Køb sker på købers eget ansvar.`,
   },
   {
     id: '7',
-    title: 'GDPR og databeskyttelse',
-    body: `Next Auction behandler personoplysninger i overensstemmelse med Europa-Parlamentets og Rådets forordning (EU) 2016/679 (GDPR) samt dansk databeskyttelseslov.
+    title: 'Forbudt indhold',
+    body: `Følgende er ikke tilladt på platformen:
+- Falske eller vildledende oplysninger
+- Salg af stjålne køretøjer
+- Manipulation af budprocessen
 
-Vi indsamler og behandler kun de personoplysninger, der er nødvendige for at levere vores tjeneste. Vi videregiver ikke dine oplysninger til tredjepart uden dit samtykke, medmindre vi er forpligtet hertil ved lov.
-
-Læs vores fulde privatlivspolitik for detaljer om dine rettigheder og vores behandling af data.`,
+Overtrædelse medfører øjeblikkelig udelukkelse fra platformen.`,
   },
   {
     id: '8',
+    title: 'GDPR og data',
+    body: `Next Auction behandler dine personoplysninger i overensstemmelse med GDPR og dansk databeskyttelseslov. Læs vores privatlivspolitik for detaljer om indsamling, opbevaring og dine rettigheder.`,
+  },
+  {
+    id: '9',
     title: 'Kontakt',
     body: `Har du spørgsmål til disse vilkår, er du velkommen til at kontakte os:
 
-Next Auction
 E-mail: support@next-auction.dk
 
 Vilkårene er sidst opdateret: 1. juni 2026.`,
@@ -150,6 +157,9 @@ export default async function TermsPage({
         <div className="mt-14 flex flex-wrap gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
           <Link href={`/${locale}/privacy`} className="hover:opacity-70 transition-opacity" style={{ color: 'var(--copper)' }}>
             Privatlivspolitik →
+          </Link>
+          <Link href={`/${locale}/faq`} className="hover:opacity-70 transition-opacity" style={{ color: 'var(--copper)' }}>
+            FAQ →
           </Link>
           <Link href={`/${locale}/faq`} className="hover:opacity-70 transition-opacity" style={{ color: 'var(--copper)' }}>
             FAQ →

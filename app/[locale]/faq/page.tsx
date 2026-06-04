@@ -18,19 +18,15 @@ const CATEGORIES = [
     items: [
       {
         q: 'Hvad er Next Auction?',
-        a: 'Next Auction er en dansk online auktionsplatform til køb og salg af biler. Private og erhvervssælgere kan oprette auktioner, og registrerede brugere kan afgive bud i realtid.',
+        a: 'En digital platform der forbinder bilkøbere og sælgere gennem realtidsauktioner.',
       },
       {
-        q: 'Er det gratis at oprette konto?',
-        a: 'Ja, oprettelse af konto er helt gratis. Der er ingen skjulte gebyrer for private brugere.',
+        q: 'Er det gratis?',
+        a: 'Ja, det er gratis at oprette konto og afgive bud.',
       },
       {
-        q: 'Hvilke betalingsmetoder accepteres?',
-        a: 'Betaling aftales direkte mellem køber og sælger efter auktionens afslutning. Next Auction formidler kun kontakten.',
-      },
-      {
-        q: 'Er platformen tilgængelig på mobil?',
-        a: 'Ja, Next Auction er fuldt responsivt og fungerer på alle enheder — desktop, tablet og mobil.',
+        q: 'Er Next Auction ansvarlig for handlen?',
+        a: 'Nej. Next Auction er en formidlingsplatform. Handlen indgås direkte mellem køber og sælger. Vi er ikke part i handlen.',
       },
     ],
   },
@@ -38,24 +34,20 @@ const CATEGORIES = [
     label: 'For Købere',
     items: [
       {
-        q: 'Hvordan afgiver jeg et bud?',
-        a: 'Opret en konto, find den bil du er interesseret i, og klik på "Afgiv bud". Angiv dit budbeløb og bekræft. Husk: bud er juridisk bindende.',
+        q: 'Er buddene bindende?',
+        a: 'Ja, afgivne bud er juridisk bindende i henhold til dansk Købelov.',
       },
       {
-        q: 'Hvad sker der når jeg vinder en auktion?',
-        a: 'Du modtager en e-mail med kontaktoplysninger på sælger. Herefter aftales overdragelse og betaling direkte med sælger.',
+        q: 'Hvad sker der når jeg vinder?',
+        a: 'Sælger kontakter dig direkte for at aftale overdragelse af køretøjet.',
       },
       {
-        q: 'Kan jeg trække et bud tilbage?',
-        a: 'Nej. I henhold til dansk Købelov er afgivne bud bindende og kan ikke tilbagetrækkes.',
+        q: 'Kan jeg fortryde mit bud?',
+        a: 'Nej. Et bud kan ikke tilbagekaldes.',
       },
       {
-        q: 'Hvad er proxy-budgivning?',
-        a: 'Med proxy-budgivning angiver du dit maksimale budget. Systemet byder automatisk for dig op til dette beløb, så du ikke behøver følge med konstant.',
-      },
-      {
-        q: 'Hvad sker der hvis reserveprisen ikke nås?',
-        a: 'Hvis det højeste bud er under reserveprisen, afsluttes auktionen uden salg. Sælger kan derefter vælge at acceptere det højeste bud eller relancere auktionen.',
+        q: 'Bør jeg se bilen inden jeg byder?',
+        a: 'Ja, vi anbefaler altid fysisk besigtigelse inden budafgivelse. Køb sker på eget ansvar.',
       },
     ],
   },
@@ -63,49 +55,25 @@ const CATEGORIES = [
     label: 'For Sælgere',
     items: [
       {
-        q: 'Hvor mange biler kan jeg sælge som privat?',
-        a: 'Som privat sælger kan du sælge op til 2 biler om året uden at det betragtes som erhvervsmæssigt salg jf. SKATs regler.',
+        q: 'Hvor mange biler kan jeg sælge?',
+        a: 'Private: max 2 biler om året (SKAT-regel). Erhverv: ubegrænset med gyldigt CVR-nummer.',
       },
       {
-        q: 'Hvad er en reservepris?',
-        a: 'Reserveprisen er den mindstepris du vil acceptere for din bil. Auktionen afsluttes kun som solgt, hvis buddet når reserveprisen.',
+        q: 'Er jeg ansvarlig for annoncens indhold?',
+        a: 'Ja, sælger er fuldt ansvarlig for alle oplysninger i annoncen.',
       },
       {
-        q: 'Hvad koster det at sælge?',
-        a: 'Det er gratis for private sælgere at oprette og afvikle auktioner på Next Auction.',
-      },
-      {
-        q: 'Kan jeg annullere en auktion?',
-        a: 'Ja, du kan annullere en auktion, så længe der ikke er afgivet bud. Når der er afgivet bud, kan auktionen som udgangspunkt ikke annulleres.',
-      },
-      {
-        q: 'Hvad er kravene til billeder?',
-        a: 'Upload mindst 3 billeder der viser bilens stand tydeligt — udefra, indefra og evt. eventuelle skader. God belysning og skarpe billeder øger interessen.',
+        q: 'Hvad hvis ingen byder?',
+        a: 'Auktionen afsluttes uden salg. Du kan oprette en ny auktion.',
       },
     ],
   },
   {
-    label: 'Regler og betingelser',
+    label: 'Regler',
     items: [
       {
-        q: 'Er buddene juridisk bindende?',
-        a: 'Ja, afgivne bud er bindende i henhold til dansk Købelov § 6. Vinderen af auktionen er forpligtet til at gennemføre købet til det afgivne budbeløb.',
-      },
-      {
-        q: 'Hvem er ansvarlig for bilens stand?',
-        a: 'Sælger er eneansvarlig for, at bilens beskrivelse og billeder er korrekte og ikke vildledende. Køber opfordres til at besigtige bilen inden budgivning.',
-      },
-      {
-        q: 'Hvad er Next Auctions ansvar?',
-        a: 'Next Auction er en formidlingsplatform og er ikke part i handlen mellem køber og sælger. Vi er ikke ansvarlige for bilens stand, pris eller handelsbetingelser.',
-      },
-      {
-        q: 'Hvordan behandles mine persondata?',
-        a: 'Vi behandler dine data i overensstemmelse med GDPR og dansk databeskyttelseslovgivning. Læs vores privatlivspolitik for detaljer.',
-      },
-      {
-        q: 'Kan jeg kontakte sælger direkte?',
-        a: 'Ja, du kan sende en besked til sælger via vores beskedsystem. Kontaktoplysninger deles kun med vinderen af auktionen.',
+        q: 'Hvad må jeg ikke gøre?',
+        a: 'Falske oplysninger, manipulation af bud og salg af stjålne biler er strengt forbudt og vil medføre permanent udelukkelse.',
       },
     ],
   },
