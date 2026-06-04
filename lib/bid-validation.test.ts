@@ -18,6 +18,9 @@ function makeInput(overrides: Partial<BidValidationInput> = {}): BidValidationIn
     auctionEndDate: FUTURE,
     ownerId: 'owner-1',
     bidderId: 'bidder-1',
+    ownerUserType: 'PRIVATE',
+    bidderUserType: 'PRIVATE',
+    bidderIsApproved: true,
     ...overrides,
   }
 }

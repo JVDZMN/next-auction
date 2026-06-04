@@ -57,61 +57,34 @@ export function BiddingSection({
   carId, currentPrice, auctionEndDate, status, ownerId, ownerUserType,
   reservePrice, bidIncrement, onBidPlaced, onPriceUpdate,
 }: BiddingSectionProps) {
+  // ── All hooks must be called unconditionally ────────────────────────────────
   const { data: session } = useSession()
-
-  // Show segment-mismatch block before anything else
-  if (session?.user && session.user.id !== ownerId) {
-    const bidderType = session.user.userType ?? 'PRIVATE'
-    if (bidderType !== ownerUserType) {
-      return (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {ownerUserType === 'BUSINESS'
-              ? 'Denne auktion er kun for erhvervsbrugere med CVR'
-              : 'Denne auktion er kun for private brugere'}
-          </AlertDescription>
-        </Alert>
-      )
-    }
-    if (bidderType === 'BUSINESS' && !session.user.isApprovedByAdmin) {
-      return (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Din erhvervskonto er endnu ikke godkendt af en administrator
-          </AlertDescription>
-        </Alert>
-      )
-    }
-  }
   const dict = useDict()
   const t = dict.bidding
 
-  const [livePrice,   setLivePrice]   = useState(currentPrice)
-  const [bids,        setBids]        = useState<BidEntry[]>([])
-  const [bidAmount,   setBidAmount]   = useState('')
-  const [isPending,   startTransition] = useTransition()
-  const [error,       setError]       = useState<string | null>(null)
-  const [success,     setSuccess]     = useState<string | null>(null)
-  const [isLoading,   setIsLoading]   = useState(true)
-  const [proxyMax,    setProxyMax]    = useState('')
-  const [proxyPending,setProxyPending]= useState(false)
-  const [proxySuccess,setProxySuccess]= useState<string | null>(null)
-  const [proxyError,  setProxyError]  = useState<string | null>(null)
+  const [livePrice,    setLivePrice]    = useState(currentPrice)
+  const [bids,         setBids]         = useState<BidEntry[]>([])
+  const [bidAmount,    setBidAmount]    = useState('')
+  const [isPending,    startTransition] = useTransition()
+  const [error,        setError]        = useState<string | null>(null)
+  const [success,      setSuccess]      = useState<string | null>(null)
+  const [isLoading,    setIsLoading]    = useState(true)
+  const [proxyMax,     setProxyMax]     = useState('')
+  const [proxyPending, setProxyPending] = useState(false)
+  const [proxySuccess, setProxySuccess] = useState<string | null>(null)
+  const [proxyError,   setProxyError]   = useState<string | null>(null)
   const [pendingAmount, setPendingAmount] = useState<number | null>(null)
   const [isEnded, setIsEnded] = useState(() => new Date() > new Date(auctionEndDate))
 
   // Client-side end timer — disables bidding the moment auctionEndDate is reached.
-  // setTimeout max is 2^31-1 ms (~24.8 days); skip the timer for distant end dates.
+  // setTimeout max is 2^31-1 ms (~24.8 days); re-check every minute for long durations.
   useEffect(() => {
     const checkStatus = () => {
       const timeLeft = new Date(auctionEndDate).getTime() - Date.now()
       if (timeLeft <= 0) {
         setIsEnded(true)
       } else {
-        // Re-check periodically to handle sleep/wake or long durations
-        const nextCheck = Math.min(timeLeft, 60000) // check at least every minute
+        const nextCheck = Math.min(timeLeft, 60000)
         const timer = setTimeout(checkStatus, nextCheck)
         return () => clearTimeout(timer)
       }
@@ -132,12 +105,12 @@ export function BiddingSection({
     }
   }, [auctionEndDate, t.antiSnipe.title, t.antiSnipe.body])
 
-  const isAuctionActive = status === 'active' && new Date(auctionEndDate) > new Date()
-  const isOwner         = Boolean(session?.user?.id && ownerId === session.user.id)
-  const isAdmin         = session?.user?.role === 'Admin'
+  const isAuctionActive  = status === 'active' && new Date(auctionEndDate) > new Date()
+  const isOwner          = Boolean(session?.user?.id && ownerId === session.user.id)
+  const isAdmin          = session?.user?.role === 'Admin'
   const canSeeBidHistory = isOwner || isAdmin
 
-  // Keep livePrice in sync if the parent re-renders with a fresh prop (e.g. on page load)
+  // Keep livePrice in sync if the parent re-renders with a fresh prop
   useLayoutEffect(() => { setLivePrice(currentPrice) }, [currentPrice])
 
   const minNextBid = bidIncrement && bidIncrement > 0
@@ -188,6 +161,33 @@ export function BiddingSection({
       pusher.unsubscribe(`car-${carId}`)
     }
   }, [carId, canSeeBidHistory, onPriceUpdate])
+
+  // ── Segment-mismatch guard (after all hooks) ────────────────────────────────
+  if (session?.user && session.user.id !== ownerId) {
+    const bidderType = session.user.userType ?? 'PRIVATE'
+    if (bidderType !== ownerUserType) {
+      return (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {ownerUserType === 'BUSINESS'
+              ? 'Denne auktion er kun for erhvervsbrugere med CVR'
+              : 'Denne auktion er kun for private brugere'}
+          </AlertDescription>
+        </Alert>
+      )
+    }
+    if (bidderType === 'BUSINESS' && !session.user.isApprovedByAdmin) {
+      return (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Din erhvervskonto er endnu ikke godkendt af en administrator
+          </AlertDescription>
+        </Alert>
+      )
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

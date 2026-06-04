@@ -14,7 +14,7 @@ import { FinalCtaSection }      from './home/FinalCtaSection'
 
 const NewsletterAndFooter = dynamic(() => import('./home/NewsletterAndFooter').then(m => ({ default: m.NewsletterAndFooter })))
 
-export interface TopCar extends AuctionCar {}
+export type TopCar = AuctionCar
 
 interface HomeClientProps {
   locale: string
