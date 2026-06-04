@@ -5,11 +5,12 @@ import Image from 'next/image'
 import { useDict } from '@/lib/i18n/context'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
-interface Props { locale: string; isSignedIn: boolean }
+interface Props { locale: string; isSignedIn: boolean; userType?: 'PRIVATE' | 'BUSINESS' }
 
-export function HeroSection({ locale, isSignedIn }: Props) {
-  const dict = useDict()
-  const nav  = dict.nav
+export function HeroSection({ locale, isSignedIn, userType }: Props) {
+  const dict       = useDict()
+  const nav        = dict.nav
+  const isBusiness = userType === 'BUSINESS'
 
   return (
     <section
@@ -81,7 +82,7 @@ export function HeroSection({ locale, isSignedIn }: Props) {
             className="mb-5 text-xs font-bold uppercase tracking-[0.25em]"
             style={{ color: 'var(--copper)' }}
           >
-            Danmarks Bilauktionsplatform
+            {isBusiness ? 'Erhvervsauktioner · B2B Markedsplads' : 'Danmarks Bilauktionsplatform'}
           </p>
 
           {/* Heading */}
@@ -89,7 +90,7 @@ export function HeroSection({ locale, isSignedIn }: Props) {
             className="font-black text-white leading-none mb-6"
             style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}
           >
-            Bid.<br />Vind.<br />Kør.
+            {isBusiness ? <>Find<br />Forhandler.<br />Handel.</> : <>Bid.<br />Vind.<br />Kør.</>}
           </h1>
 
           {/* Subtext */}
@@ -97,24 +98,26 @@ export function HeroSection({ locale, isSignedIn }: Props) {
             className="mb-10 text-base sm:text-lg leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.68)' }}
           >
-            Real-time auktioner · Verificerede sælgere · Sikker handel
+            {isBusiness
+              ? 'Erhvervsauktioner · Godkendte forhandlere · Professionel handel'
+              : 'Real-time auktioner · Verificerede sælgere · Sikker handel'}
           </p>
 
           {/* Buttons */}
           <div className="flex flex-wrap gap-4">
             <Link
-              href={`/${locale}/cars`}
+              href={isBusiness ? `/${locale}/dealers` : `/${locale}/cars`}
               className="inline-block rounded px-7 py-4 text-sm font-bold text-white shadow-lg hover:scale-105 active:scale-95 transition-transform duration-150"
               style={{ backgroundColor: 'var(--copper)' }}
             >
-              Find din næste bil →
+              {isBusiness ? 'Find forhandler →' : 'Find din næste bil →'}
             </Link>
             <Link
               href={isSignedIn ? `/${locale}/cars/create` : `/${locale}/auth/signup`}
               className="inline-block rounded border-2 px-7 py-4 text-sm font-bold transition-all duration-150 hover:bg-white/10"
               style={{ borderColor: 'rgba(255,255,255,0.5)', color: 'white' }}
             >
-              Sælg din bil
+              {isBusiness ? 'Opret erhvervsannonce' : 'Sælg din bil'}
             </Link>
           </div>
         </div>

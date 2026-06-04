@@ -34,7 +34,7 @@ interface SavedSearch {
 interface UserCar {
   id: string; brand: string; model: string; year: number; status: string
   isDraft: boolean; currentPrice: number; startingPrice: number
-  auctionEndDate: string; views: number; _count: { bids: number }
+  auctionEndDate: string; createdAt: string; views: number; _count: { bids: number }
 }
 interface BidEntry {
   id: string; amount: number; createdAt: string
@@ -42,7 +42,7 @@ interface BidEntry {
 }
 interface User {
   id: string; name: string | null; email: string; image?: string | null
-  role: string; createdAt: string
+  role: string; createdAt: string; userType?: 'PRIVATE' | 'BUSINESS'
   cars: UserCar[]
   bids: Array<{
     id: string; amount: number; createdAt: string
@@ -281,6 +281,10 @@ function DashboardContent() {
   const totalBidsReceived = user.cars.reduce((s, c) => s + c._count.bids, 0)
   const soldCars          = user.cars.filter(c => c.status === 'completed')
   const initials          = (user.name ?? user.email).slice(0, 2).toUpperCase()
+  const isPrivate         = user.userType === 'PRIVATE'
+  const isBusiness        = user.userType === 'BUSINESS'
+  const thisYear          = new Date().getFullYear()
+  const carsListedThisYear = user.cars.filter(c => new Date(c.createdAt).getFullYear() === thisYear).length
 
   return (
     <PageLayout maxWidth="max-w-5xl">
@@ -295,10 +299,18 @@ function DashboardContent() {
             <div>
               <h2 className="text-xl font-semibold">{user.name || user.email}</h2>
               <p className="text-sm text-muted-foreground">{user.email}</p>
-              <div className="flex gap-2 mt-1.5">
+              <div className="flex gap-2 mt-1.5 flex-wrap">
                 <Badge variant="secondary">{user.role}</Badge>
-                <Badge variant="outline">Joined {new Date(user.createdAt).toLocaleDateString()}</Badge>
+                {isPrivate  && <Badge variant="outline" style={{ borderColor: 'var(--copper)', color: 'var(--copper)' }}>🏠 Privat</Badge>}
+                {isBusiness && <Badge variant="outline" style={{ borderColor: 'var(--brand)', color: 'var(--brand)' }}>🏢 Erhverv</Badge>}
+                <Badge variant="outline">Tilmeldt {new Date(user.createdAt).toLocaleDateString('da-DK')}</Badge>
               </div>
+              {isPrivate && (
+                <p className="mt-2 text-xs" style={{ color: carsListedThisYear >= 2 ? 'red' : 'var(--text-muted)' }}>
+                  Biler oprettet dette år: <strong>{carsListedThisYear} / 2</strong>
+                  {carsListedThisYear >= 2 && ' — SKAT-grænse nået'}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -365,9 +377,19 @@ function DashboardContent() {
         {/* ─── My Auctions ────────────────────────────────────────────────── */}
         <TabsContent value="listings">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="font-semibold">My Auctions</h3>
-            <Button size="sm" onClick={() => router.push(`/${locale}/cars/create`)}>
-              <Plus className="h-4 w-4 mr-1" /> New Listing
+            <div>
+              <h3 className="font-semibold">
+                {isBusiness ? 'Mine annoncer (ubegrænset)' : `Mine biler (${carsListedThisYear}/2 dette år)`}
+              </h3>
+              {isPrivate && carsListedThisYear >= 2 && (
+                <p className="text-xs mt-0.5" style={{ color: 'red' }}>
+                  SKAT-grænsen på 2 biler/år er nået. Kontakt os ved spørgsmål.
+                </p>
+              )}
+            </div>
+            <Button size="sm" onClick={() => router.push(`/${locale}/cars/create`)}
+              disabled={isPrivate && carsListedThisYear >= 2}>
+              <Plus className="h-4 w-4 mr-1" /> Ny annonce
             </Button>
           </div>
           {user.cars.length === 0 ? (

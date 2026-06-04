@@ -11,12 +11,15 @@ const CAR_SELECT = {
   _count: { select: { bids: true } },
 } as const
 
-const now        = new Date()
-const activeBase = { status: 'active' as const, isDraft: false, auctionEndDate: { gte: now } }
+const activeBase = () => ({
+  status: 'active' as const,
+  isDraft: false,
+  auctionEndDate: { gte: new Date() },
+})
 
 async function fetchSegment(userType: 'PRIVATE' | 'BUSINESS') {
   const rows = await prisma.car.findMany({
-    where: { ...activeBase, owner: { userType } },
+    where: { ...activeBase(), owner: { userType } },
     select: CAR_SELECT,
     orderBy: { bids: { _count: 'desc' } },
     take: 3,
@@ -41,18 +44,21 @@ export default async function HomePage({
   params: Promise<{ locale: string }>
 }) {
   const { locale: rawLocale } = await params
-  const locale  = toLocale(rawLocale)
-  const session = await getServerSession(authOptions)
+  const locale   = toLocale(rawLocale)
+  const session  = await getServerSession(authOptions)
+  const userType = session?.user?.userType as 'PRIVATE' | 'BUSINESS' | undefined
 
+  // Fetch only what the user can see
   const [privateCars, businessCars] = await Promise.all([
-    fetchSegment('PRIVATE'),
-    fetchSegment('BUSINESS'),
+    userType === 'BUSINESS' ? [] : fetchSegment('PRIVATE'),
+    userType === 'PRIVATE'  ? [] : fetchSegment('BUSINESS'),
   ])
 
   return (
     <HomeClient
       locale={locale}
       isSignedIn={!!session}
+      userType={userType}
       privateCars={privateCars}
       businessCars={businessCars}
     />

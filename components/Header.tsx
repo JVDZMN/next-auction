@@ -22,8 +22,9 @@ const NAV_LINK = 'px-3 py-1.5 rounded text-sm font-medium text-white/65 hover:te
 
 export function Header() {
   const { data: session, status } = useSession()
-  const locale  = useLocale()
-  const isAdmin = session?.user?.role === 'Admin'
+  const locale      = useLocale()
+  const isAdmin     = session?.user?.role === 'Admin'
+  const isPrivate   = session?.user?.userType === 'PRIVATE'
   const { totalCount } = useNotifications()
 
   const initials = session?.user?.name
@@ -45,8 +46,13 @@ export function Header() {
         {/* Nav */}
         <nav className="hidden sm:flex items-center gap-0.5">
           <Link href={`/${locale}/cars`} className={NAV_LINK}>
-            Browse Cars
+            Se biler
           </Link>
+          {!isPrivate && (
+            <Link href={`/${locale}/dealers`} className={NAV_LINK}>
+              Forhandlere
+            </Link>
+          )}
           <Link
             href={`/${locale}/dashboard`}
             className={cn(NAV_LINK, 'inline-flex items-center gap-1.5')}

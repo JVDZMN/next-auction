@@ -40,17 +40,30 @@ export async function middleware(request: NextRequest) {
   )
 
   if (pathnameHasLocale) {
+    const locale = (locales.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? defaultLocale) as Locale
+
     // ── 1a. Auth guard for protected pages ─────────────────────────────────
     if (requiresAuth(pathname)) {
       const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
       if (!token) {
-        const locale = (locales.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) ?? defaultLocale) as Locale
         const url = request.nextUrl.clone()
         url.pathname = `/${locale}/auth/signin`
         url.searchParams.set('callbackUrl', pathname)
         return NextResponse.redirect(url)
       }
     }
+
+    // ── 1b. Dealers page: redirect PRIVATE users to /cars ──────────────────
+    const isDealersPath = pathname.startsWith(`/${locale}/dealers`)
+    if (isDealersPath) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+      if (token?.userType === 'PRIVATE') {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${locale}/cars`
+        return NextResponse.redirect(url)
+      }
+    }
+
     return NextResponse.next()
   }
 

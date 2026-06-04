@@ -27,9 +27,7 @@ export function validateBid(input: BidValidationInput): BidValidationResult {
   if (input.ownerUserType !== input.bidderUserType) {
     return {
       valid: false,
-      error: input.bidderUserType === 'PRIVATE'
-        ? 'Denne auktion er kun for erhvervsbrugere'
-        : 'Denne auktion er kun for private brugere',
+      error: 'Du kan ikke byde på denne type auktion',
       httpStatus: 403,
     }
   }
@@ -37,7 +35,7 @@ export function validateBid(input: BidValidationInput): BidValidationResult {
   if (input.bidderUserType === 'BUSINESS' && !input.bidderIsApproved) {
     return {
       valid: false,
-      error: 'Din erhvervskonto er endnu ikke godkendt af en administrator',
+      error: 'Din erhvervskonto er endnu ikke godkendt',
       httpStatus: 403,
     }
   }

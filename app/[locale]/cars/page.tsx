@@ -1,11 +1,14 @@
 import { CarsClient, CarsResponse } from './CarsClient'
 import { prisma, ownerSelect, latestBidInclude } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { CarStatus, FuelType, UserType } from '@prisma/client'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { CarStatus, FuelType } from '@prisma/client'
+import { getUserTypeFilter } from '@/lib/car-filters'
 
 const KM_MAX = 500_000
 
-async function fetchCars(params: Record<string, string>): Promise<CarsResponse> {
+async function fetchCars(params: Record<string, string>, callerUserType: 'PRIVATE' | 'BUSINESS' | undefined): Promise<CarsResponse> {
   const brand     = params.brand     || undefined
   const model     = params.model     || undefined
   const city      = params.city      || undefined
@@ -19,7 +22,6 @@ async function fetchCars(params: Record<string, string>): Promise<CarsResponse> 
   const maxKm     = params.maxKm     ? Number(params.maxKm)    : undefined
   const synStatus = params.synStatus || undefined
   const likedOnly = params.liked === 'true'
-  const segment   = params.segment === 'business' ? 'BUSINESS' : params.segment === 'private' ? 'PRIVATE' : undefined
   const page      = Math.max(1, Number(params.page || 1))
   const pageSize  = 12
   const sortBy    = params.sortBy || 'newest'
@@ -65,7 +67,7 @@ async function fetchCars(params: Record<string, string>): Promise<CarsResponse> 
     ...(synStatus === 'valid'   && { nextInspection: { gt: new Date() } }),
     ...(synStatus === 'expired' && { nextInspection: { lte: new Date() } }),
     ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
-    ...(segment && { owner: { userType: segment as UserType } }),
+    ...getUserTypeFilter(callerUserType),
   }
 
   const [total, cars] = await Promise.all([
@@ -101,6 +103,8 @@ export default async function CarsPage({
   searchParams: Promise<Record<string, string>>
 }) {
   const params      = await searchParams
-  const initialData = await fetchCars(params)
-  return <CarsClient initialData={initialData} />
+  const session     = await getServerSession(authOptions)
+  const userType    = session?.user?.userType as 'PRIVATE' | 'BUSINESS' | undefined
+  const initialData = await fetchCars(params, userType)
+  return <CarsClient initialData={initialData} userType={userType} />
 }

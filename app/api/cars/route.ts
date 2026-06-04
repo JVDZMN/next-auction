@@ -4,6 +4,8 @@ import { prisma, ownerSelect, latestBidInclude } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { CarStatus } from '@prisma/client'
 import { sendEmail } from '@/lib/email'
+import { getUserTypeFilter } from '@/lib/car-filters'
+import { getToken } from 'next-auth/jwt'
 
 async function notifySavedSearches(car: { id: string; brand: string; model: string; year: number; currentPrice: number; fuel: string | null }) {
   try {
@@ -74,6 +76,10 @@ export async function GET(request: NextRequest) {
     const pageSize  = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || 12)))
     const sortBy    = searchParams.get('sortBy') || 'newest'
 
+    // Resolve the caller's userType — used to scope the market segment
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const callerUserType = token?.userType as 'PRIVATE' | 'BUSINESS' | undefined
+
     let likedByUserId: string | undefined
     if (likedOnly) {
       const session = await requireAuth()
@@ -116,6 +122,7 @@ export async function GET(request: NextRequest) {
       ...(synStatus === 'valid'   && { nextInspection: { gt: new Date() } }),
       ...(synStatus === 'expired' && { nextInspection: { lte: new Date() } }),
       ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
+      ...getUserTypeFilter(callerUserType),
     }
 
     const [total, cars] = await Promise.all([

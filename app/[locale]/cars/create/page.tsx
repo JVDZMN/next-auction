@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageLayout } from '@/components/PageLayout'
@@ -67,6 +68,8 @@ export default function CreateCarPage() {
     handleLookupResult,
     handleSubmit,
   } = useCreateCarForm()
+  const { data: session } = useSession()
+  const isPrivate = session?.user?.userType === 'PRIVATE'
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -98,6 +101,15 @@ export default function CreateCarPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {isPrivate && (
+              <Alert className="mb-4" style={{ borderColor: 'var(--copper)', backgroundColor: 'rgba(196,125,58,0.06)' }}>
+                <AlertDescription style={{ color: 'var(--text-body)' }}>
+                  <strong>SKAT-regel:</strong> Du kan sælge op til 2 biler om året som privatperson.
+                  Salg ud over denne grænse betragtes som erhvervsmæssigt af SKAT.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <VehicleLookupPanel onResult={handleLookupResult} />
 

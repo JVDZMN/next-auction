@@ -62,12 +62,17 @@ export interface CarsResponse { cars: CarListing[]; total: number; page: number;
 
 const KM_MAX = 500_000
 
-export function CarsClient({ initialData }: { initialData: CarsResponse }) {
+export function CarsClient({ initialData, userType }: { initialData: CarsResponse; userType?: 'PRIVATE' | 'BUSINESS' }) {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const locale       = useLocale()
   const brands       = getAllBrands()
+
+  // If logged in, segment is locked to the user's own market.
+  // If not logged in, the tab is user-controlled.
+  const forcedSegment: 'private' | 'business' | undefined =
+    userType === 'PRIVATE' ? 'private' : userType === 'BUSINESS' ? 'business' : undefined
 
   const [brand,      setBrand]     = useState(searchParams?.get('brand')     ?? '')
   const [model,      setModel]     = useState(searchParams?.get('model')     ?? '')
@@ -82,7 +87,7 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
   const [sortBy,     setSortBy]    = useState(searchParams?.get('sortBy')    ?? 'newest')
   const [likedOnly,  setLikedOnly] = useState(searchParams?.get('liked') === 'true')
   const [segment,    setSegment]   = useState<'private' | 'business'>(
-    searchParams?.get('segment') === 'business' ? 'business' : 'private'
+    forcedSegment ?? (searchParams?.get('segment') === 'business' ? 'business' : 'private')
   )
   const [page,       setPage]      = useState(Number(searchParams?.get('page') ?? 1))
   const [kmRange,    setKmRange]   = useState<[number, number]>([
@@ -279,20 +284,25 @@ export function CarsClient({ initialData }: { initialData: CarsResponse }) {
             {data && !loading && (
               <p className="text-sm text-muted-foreground mt-0.5">{data.total.toLocaleString('da-DK')} listings</p>
             )}
-            {/* Segment tabs */}
+            {/* Segment tabs — locked when logged in (shows only own market) */}
             <div className="flex gap-1 mt-3 p-1 rounded-lg w-fit" style={{ backgroundColor: 'var(--section-alt)' }}>
-              {(['private', 'business'] as const).map(seg => (
-                <button
-                  key={seg}
-                  onClick={() => { setSegment(seg); setPage(1) }}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-150"
-                  style={segment === seg
-                    ? { backgroundColor: 'var(--copper)', color: 'white' }
-                    : { color: 'var(--text-muted)', backgroundColor: 'transparent' }}
-                >
-                  {seg === 'private' ? '🏠 Private Auktioner' : '🏢 Erhvervsauktioner'}
-                </button>
-              ))}
+              {(['private', 'business'] as const).map(seg => {
+                const isActive  = segment === seg
+                const isDisabled = !!forcedSegment && forcedSegment !== seg
+                return (
+                  <button
+                    key={seg}
+                    disabled={isDisabled}
+                    onClick={() => { if (!forcedSegment) { setSegment(seg); setPage(1) } }}
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={isActive
+                      ? { backgroundColor: 'var(--copper)', color: 'white' }
+                      : { color: 'var(--text-muted)', backgroundColor: 'transparent' }}
+                  >
+                    {seg === 'private' ? '🏠 Private Auktioner' : '🏢 Erhvervsauktioner'}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
             currentPrice: true,
             startingPrice: true,
             auctionEndDate: true,
+            createdAt: true,
             views: true,
             _count: { select: { bids: true } },
           },
