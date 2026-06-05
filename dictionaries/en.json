@@ -19,18 +19,35 @@
     "admin": "Admin",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "switchLang": "Dansk"
+    "switchLang": "Dansk",
+    "browseCars": "Browse Cars",
+    "browseBusiness": "Commercial Cars",
+    "dealers": "Dealers",
+    "myBusiness": "My Business",
+    "myAccount": "My Account",
+    "createListing": "List a Car",
+    "language": "Language",
+    "openMenu": "Open menu",
+    "adminDashboard": "Admin Dashboard",
+    "signUp": "Sign up"
   },
   "home": {
     "hero": {
-      "title": "Buy Your Dream Car",
-      "subtitle": "Real-time bidding · Verified sellers · Secure transactions",
-      "browse": "Browse Auctions",
-      "sell": "Start Selling",
-      "phrase1": "Register",
-      "phrase2": "Place a Bid",
-      "phrase3": "Win Your Dream Car",
-      "listCar": "List a Car"
+      "labelPrivate": "Denmark's Car Auction Platform",
+      "labelBusiness": "Commercial Auction Platform",
+      "headingPrivateLine1": "Bid. Win.",
+      "headingPrivateLine2": "Drive.",
+      "headingBusinessLine1": "Find",
+      "headingBusinessLine2": "Dealer.",
+      "headingBusinessLine3": "Trade.",
+      "subtextLine1": "Real-time auctions · Direct trade",
+      "subtextLine2": "between buyer and seller",
+      "btnFindPrivate": "Find your next car →",
+      "btnFindBusiness": "Find dealer →",
+      "btnSell": "Sell your car",
+      "trustItem1": "Free to create account",
+      "trustItem2": "Legally binding bids",
+      "trustItem3": "Direct trade"
     },
     "activeAuctions": "Active Auctions",
     "viewAll": "View all",
@@ -94,15 +111,41 @@
     },
     "footer": {
       "tagline": "Specialized in the sale of exclusive vehicles at home and abroad. Connecting passionate buyers with exceptional automobiles since 2024.",
+      "navTitle": "Navigation",
       "browse": "Browse Cars",
+      "dealers": "Dealers",
       "signIn": "Sign In",
       "register": "Register",
       "listCar": "List a Car",
+      "legalTitle": "Legal",
       "certified": "Certified Platform",
       "copyright": "© 2026 Automotive Auctions. All rights reserved.",
+      "disclaimer": "Next Auction only facilitates contact.",
       "privacy": "Privacy Statement",
       "terms": "Terms and Conditions",
       "faq": "FAQ"
+    },
+    "auctionTypes": {
+      "privateLabel": "Active Auctions",
+      "privateHeading": "Find Your Next Car",
+      "privateSubtext": "Buy a car directly from private sellers",
+      "businessLabel": "Commercial Auctions",
+      "businessHeading": "Professional Dealers",
+      "businessSubtext": "Approved commercial dealers and businesses"
+    },
+    "finalCta": {
+      "heading": "Ready to get started?",
+      "subtext": "Create your free account today",
+      "btnSignUp": "Create account for free",
+      "btnBrowse": "Browse active auctions"
+    },
+    "buyerSteps": {
+      "step1title": "Create account",
+      "step1desc": "Free and fast. Ready in 2 minutes.",
+      "step2title": "Find your car",
+      "step2desc": "Search, filter and save favorites.",
+      "step3title": "Place bid and win",
+      "step3desc": "Highest bid at end wins."
     }
   },
   "cars": {

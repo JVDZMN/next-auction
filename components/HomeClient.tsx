@@ -8,6 +8,7 @@ import type { AuctionCar }   from './home/AuctionTypeSection'
 import { SellerTypeSection } from './home/SellerTypeSection'
 import { FaqPreviewSection } from './home/FaqPreviewSection'
 import { FinalCtaSection }   from './home/FinalCtaSection'
+import { useDict } from '@/lib/i18n/context'
 
 const NewsletterAndFooter = dynamic(() => import('./home/NewsletterAndFooter').then(m => ({ default: m.NewsletterAndFooter })))
 
@@ -22,6 +23,8 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ locale, isSignedIn, userType, privateCars, businessCars }: HomeClientProps) {
+  const t = useDict().home.auctionTypes
+
   return (
     <main>
       {/* 1. Hero — two-column, light bg, hero-cars.png */}
@@ -34,9 +37,9 @@ export function HomeClient({ locale, isSignedIn, userType, privateCars, business
       {userType !== 'BUSINESS' && privateCars.length > 0 && (
         <AuctionTypeSection
           locale={locale}
-          label="Aktive Auktioner"
-          heading="Find Din Næste Bil"
-          subtext="Køb bil direkte fra private sælgere"
+          label={t.privateLabel}
+          heading={t.privateHeading}
+          subtext={t.privateSubtext}
           cars={privateCars}
           viewAllHref={`/${locale}/cars?segment=private`}
         />
@@ -44,9 +47,9 @@ export function HomeClient({ locale, isSignedIn, userType, privateCars, business
       {userType !== 'PRIVATE' && businessCars.length > 0 && (
         <AuctionTypeSection
           locale={locale}
-          label="Erhvervsauktioner"
-          heading="Professionelle Forhandlere"
-          subtext="Godkendte erhvervsforhandlere og virksomheder"
+          label={t.businessLabel}
+          heading={t.businessHeading}
+          subtext={t.businessSubtext}
           cars={businessCars}
           viewAllHref={`/${locale}/cars?segment=business`}
           dark

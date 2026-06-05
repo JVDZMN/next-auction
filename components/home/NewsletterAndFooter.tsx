@@ -67,19 +67,19 @@ export function NewsletterAndFooter({ locale }: Props) {
               Next<span style={{ color: 'var(--copper)' }}>Auction</span>
             </p>
             <p className="mt-3 max-w-xs text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              Danmarks digitale bilauktionsplatform
+              {tf.tagline}
             </p>
           </div>
 
           {/* Col 2 — Navigation */}
           <div>
             <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--copper)' }}>
-              Navigation
+              {tf.navTitle}
             </p>
             <ul className="flex flex-col gap-3">
               {[
                 { label: tf.browse,   href: `/${locale}/cars` },
-                { label: 'Forhandlere', href: `/${locale}/dealers` },
+                { label: tf.dealers, href: `/${locale}/dealers` },
                 { label: tf.register, href: `/${locale}/auth/signup` },
               ].map(({ label, href }) => (
                 <li key={href}>
@@ -100,7 +100,7 @@ export function NewsletterAndFooter({ locale }: Props) {
           {/* Col 3 — Legal */}
           <div>
             <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--copper)' }}>
-              Juridisk
+              {tf.legalTitle}
             </p>
             <ul className="flex flex-col gap-3">
               {[
@@ -133,7 +133,7 @@ export function NewsletterAndFooter({ locale }: Props) {
             {tf.copyright}
           </p>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>
-            Next Auction er en formidlingsplatform. Vi er ikke part i handlen mellem køber og sælger.
+            {tf.disclaimer}
           </p>
         </div>
       </footer>

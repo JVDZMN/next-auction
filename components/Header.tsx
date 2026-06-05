@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { useLocale } from '@/lib/i18n/context'
+import { useLocale, useDict } from '@/lib/i18n/context'
 import { useNotifications } from '@/lib/notification-context'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Separator } from '@/components/ui/separator'
@@ -30,11 +30,21 @@ const NAV_LINK_STYLE = { color: 'rgba(255,255,255,0.65)' }
 export function Header() {
   const { data: session, status } = useSession()
   const locale        = useLocale()
+  const t             = useDict().nav
   const isAdmin       = session?.user?.role === 'Admin'
   const isPrivate     = session?.user?.userType === 'PRIVATE'
   const isBusiness    = session?.user?.userType === 'BUSINESS'
   const { totalCount } = useNotifications()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const initials = session?.user?.name
     ? session.user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -47,27 +57,32 @@ export function Header() {
     ? [
         ...(isBusiness
           ? [
-              { label: 'Se erhvervsbiler', href: `/${locale}/cars` },
-              { label: 'Forhandlere',      href: `/${locale}/dealers` },
+              { label: t.browseBusiness, href: `/${locale}/cars` },
+              { label: t.dealers,        href: `/${locale}/dealers` },
             ]
-          : [{ label: 'Se biler', href: `/${locale}/cars` }]),
+          : [{ label: t.browseCars, href: `/${locale}/cars` }]),
         {
-          label: isAdmin ? 'Admin' : (isBusiness ? 'Min virksomhed' : 'Min konto'),
+          label: isAdmin ? t.admin : (isBusiness ? t.myBusiness : t.myAccount),
           href:  isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`,
         },
-        { label: 'Opret bil', href: `/${locale}/cars/create` },
+        { label: t.createListing, href: `/${locale}/cars/create` },
       ]
     : [
-        { label: 'Se biler',     href: `/${locale}/cars` },
-        { label: 'Forhandlere',  href: `/${locale}/dealers` },
-        { label: 'Log ind',      href: `/${locale}/auth/signin` },
-        { label: 'Opret konto',  href: `/${locale}/auth/signup` },
+        { label: t.browseCars,   href: `/${locale}/cars` },
+        { label: t.dealers,      href: `/${locale}/dealers` },
+        { label: t.signIn,       href: `/${locale}/auth/signin` },
+        { label: t.signUp,       href: `/${locale}/auth/signup` },
       ]
 
   return (
     <header
-      className="sticky top-0 z-40 w-full"
-      style={{ backgroundColor: 'var(--dark-section)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+      className={cn(
+        'fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out',
+        isScrolled
+          ? 'bg-slate-950/40 backdrop-blur-md shadow-lg'
+          : 'bg-slate-950'
+      )}
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
     >
       <div className="max-w-7xl mx-auto flex h-14 items-center justify-between px-4">
 

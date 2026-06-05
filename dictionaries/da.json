@@ -19,18 +19,35 @@
     "admin": "Admin",
     "signIn": "Log ind",
     "signOut": "Log ud",
-    "switchLang": "English"
+    "switchLang": "English",
+    "browseCars": "Se biler",
+    "browseBusiness": "Se erhvervsbiler",
+    "dealers": "Forhandlere",
+    "myBusiness": "Min virksomhed",
+    "myAccount": "Min konto",
+    "createListing": "Opret bil",
+    "language": "Sprog",
+    "openMenu": "Åbn menu",
+    "adminDashboard": "Admin Dashboard",
+    "signUp": "Opret konto"
   },
   "home": {
     "hero": {
-      "title": "Find din næste bil",
-      "subtitle": "Realtidsauktioner · Verificerede sælgere · Sikre betalinger",
-      "browse": "Se auktioner",
-      "sell": "Sæt til salg",
-      "phrase1": "Registrer",
-      "phrase2": "Afgiv bud",
-      "phrase3": "Vind din drømmebil",
-      "listCar": "Opret bil"
+      "labelPrivate": "Danmarks Bilauktionsplatform",
+      "labelBusiness": "Kommerciel Auktionsplatform",
+      "headingPrivateLine1": "Byd. Vind.",
+      "headingPrivateLine2": "Kør.",
+      "headingBusinessLine1": "Find",
+      "headingBusinessLine2": "Forhandler.",
+      "headingBusinessLine3": "Handel.",
+      "subtextLine1": "Realtidsauktioner · Direkte handel",
+      "subtextLine2": "mellem køber og sælger",
+      "btnFindPrivate": "Find din næste bil →",
+      "btnFindBusiness": "Find forhandler →",
+      "btnSell": "Sælg din bil",
+      "trustItem1": "Gratis at oprette konto",
+      "trustItem2": "Juridisk bindende bud",
+      "trustItem3": "Direkte handel"
     },
     "activeAuctions": "Aktive auktioner",
     "viewAll": "Se alle",
@@ -94,15 +111,41 @@
     },
     "footer": {
       "tagline": "Specialiseret i salg af eksklusive køretøjer hjemme og i udlandet. Vi forbinder passionerede købere med exceptionelle biler siden 2024.",
+      "navTitle": "Navigation",
       "browse": "Se biler",
+      "dealers": "Forhandlere",
       "signIn": "Log ind",
       "register": "Registrer",
       "listCar": "Opret bil",
+      "legalTitle": "Juridisk",
       "certified": "Certificeret platform",
       "copyright": "© 2026 Automotive Auctions. Alle rettigheder forbeholdes.",
+      "disclaimer": "Next Auction formidler kun kontakt.",
       "privacy": "Privatlivspolitik",
       "terms": "Vilkår og betingelser",
       "faq": "FAQ"
+    },
+    "auctionTypes": {
+      "privateLabel": "Aktive Auktioner",
+      "privateHeading": "Find Din Næste Bil",
+      "privateSubtext": "Køb bil direkte fra private sælgere",
+      "businessLabel": "Erhvervsauktioner",
+      "businessHeading": "Professionelle Forhandlere",
+      "businessSubtext": "Godkendte erhvervsforhandlere og virksomheder"
+    },
+    "finalCta": {
+      "heading": "Klar til at komme i gang?",
+      "subtext": "Opret din gratis konto i dag",
+      "btnSignUp": "Opret konto gratis",
+      "btnBrowse": "Se aktive auktioner"
+    },
+    "buyerSteps": {
+      "step1title": "Opret konto",
+      "step1desc": "Gratis og hurtigt. Klar på 2 minutter.",
+      "step2title": "Find din bil",
+      "step2desc": "Søg, filtrer og gem favoritter.",
+      "step3title": "Afgiv bud og vind",
+      "step3desc": "Højeste bud ved udløb vinder."
     }
   },
   "cars": {
@@ -269,5 +312,13 @@
     "forgotPassword": "Glemt adgangskode?",
     "noAccount": "Har du ikke en konto?",
     "haveAccount": "Har du allerede en konto?"
+  },
+  "skat": {
+    "title": "SKAT Compliance",
+    "disclaimer": "Jeg bekræfter, at jeg sælger dette køretøj som privatperson (C2C) og har udarbejdet en manuel slutseddel. Jeg anerkender, at denne platform ikke er en auktionarius og ikke påtager sig noget ansvar for køretøjets stand.",
+    "accept": "Accepter ansvarsfraskrivelse",
+    "privateUser": "Privat bruger",
+    "businessUser": "Erhvervsbruger",
+    "upgradeRequired": "Opgrader til Erhverv (CVR) for at oprette mere end 2 biler om året."
   }
 }
