@@ -10,7 +10,8 @@
     "confirm": "Confirm",
     "close": "Close",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "ended": "Ended"
   },
   "nav": {
     "browse": "Browse",
@@ -29,7 +30,9 @@
     "language": "Language",
     "openMenu": "Open menu",
     "adminDashboard": "Admin Dashboard",
-    "signUp": "Sign up"
+    "signUp": "Sign up",
+    "mitIdVerified": "MitID Verified",
+    "verifyMitId": "Verify with MitID"
   },
   "home": {
     "hero": {
@@ -47,7 +50,8 @@
       "btnSell": "Sell your car",
       "trustItem1": "Free to create account",
       "trustItem2": "Legally binding bids",
-      "trustItem3": "Direct trade"
+      "trustItem3": "Direct trade",
+      "imageAlt": "Next Auction car auction"
     },
     "activeAuctions": "Active Auctions",
     "viewAll": "View all",
@@ -146,7 +150,72 @@
       "step2desc": "Search, filter and save favorites.",
       "step3title": "Place bid and win",
       "step3desc": "Highest bid at end wins."
-    }
+    },
+    "howItWorks": {
+      "label": "How it works",
+      "heading": "Get started in 4 steps",
+      "step1title": "Create account",
+      "step1desc": "Free registration in 2 minutes",
+      "step2title": "Find your car",
+      "step2desc": "Search and filter across all auctions",
+      "step3title": "Place a bid",
+      "step3desc": "Bid in real time — highest bid wins",
+      "step4title": "Contact seller",
+      "step4desc": "Winner contacts the seller directly"
+    },
+    "sellerTypes": {
+      "label": "For everyone",
+      "heading": "Two markets. One platform.",
+      "privateTitle": "Private",
+      "privateDesc": "Buy and sell cars as a private individual",
+      "privateFeature1": "Free",
+      "privateFeature2": "Max 2 cars/year",
+      "privateFeature3": "Direct trade",
+      "privateCta": "Create private account",
+      "businessTitle": "Business",
+      "businessDesc": "Professional sales with a CVR number",
+      "businessFeature1": "Unlimited listings",
+      "businessFeature2": "Business profile",
+      "businessFeature3": "Priority placement",
+      "businessCta": "Apply for business account"
+    },
+    "faqPreview": {
+      "label": "Frequently asked questions",
+      "heading": "We answer your questions",
+      "viewAll": "View all questions →",
+      "items": [
+        {
+          "q": "Is it free to create an account?",
+          "a": "Yes, creating an account is completely free."
+        },
+        {
+          "q": "What happens when I win an auction?",
+          "a": "You are contacted directly by the seller to arrange transfer of the vehicle."
+        },
+        {
+          "q": "What is a reserve price?",
+          "a": "The reserve price is the minimum amount the seller will accept. The auction only closes as sold if the highest bid meets the reserve."
+        },
+        {
+          "q": "Are bids legally binding?",
+          "a": "Yes, placed bids are binding under Danish sale of goods law. Read our terms and conditions for details."
+        },
+        {
+          "q": "Can I contact the seller?",
+          "a": "Yes, you can send a direct message to the seller through the platform."
+        }
+      ]
+    },
+    "auctionCards": {
+      "ended": "Ended",
+      "business": "Business",
+      "private": "Private",
+      "currentBid": "Current bid",
+      "endsIn": "Ends in",
+      "viewAll": "View all →",
+      "viewAllMobile": "View all auctions →"
+    },
+    "welcomeImageAlt": "Featured vehicle"
   },
   "cars": {
     "filter": {
@@ -320,5 +389,81 @@
     "privateUser": "Private User",
     "businessUser": "Business User",
     "upgradeRequired": "Upgrade to Business (CVR) to list more than 2 cars per year."
+  },
+  "signin": {
+    "title": "Sign in",
+    "subtitle": "Welcome back to Next Auction",
+    "registeredAlert": "Account created! Please check your email and click the verification link before signing in.",
+    "labelEmail": "Email",
+    "labelPassword": "Password",
+    "btnSignIn": "Sign In",
+    "btnSigningIn": "Signing in…",
+    "or": "or",
+    "continueWithGoogle": "Continue with Google",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up",
+    "errInvalidCredentials": "Invalid email or password. If you just registered, please verify your email first.",
+    "errGeneric": "An error occurred. Please try again."
+  },
+  "signup": {
+    "pageSubtitle": "Create your account",
+    "tabPrivate": "Private",
+    "tabBusiness": "Business",
+    "skatInfoPrefix": "As a private individual you may sell max.",
+    "skatInfoHighlight": "2 cars per year",
+    "skatInfoSuffix": "(SKAT rules).",
+    "labelFullName": "Full name",
+    "labelEmail": "Email",
+    "labelPassword": "Password",
+    "labelConfirmPassword": "Confirm password",
+    "placeholderName": "John Smith",
+    "placeholderEmail": "your@email.com",
+    "termsPrefix": "I accept the",
+    "termsLink": "terms and conditions",
+    "termsConjunction": "and",
+    "privacyLink": "privacy policy",
+    "btnCreatePrivate": "Create Private Account",
+    "btnCreating": "Creating account…",
+    "bizApprovalWarning": "Your account must be approved by an administrator before you can bid or create listings. This normally takes 1–2 business days.",
+    "labelCvr": "CVR number",
+    "cvrLoading": "Fetching company info…",
+    "cvrActive": "Active",
+    "cvrNotFound": "Company not found — check the CVR number",
+    "cvrFetchError": "Could not fetch company info",
+    "labelCompanyName": "Company name",
+    "placeholderCompany": "Company Ltd.",
+    "placeholderBizEmail": "info@company.com",
+    "cvrVerifyInfo": "We verify your CVR number against the Danish Business Authority register to prevent fraud.",
+    "btnApplyBusiness": "Apply for Business Account",
+    "btnSending": "Sending application…",
+    "continueWithGoogle": "Continue with Google",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "errPasswordMismatch": "Passwords do not match",
+    "errPasswordTooShort": "Password must be at least 6 characters",
+    "errCreateFailed": "Registration failed",
+    "errVerifyCvr": "Please verify your CVR number before continuing",
+    "errApplyFailed": "Application failed",
+    "errGeneric": "An error occurred",
+    "successTitle": "Application received",
+    "successBody": "Your application for a business account has been received. We will get back to you within 1–2 business days.",
+    "successSignIn": "Go to sign in"
+  },
+  "dealers": {
+    "pageTitle": "Dealers – Next Auction",
+    "pageDescription": "Approved commercial dealers on Next Auction.",
+    "label": "Commercial Market",
+    "heading": "Dealers",
+    "approvedCount": "approved commercial dealers",
+    "empty": "No approved dealers yet.",
+    "unnamed": "Unnamed dealer",
+    "activeAuctions": "Active auctions",
+    "completedSales": "Completed sales",
+    "memberSince": "Dealer since",
+    "viewAuctions": "View auctions →",
+    "backToList": "← All dealers",
+    "noActiveCars": "No active auctions from this dealer.",
+    "approvedDealer": "Approved dealer",
+    "previousSales": "Previous sales"
   }
 }

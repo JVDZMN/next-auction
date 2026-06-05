@@ -28,7 +28,7 @@ export async function generateMetadata({
   const dict = await getDictionary(toLocale(locale))
   return {
     title: { default: 'Next Auction', template: '%s — Next Auction' },
-    description: dict.home.hero.subtitle,
+    description: `${dict.home.hero.subtextLine1} ${dict.home.hero.subtextLine2}`,
   }
 }
 

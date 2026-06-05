@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
-import { useLocale } from '@/lib/i18n/context'
+import { useLocale, useDict } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,6 +31,7 @@ type CvrResult = { name: string; city: string; industry: string } | null
 function SignUpContent() {
   const router   = useRouter()
   const locale   = useLocale()
+  const t        = useDict().signup
   const params   = useSearchParams()
   const defaultTab = (params.get('tab') === 'business' ? 'business' : 'private') as 'private' | 'business'
 
@@ -43,7 +44,7 @@ function SignUpContent() {
   const [priv, setPriv] = useState({ name: '', email: '', password: '', confirm: '' })
 
   // Business form
-  const [biz, setBiz]       = useState({ name: '', cvr: '', email: '', password: '', confirm: '' })
+  const [biz, setBiz]           = useState({ name: '', cvr: '', email: '', password: '', confirm: '' })
   const [cvrResult, setCvrResult]   = useState<CvrResult>(null)
   const [cvrLoading, setCvrLoading] = useState(false)
   const [cvrError, setCvrError]     = useState('')
@@ -58,19 +59,19 @@ function SignUpContent() {
       .then(r => r.json())
       .then((data: { name?: string; city?: string; industry?: string; error?: string }) => {
         if (cancelled) return
-        if (data.error) { setCvrError('Virksomhed ikke fundet — tjek CVR-nummeret'); setCvrResult(null) }
+        if (data.error) { setCvrError(t.cvrNotFound); setCvrResult(null) }
         else { setCvrResult({ name: data.name ?? '', city: data.city ?? '', industry: data.industry ?? '' }); setCvrError('') }
       })
-      .catch(() => { if (!cancelled) setCvrError('Kunne ikke hente CVR-oplysninger') })
+      .catch(() => { if (!cancelled) setCvrError(t.cvrFetchError) })
       .finally(() => { if (!cancelled) setCvrLoading(false) })
     return () => { cancelled = true }
-  }, [biz.cvr])
+  }, [biz.cvr, t.cvrNotFound, t.cvrFetchError])
 
   const handlePrivateSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    if (priv.password !== priv.confirm) { setError('Adgangskoderne matcher ikke'); return }
-    if (priv.password.length < 6) { setError('Adgangskode skal være mindst 6 tegn'); return }
+    if (priv.password !== priv.confirm) { setError(t.errPasswordMismatch); return }
+    if (priv.password.length < 6) { setError(t.errPasswordTooShort); return }
     setLoading(true)
     try {
       const res  = await fetch('/api/auth/register', {
@@ -79,10 +80,10 @@ function SignUpContent() {
         body: JSON.stringify({ name: priv.name, email: priv.email, password: priv.password, locale, userType: 'PRIVATE', skatDisclaimerAccepted: true }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Oprettelse mislykkedes')
+      if (!res.ok) throw new Error(data.error || t.errCreateFailed)
       router.push(`/${locale}/auth/signin?registered=1`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Der opstod en fejl')
+      setError(err instanceof Error ? err.message : t.errGeneric)
     } finally {
       setLoading(false)
     }
@@ -91,9 +92,9 @@ function SignUpContent() {
   const handleBusinessSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!cvrResult) { setError('Verificer dit CVR-nummer inden du fortsætter'); return }
-    if (biz.password !== biz.confirm) { setError('Adgangskoderne matcher ikke'); return }
-    if (biz.password.length < 6) { setError('Adgangskode skal være mindst 6 tegn'); return }
+    if (!cvrResult) { setError(t.errVerifyCvr); return }
+    if (biz.password !== biz.confirm) { setError(t.errPasswordMismatch); return }
+    if (biz.password.length < 6) { setError(t.errPasswordTooShort); return }
     setLoading(true)
     try {
       const res  = await fetch('/api/auth/register', {
@@ -102,10 +103,10 @@ function SignUpContent() {
         body: JSON.stringify({ name: biz.name || cvrResult.name, email: biz.email, password: biz.password, locale, userType: 'BUSINESS', cvrNumber: biz.cvr }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Ansøgning mislykkedes')
+      if (!res.ok) throw new Error(data.error || t.errApplyFailed)
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Der opstod en fejl')
+      setError(err instanceof Error ? err.message : t.errGeneric)
     } finally {
       setLoading(false)
     }
@@ -121,17 +122,16 @@ function SignUpContent() {
               <CheckCircle2 className="h-8 w-8" style={{ color: 'var(--copper)' }} />
             </div>
           </div>
-          <h1 className="mb-3 text-2xl font-black" style={{ color: 'var(--text-body)' }}>Ansøgning modtaget</h1>
+          <h1 className="mb-3 text-2xl font-black" style={{ color: 'var(--text-body)' }}>{t.successTitle}</h1>
           <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            Din ansøgning om erhvervskonto er modtaget.<br />
-            Vi vender tilbage inden for 1–2 hverdage.
+            {t.successBody}
           </p>
           <Link
             href={`/${locale}/auth/signin`}
             className="inline-block rounded px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-85"
             style={{ backgroundColor: 'var(--dark-section)' }}
           >
-            Gå til log ind
+            {t.successSignIn}
           </Link>
         </div>
       </div>
@@ -147,7 +147,7 @@ function SignUpContent() {
           <Link href={`/${locale}`} className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-body)' }}>
             Next<span style={{ color: 'var(--copper)' }}>Auction</span>
           </Link>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Opret din konto</p>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t.pageSubtitle}</p>
         </div>
 
         {/* Tab card */}
@@ -158,10 +158,10 @@ function SignUpContent() {
             <Tabs value={tab} onValueChange={(v) => { setTab(v as 'private' | 'business'); setError('') }}>
               <TabsList className="w-full grid grid-cols-2 h-11">
                 <TabsTrigger value="private" className="gap-2 text-sm font-semibold">
-                  <User className="h-4 w-4" /> Privat
+                  <User className="h-4 w-4" /> {t.tabPrivate}
                 </TabsTrigger>
                 <TabsTrigger value="business" className="gap-2 text-sm font-semibold">
-                  <Building2 className="h-4 w-4" /> Erhverv
+                  <Building2 className="h-4 w-4" /> {t.tabBusiness}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -185,28 +185,28 @@ function SignUpContent() {
                 >
                   <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'var(--copper)' }} />
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--text-body)' }}>
-                    Som privatperson må du sælge maks. <strong>2 biler om året</strong> (SKATs regler).
+                    {t.skatInfoPrefix} <strong>{t.skatInfoHighlight}</strong> {t.skatInfoSuffix}
                   </p>
                 </div>
 
                 <form onSubmit={handlePrivateSubmit} className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="priv-name">Fulde navn</Label>
-                    <Input id="priv-name" type="text" required className="h-11 text-base" placeholder="Jens Hansen"
+                    <Label htmlFor="priv-name">{t.labelFullName}</Label>
+                    <Input id="priv-name" type="text" required className="h-11 text-base" placeholder={t.placeholderName}
                       value={priv.name} onChange={e => setPriv({ ...priv, name: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="priv-email">Email</Label>
-                    <Input id="priv-email" type="email" required className="h-11 text-base" placeholder="din@email.dk"
+                    <Label htmlFor="priv-email">{t.labelEmail}</Label>
+                    <Input id="priv-email" type="email" required className="h-11 text-base" placeholder={t.placeholderEmail}
                       value={priv.email} onChange={e => setPriv({ ...priv, email: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="priv-pw">Adgangskode</Label>
+                    <Label htmlFor="priv-pw">{t.labelPassword}</Label>
                     <Input id="priv-pw" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
                       value={priv.password} onChange={e => setPriv({ ...priv, password: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="priv-confirm">Bekræft adgangskode</Label>
+                    <Label htmlFor="priv-confirm">{t.labelConfirmPassword}</Label>
                     <Input id="priv-confirm" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
                       value={priv.confirm} onChange={e => setPriv({ ...priv, confirm: e.target.value })} />
                   </div>
@@ -214,16 +214,16 @@ function SignUpContent() {
                   <div className="flex items-start gap-2.5 pt-1">
                     <Checkbox id="priv-terms" required className="mt-0.5 shrink-0" />
                     <Label htmlFor="priv-terms" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
-                      Jeg accepterer{' '}
-                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>vilkår og betingelser</Link>
-                      {' '}og{' '}
-                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>privatlivspolitik</Link>
+                      {t.termsPrefix}{' '}
+                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.termsLink}</Link>
+                      {' '}{t.termsConjunction}{' '}
+                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.privacyLink}</Link>
                     </Label>
                   </div>
 
                   <Button type="submit" className="w-full h-11 text-sm font-bold text-white" disabled={isLoading}
                     style={{ backgroundColor: 'var(--copper)' }}>
-                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Opretter konto…</> : 'Opret Privatkonto'}
+                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />{t.btnCreating}</> : t.btnCreatePrivate}
                   </Button>
                 </form>
               </>
@@ -235,25 +235,25 @@ function SignUpContent() {
                 <Alert style={{ borderColor: 'rgba(180,130,0,0.3)', backgroundColor: 'rgba(255,200,0,0.07)' }}>
                   <AlertTriangle className="h-4 w-4" style={{ color: 'rgb(160,110,0)' }} />
                   <AlertDescription style={{ color: 'rgb(120,80,0)' }}>
-                    Din konto skal godkendes af en administrator inden du kan byde eller oprette annoncer. Dette tager normalt 1–2 hverdage.
+                    {t.bizApprovalWarning}
                   </AlertDescription>
                 </Alert>
 
                 <form onSubmit={handleBusinessSubmit} className="space-y-4">
                   {/* CVR field */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="biz-cvr">CVR-nummer</Label>
+                    <Label htmlFor="biz-cvr">{t.labelCvr}</Label>
                     <Input id="biz-cvr" type="text" required inputMode="numeric" maxLength={8} className="h-11 text-base font-mono tracking-widest" placeholder="12345678"
                       value={biz.cvr} onChange={e => setBiz({ ...biz, cvr: e.target.value.replace(/\D/g, '') })} />
                     {cvrLoading && (
                       <p className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                        <Spinner className="h-3 w-3" /> Henter CVR-oplysninger…
+                        <Spinner className="h-3 w-3" /> {t.cvrLoading}
                       </p>
                     )}
                     {cvrResult && (
                       <div className="flex items-center gap-2 rounded-md px-3 py-2 text-xs" style={{ backgroundColor: 'rgba(0,160,60,0.08)', border: '1px solid rgba(0,160,60,0.2)', color: 'rgb(0,120,40)' }}>
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                        <span><strong>{cvrResult.name}</strong> · {cvrResult.city} · Aktiv</span>
+                        <span><strong>{cvrResult.name}</strong> · {cvrResult.city} · {t.cvrActive}</span>
                       </div>
                     )}
                     {cvrError && (
@@ -262,43 +262,43 @@ function SignUpContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="biz-name">Virksomhedsnavn</Label>
-                    <Input id="biz-name" type="text" required className="h-11 text-base" placeholder={cvrResult?.name || 'Firma ApS'}
+                    <Label htmlFor="biz-name">{t.labelCompanyName}</Label>
+                    <Input id="biz-name" type="text" required className="h-11 text-base" placeholder={cvrResult?.name || t.placeholderCompany}
                       value={biz.name} onChange={e => setBiz({ ...biz, name: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="biz-email">Email</Label>
-                    <Input id="biz-email" type="email" required className="h-11 text-base" placeholder="info@firma.dk"
+                    <Label htmlFor="biz-email">{t.labelEmail}</Label>
+                    <Input id="biz-email" type="email" required className="h-11 text-base" placeholder={t.placeholderBizEmail}
                       value={biz.email} onChange={e => setBiz({ ...biz, email: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="biz-pw">Adgangskode</Label>
+                    <Label htmlFor="biz-pw">{t.labelPassword}</Label>
                     <Input id="biz-pw" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
                       value={biz.password} onChange={e => setBiz({ ...biz, password: e.target.value })} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="biz-confirm">Bekræft adgangskode</Label>
+                    <Label htmlFor="biz-confirm">{t.labelConfirmPassword}</Label>
                     <Input id="biz-confirm" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
                       value={biz.confirm} onChange={e => setBiz({ ...biz, confirm: e.target.value })} />
                   </div>
 
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    Vi verificerer dit CVR-nummer mod Erhvervsstyrelsens register for at forhindre svindel.
+                    {t.cvrVerifyInfo}
                   </p>
 
                   <div className="flex items-start gap-2.5 pt-1">
                     <Checkbox id="biz-terms" required className="mt-0.5 shrink-0" />
                     <Label htmlFor="biz-terms" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
-                      Jeg accepterer{' '}
-                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>vilkår og betingelser</Link>
-                      {' '}og{' '}
-                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>privatlivspolitik</Link>
+                      {t.termsPrefix}{' '}
+                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.termsLink}</Link>
+                      {' '}{t.termsConjunction}{' '}
+                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.privacyLink}</Link>
                     </Label>
                   </div>
 
                   <Button type="submit" className="w-full h-11 text-sm font-bold text-white" disabled={isLoading}
                     style={{ backgroundColor: 'var(--dark-section)' }}>
-                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Sender ansøgning…</> : 'Ansøg om Erhvervskonto'}
+                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />{t.btnSending}</> : t.btnApplyBusiness}
                   </Button>
                 </form>
               </>
@@ -308,13 +308,13 @@ function SignUpContent() {
 
             <Button variant="outline" className="w-full h-11 gap-3" disabled={isLoading}
               onClick={() => signIn('google', { callbackUrl: `/${locale}` })}>
-              <GoogleIcon /> Fortsæt med Google
+              <GoogleIcon /> {t.continueWithGoogle}
             </Button>
 
             <p className="text-center text-sm" style={{ color: 'var(--text-muted)' }}>
-              Har du allerede en konto?{' '}
+              {t.haveAccount}{' '}
               <Link href={`/${locale}/auth/signin`} className="font-medium underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: 'var(--text-body)' }}>
-                Log ind
+                {t.signInLink}
               </Link>
             </p>
           </div>

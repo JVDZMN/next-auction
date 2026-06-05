@@ -3,33 +3,12 @@
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
-
-const FAQ_ITEMS = [
-  {
-    q: 'Er det gratis at oprette konto?',
-    a: 'Ja, oprettelse af konto er helt gratis.',
-  },
-  {
-    q: 'Hvad sker der når jeg vinder en auktion?',
-    a: 'Du kontaktes direkte af sælger for at aftale overdragelse af bilen.',
-  },
-  {
-    q: 'Hvad er en reservepris?',
-    a: 'Reserveprisen er den minimumspris sælger vil acceptere. Auktionen afsluttes kun som solgt, hvis det højeste bud når reserveprisen.',
-  },
-  {
-    q: 'Er buddene juridisk bindende?',
-    a: 'Ja, afgivne bud er bindende i henhold til dansk Købelov. Læs vores vilkår og betingelser for detaljer.',
-  },
-  {
-    q: 'Kan jeg kontakte sælger?',
-    a: 'Ja, du kan sende en direkte besked til sælger via platformen.',
-  },
-]
+import { useDict } from '@/lib/i18n/context'
 
 interface Props { locale: string }
 
 export function FaqPreviewSection({ locale }: Props) {
+  const t = useDict().home.faqPreview
   const sectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,24 +26,22 @@ export function FaqPreviewSection({ locale }: Props) {
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--page-bg)' }}>
       <div ref={sectionRef} className="mx-auto max-w-3xl px-6 sm:px-10">
 
-        {/* Header */}
         <div className="mb-12 text-center fade-in-up">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
             <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
-              Ofte stillede spørgsmål
+              {t.label}
             </p>
             <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
           </div>
           <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-body)', letterSpacing: '-0.01em' }}>
-            Vi svarer på dine spørgsmål
+            {t.heading}
           </h2>
         </div>
 
-        {/* Accordion */}
         <div className="fade-in-up delay-1 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <Accordion multiple className="flex flex-col divide-y" style={{ borderColor: 'var(--border)' }}>
-            {FAQ_ITEMS.map(({ q, a }) => (
+            {t.items.map(({ q, a }) => (
               <AccordionItem
                 key={q}
                 value={q}
@@ -91,7 +68,7 @@ export function FaqPreviewSection({ locale }: Props) {
             className="text-sm font-bold hover:opacity-70 transition-opacity"
             style={{ color: 'var(--copper)' }}
           >
-            Se alle spørgsmål →
+            {t.viewAll}
           </Link>
         </div>
 

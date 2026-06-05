@@ -10,7 +10,8 @@
     "confirm": "Bekræft",
     "close": "Luk",
     "yes": "Ja",
-    "no": "Nej"
+    "no": "Nej",
+    "ended": "Afsluttet"
   },
   "nav": {
     "browse": "Se biler",
@@ -29,7 +30,9 @@
     "language": "Sprog",
     "openMenu": "Åbn menu",
     "adminDashboard": "Admin Dashboard",
-    "signUp": "Opret konto"
+    "signUp": "Opret konto",
+    "mitIdVerified": "MitID verificeret",
+    "verifyMitId": "Verificer med MitID"
   },
   "home": {
     "hero": {
@@ -47,7 +50,8 @@
       "btnSell": "Sælg din bil",
       "trustItem1": "Gratis at oprette konto",
       "trustItem2": "Juridisk bindende bud",
-      "trustItem3": "Direkte handel"
+      "trustItem3": "Direkte handel",
+      "imageAlt": "Next Auction bilauktion"
     },
     "activeAuctions": "Aktive auktioner",
     "viewAll": "Se alle",
@@ -146,7 +150,72 @@
       "step2desc": "Søg, filtrer og gem favoritter.",
       "step3title": "Afgiv bud og vind",
       "step3desc": "Højeste bud ved udløb vinder."
-    }
+    },
+    "howItWorks": {
+      "label": "Sådan fungerer det",
+      "heading": "Kom i gang på 4 trin",
+      "step1title": "Opret konto",
+      "step1desc": "Gratis registrering på 2 minutter",
+      "step2title": "Find din bil",
+      "step2desc": "Søg og filtrer blandt alle auktioner",
+      "step3title": "Afgiv bud",
+      "step3desc": "Byd i realtid — højeste bud vinder",
+      "step4title": "Kontakt sælger",
+      "step4desc": "Vinder kontakter sælger direkte"
+    },
+    "sellerTypes": {
+      "label": "For alle",
+      "heading": "To markeder. Én platform.",
+      "privateTitle": "Privat",
+      "privateDesc": "Køb og sælg bil som privatperson",
+      "privateFeature1": "Gratis",
+      "privateFeature2": "Max 2 biler/år",
+      "privateFeature3": "Direkte handel",
+      "privateCta": "Opret Privatkonto",
+      "businessTitle": "Erhverv",
+      "businessDesc": "Professionelt salg med CVR-nummer",
+      "businessFeature1": "Ubegrænset antal biler",
+      "businessFeature2": "Erhvervsprofil",
+      "businessFeature3": "Prioriteret placering",
+      "businessCta": "Ansøg om Erhvervskonto"
+    },
+    "faqPreview": {
+      "label": "Ofte stillede spørgsmål",
+      "heading": "Vi svarer på dine spørgsmål",
+      "viewAll": "Se alle spørgsmål →",
+      "items": [
+        {
+          "q": "Er det gratis at oprette konto?",
+          "a": "Ja, oprettelse af konto er helt gratis."
+        },
+        {
+          "q": "Hvad sker der når jeg vinder en auktion?",
+          "a": "Du kontaktes direkte af sælger for at aftale overdragelse af bilen."
+        },
+        {
+          "q": "Hvad er en reservepris?",
+          "a": "Reserveprisen er den minimumspris sælger vil acceptere. Auktionen afsluttes kun som solgt, hvis det højeste bud når reserveprisen."
+        },
+        {
+          "q": "Er buddene juridisk bindende?",
+          "a": "Ja, afgivne bud er bindende i henhold til dansk Købelov. Læs vores vilkår og betingelser for detaljer."
+        },
+        {
+          "q": "Kan jeg kontakte sælger?",
+          "a": "Ja, du kan sende en direkte besked til sælger via platformen."
+        }
+      ]
+    },
+    "auctionCards": {
+      "ended": "Afsluttet",
+      "business": "Erhverv",
+      "private": "Privat",
+      "currentBid": "Aktuelt bud",
+      "endsIn": "Slutter om",
+      "viewAll": "Se alle →",
+      "viewAllMobile": "Se alle auktioner →"
+    },
+    "welcomeImageAlt": "Udvalgt køretøj"
   },
   "cars": {
     "filter": {
@@ -320,5 +389,81 @@
     "privateUser": "Privat bruger",
     "businessUser": "Erhvervsbruger",
     "upgradeRequired": "Opgrader til Erhverv (CVR) for at oprette mere end 2 biler om året."
+  },
+  "signin": {
+    "title": "Log ind",
+    "subtitle": "Velkommen tilbage til Next Auction",
+    "registeredAlert": "Konto oprettet! Tjek din email og klik på bekræftelseslinket inden du logger ind.",
+    "labelEmail": "Email",
+    "labelPassword": "Adgangskode",
+    "btnSignIn": "Log ind",
+    "btnSigningIn": "Logger ind…",
+    "or": "eller",
+    "continueWithGoogle": "Fortsæt med Google",
+    "noAccount": "Har du ikke en konto?",
+    "signUpLink": "Opret konto",
+    "errInvalidCredentials": "Forkert email eller adgangskode. Har du netop registreret dig, så bekræft din email først.",
+    "errGeneric": "Der opstod en fejl. Prøv igen."
+  },
+  "signup": {
+    "pageSubtitle": "Opret din konto",
+    "tabPrivate": "Privat",
+    "tabBusiness": "Erhverv",
+    "skatInfoPrefix": "Som privatperson må du sælge maks.",
+    "skatInfoHighlight": "2 biler om året",
+    "skatInfoSuffix": "(SKATs regler).",
+    "labelFullName": "Fulde navn",
+    "labelEmail": "Email",
+    "labelPassword": "Adgangskode",
+    "labelConfirmPassword": "Bekræft adgangskode",
+    "placeholderName": "Jens Hansen",
+    "placeholderEmail": "din@email.dk",
+    "termsPrefix": "Jeg accepterer",
+    "termsLink": "vilkår og betingelser",
+    "termsConjunction": "og",
+    "privacyLink": "privatlivspolitik",
+    "btnCreatePrivate": "Opret Privatkonto",
+    "btnCreating": "Opretter konto…",
+    "bizApprovalWarning": "Din konto skal godkendes af en administrator inden du kan byde eller oprette annoncer. Dette tager normalt 1–2 hverdage.",
+    "labelCvr": "CVR-nummer",
+    "cvrLoading": "Henter CVR-oplysninger…",
+    "cvrActive": "Aktiv",
+    "cvrNotFound": "Virksomhed ikke fundet — tjek CVR-nummeret",
+    "cvrFetchError": "Kunne ikke hente CVR-oplysninger",
+    "labelCompanyName": "Virksomhedsnavn",
+    "placeholderCompany": "Firma ApS",
+    "placeholderBizEmail": "info@firma.dk",
+    "cvrVerifyInfo": "Vi verificerer dit CVR-nummer mod Erhvervsstyrelsens register for at forhindre svindel.",
+    "btnApplyBusiness": "Ansøg om Erhvervskonto",
+    "btnSending": "Sender ansøgning…",
+    "continueWithGoogle": "Fortsæt med Google",
+    "haveAccount": "Har du allerede en konto?",
+    "signInLink": "Log ind",
+    "errPasswordMismatch": "Adgangskoderne matcher ikke",
+    "errPasswordTooShort": "Adgangskode skal være mindst 6 tegn",
+    "errCreateFailed": "Oprettelse mislykkedes",
+    "errVerifyCvr": "Verificer dit CVR-nummer inden du fortsætter",
+    "errApplyFailed": "Ansøgning mislykkedes",
+    "errGeneric": "Der opstod en fejl",
+    "successTitle": "Ansøgning modtaget",
+    "successBody": "Din ansøgning om erhvervskonto er modtaget. Vi vender tilbage inden for 1–2 hverdage.",
+    "successSignIn": "Gå til log ind"
+  },
+  "dealers": {
+    "pageTitle": "Forhandlere – Next Auction",
+    "pageDescription": "Godkendte erhvervsforhandlere på Next Auction.",
+    "label": "Erhvervsmarked",
+    "heading": "Forhandlere",
+    "approvedCount": "godkendte erhvervsforhandlere",
+    "empty": "Ingen godkendte forhandlere endnu.",
+    "unnamed": "Unavngivet forhandler",
+    "activeAuctions": "Aktive auktioner",
+    "completedSales": "Afsluttede salg",
+    "memberSince": "Forhandler siden",
+    "viewAuctions": "Se auktioner →",
+    "backToList": "← Alle forhandlere",
+    "noActiveCars": "Ingen aktive auktioner fra denne forhandler.",
+    "approvedDealer": "Godkendt forhandler",
+    "previousSales": "Tidligere salg"
   }
 }

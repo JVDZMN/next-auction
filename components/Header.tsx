@@ -97,14 +97,14 @@ export function Header() {
             onMouseEnter={e => ((e.target as HTMLElement).style.color = 'white')}
             onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.65)')}
           >
-            {isBusiness ? 'Se erhvervsbiler' : 'Se biler'}
+            {isBusiness ? t.browseBusiness : t.browseCars}
           </Link>
           {!isPrivate && (
             <Link href={`/${locale}/dealers`} className={NAV_LINK} style={NAV_LINK_STYLE}
               onMouseEnter={e => ((e.target as HTMLElement).style.color = 'white')}
               onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.65)')}
             >
-              Forhandlere
+              {t.dealers}
             </Link>
           )}
           {session && (
@@ -115,7 +115,7 @@ export function Header() {
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'white')}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)')}
             >
-              {isAdmin ? 'Admin' : (isBusiness ? 'Min virksomhed' : 'Min konto')}
+              {isAdmin ? t.admin : (isBusiness ? t.myBusiness : t.myAccount)}
               {totalCount > 0 && (
                 <span
                   className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white tabular-nums"
@@ -128,7 +128,7 @@ export function Header() {
           )}
           {isAdmin && (
             <Link href={`/${locale}/admin/dashboard`} className={cn(NAV_LINK, 'inline-flex items-center gap-1')} style={NAV_LINK_STYLE}>
-              <Shield className="h-3.5 w-3.5" /> Admin
+              <Shield className="h-3.5 w-3.5" /> {t.admin}
             </Link>
           )}
         </nav>
@@ -158,16 +158,16 @@ export function Header() {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem render={<Link href={isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`} />}>
-                  {isAdmin ? 'Admin Dashboard' : (isBusiness ? 'Min virksomhed' : 'Min konto')}
+                  {isAdmin ? t.adminDashboard : (isBusiness ? t.myBusiness : t.myAccount)}
                 </DropdownMenuItem>
                 {(session.user as { mitIdVerified?: boolean }).mitIdVerified ? (
                   <DropdownMenuItem disabled>
                     <BadgeCheck className="mr-2 h-4 w-4" style={{ color: 'var(--brand)' }} />
-                    <span style={{ color: 'var(--brand)' }}>MitID Verified</span>
+                    <span style={{ color: 'var(--brand)' }}>{t.mitIdVerified}</span>
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => { window.location.href = '/api/mitid/start' }}>
-                    <span className="mr-2">🇩🇰</span> Verify with MitID
+                    <span className="mr-2">🇩🇰</span> {t.verifyMitId}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -175,7 +175,7 @@ export function Header() {
                   className="text-destructive focus:text-destructive"
                   onClick={() => signOut()}
                 >
-                  <LogOut className="mr-2 h-4 w-4" /> Log ud
+                  <LogOut className="mr-2 h-4 w-4" /> {t.signOut}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -186,14 +186,14 @@ export function Header() {
                 className="rounded px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-80"
                 style={{ color: 'rgba(255,255,255,0.75)' }}
               >
-                Log ind
+                {t.signIn}
               </Link>
               <Link
                 href={`/${locale}/auth/signup`}
                 className="rounded px-4 py-1.5 text-sm font-bold text-white transition-opacity hover:opacity-85"
                 style={{ backgroundColor: 'var(--copper)' }}
               >
-                Opret konto
+                {t.signUp}
               </Link>
             </div>
           )}
@@ -213,7 +213,7 @@ export function Header() {
           <Sheet open={sheetOpen} onOpenChange={(open) => setSheetOpen(open)}>
             <SheetTrigger
               className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/75 hover:text-white hover:bg-white/8 transition-colors"
-              aria-label="Åbn menu"
+              aria-label={t.openMenu}
             >
               <Menu className="h-5 w-5" />
             </SheetTrigger>
@@ -259,7 +259,7 @@ export function Header() {
                       onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'rgb(255,80,80)')}
                       onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(255,80,80,0.85)')}
                     >
-                      <LogOut className="mr-2.5 h-4 w-4" /> Log ud
+                      <LogOut className="mr-2.5 h-4 w-4" /> {t.signOut}
                     </button>
                   </>
                 )}
@@ -271,7 +271,7 @@ export function Header() {
                 style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
               >
                 <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.40)' }}>
-                  Sprog
+                  {t.language}
                 </span>
                 <LanguageSwitcher />
               </div>

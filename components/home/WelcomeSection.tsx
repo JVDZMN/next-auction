@@ -8,7 +8,8 @@ import { useInView } from '@/lib/use-in-view'
 interface Props { locale: string; showcaseImage: string | null }
 
 export function WelcomeSection({ locale, showcaseImage }: Props) {
-  const t = useDict().home.welcome
+  const dict = useDict().home
+  const t = dict.welcome
   const [textRef,  textInView]  = useInView<HTMLDivElement>({ rootMargin: '-80px' })
   const [imageRef, imageInView] = useInView<HTMLDivElement>({ rootMargin: '-80px' })
 
@@ -48,7 +49,7 @@ export function WelcomeSection({ locale, showcaseImage }: Props) {
           <div className="absolute inset-0 z-0" style={{ border: `5px solid ${'var(--copper)'}`, transform: 'translate(14px, 14px)' }} />
           <div className="relative z-10 overflow-hidden" style={{ aspectRatio: '4/3', backgroundColor: 'var(--brand)' }}>
             {showcaseImage ? (
-              <Image src={showcaseImage} alt="Featured vehicle" fill className="object-cover" sizes="(max-width: 768px) 100vw, 45vw" priority />
+              <Image src={showcaseImage} alt={dict.welcomeImageAlt} fill className="object-cover" sizes="(max-width: 768px) 100vw, 45vw" priority />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <CarSilhouetteSVG className="h-24 w-36 text-white/25" />

@@ -1,11 +1,6 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
-import { toLocale } from '@/lib/i18n'
-
-export const metadata = {
-  title: 'Forhandlere – Next Auction',
-  description: 'Godkendte erhvervsforhandlere på Next Auction.',
-}
+import { toLocale, getDictionary } from '@/lib/i18n'
 
 async function fetchDealers() {
   const now = new Date()
@@ -36,7 +31,9 @@ export default async function DealersPage({
 }) {
   const { locale: rawLocale } = await params
   const locale  = toLocale(rawLocale)
-  const dealers = await fetchDealers()
+  const [dealers, dict] = await Promise.all([fetchDealers(), getDictionary(locale)])
+  const t = dict.dealers
+  const dateLocale = locale === 'da' ? 'da-DK' : 'en-GB'
 
   return (
     <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh' }}>
@@ -54,11 +51,11 @@ export default async function DealersPage({
         />
         <div className="relative z-10 mx-auto max-w-6xl px-6 sm:px-10">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
-            Erhvervsmarked
+            {t.label}
           </p>
-          <h1 className="text-4xl font-black text-white sm:text-5xl">Forhandlere</h1>
+          <h1 className="text-4xl font-black text-white sm:text-5xl">{t.heading}</h1>
           <p className="mt-3 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            {dealers.length} godkendte erhvervsforhandlere
+            {dealers.length} {t.approvedCount}
           </p>
         </div>
       </div>
@@ -67,7 +64,7 @@ export default async function DealersPage({
       <div className="mx-auto max-w-6xl px-6 sm:px-10 py-14">
         {dealers.length === 0 ? (
           <p className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
-            Ingen godkendte forhandlere endnu.
+            {t.empty}
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -100,15 +97,15 @@ export default async function DealersPage({
                     className="text-base font-black group-hover:underline underline-offset-2"
                     style={{ color: 'var(--text-body)' }}
                   >
-                    {dealer.name ?? 'Unavngivet forhandler'}
+                    {dealer.name ?? t.unnamed}
                   </h2>
 
                   <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Aktive auktioner: <strong style={{ color: 'var(--copper)' }}>{dealer._count.cars}</strong>
+                    {t.activeAuctions}: <strong style={{ color: 'var(--copper)' }}>{dealer._count.cars}</strong>
                   </p>
 
                   <p className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Forhandler siden {new Date(dealer.createdAt).toLocaleDateString('da-DK', { month: 'long', year: 'numeric' })}
+                    {t.memberSince} {new Date(dealer.createdAt).toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' })}
                   </p>
                 </div>
 
@@ -116,7 +113,7 @@ export default async function DealersPage({
                   className="px-6 py-3 flex items-center justify-between border-t text-sm font-semibold"
                   style={{ borderColor: 'rgba(0,0,0,0.06)', color: 'var(--copper)' }}
                 >
-                  Se auktioner →
+                  {t.viewAuctions}
                 </div>
               </Link>
             ))}

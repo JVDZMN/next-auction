@@ -4,7 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useState, FormEvent, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useLocale } from '@/lib/i18n/context'
+import { useLocale, useDict } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,10 +15,11 @@ import { Spinner } from '@/components/ui/spinner'
 import { AlertTriangle } from 'lucide-react'
 
 function SignInContent() {
-  const router      = useRouter()
+  const router       = useRouter()
   const searchParams = useSearchParams()
-  const locale      = useLocale()
-  const callbackUrl = searchParams?.get('callbackUrl') || `/${locale}`
+  const locale       = useLocale()
+  const t            = useDict().signin
+  const callbackUrl  = searchParams?.get('callbackUrl') || `/${locale}`
   const justRegistered = searchParams?.get('registered') === '1'
   const [isLoading, setIsLoading] = useState(false)
   const [error,     setError]     = useState('')
@@ -32,11 +33,11 @@ function SignInContent() {
       const result = await signIn('credentials', {
         email: formData.email, password: formData.password, redirect: false,
       })
-      if (result?.error === 'CredentialsSignin') setError('Invalid email or password. If you just registered, please verify your email first.')
+      if (result?.error === 'CredentialsSignin') setError(t.errInvalidCredentials)
       else if (result?.error) setError(result.error)
       else router.push(callbackUrl)
     } catch {
-      setError('An error occurred. Please try again.')
+      setError(t.errGeneric)
     } finally {
       setIsLoading(false)
     }
@@ -46,15 +47,13 @@ function SignInContent() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Sign in</CardTitle>
-          <CardDescription>Welcome back to Next Auction</CardDescription>
+          <CardTitle className="text-2xl">{t.title}</CardTitle>
+          <CardDescription>{t.subtitle}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {justRegistered && (
             <Alert className="border-blue-200 bg-blue-50 text-blue-800">
-              <AlertDescription>
-                Account created! Please check your email and click the verification link before signing in.
-              </AlertDescription>
+              <AlertDescription>{t.registeredAlert}</AlertDescription>
             </Alert>
           )}
           {error && (
@@ -66,36 +65,36 @@ function SignInContent() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.labelEmail}</Label>
               <Input id="email" type="email" required placeholder="your@email.com"
                 value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.labelPassword}</Label>
               <Input id="password" type="password" required placeholder="••••••••"
                 value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Signing in…</> : 'Sign In'}
+              {isLoading ? <><Spinner className="mr-2 h-4 w-4" />{t.btnSigningIn}</> : t.btnSignIn}
             </Button>
           </form>
 
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
-              or
+              {t.or}
             </span>
           </div>
 
           <Button variant="outline" className="w-full gap-3" disabled={isLoading}
             onClick={() => signIn('google', { callbackUrl })}>
             <GoogleIcon />
-            Continue with Google
+            {t.continueWithGoogle}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href={`/${locale}/auth/signup`} className="font-medium text-primary hover:underline">Sign up</Link>
+            {t.noAccount}{' '}
+            <Link href={`/${locale}/auth/signup`} className="font-medium text-primary hover:underline">{t.signUpLink}</Link>
           </p>
         </CardContent>
       </Card>

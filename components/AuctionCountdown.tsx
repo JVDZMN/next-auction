@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useDict } from '@/lib/i18n/context'
 
 interface TimeLeft {
   days: number; hours: number; minutes: number; seconds: number; total: number
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export function AuctionCountdown({ endDate, showSeconds = true, className }: Props) {
+  const ended = useDict().common.ended
   const [left, setLeft] = useState<TimeLeft>(() => compute(endDate))
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function AuctionCountdown({ endDate, showSeconds = true, className }: Pro
   if (left.total <= 0) {
     return (
       <Badge variant="outline" className={cn('text-muted-foreground', className)}>
-        <ClockIcon /> Afsluttet
+        <ClockIcon /> {ended}
       </Badge>
     )
   }

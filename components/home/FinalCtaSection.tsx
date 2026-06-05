@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
+import { useDict } from '@/lib/i18n/context'
 
 interface Props { locale: string }
 
 export function FinalCtaSection({ locale }: Props) {
+  const t = useDict().home.finalCta
   const sectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -20,22 +22,16 @@ export function FinalCtaSection({ locale }: Props) {
   }, [])
 
   return (
-    <section
-      className="py-24 sm:py-32"
-      style={{ backgroundColor: 'var(--dark-section)' }}
-    >
-      <div
-        ref={sectionRef}
-        className="mx-auto max-w-2xl px-6 text-center fade-in-up"
-      >
+    <section className="py-24 sm:py-32" style={{ backgroundColor: 'var(--dark-section)' }}>
+      <div ref={sectionRef} className="mx-auto max-w-2xl px-6 text-center fade-in-up">
         <h2
           className="mb-4 font-black text-white leading-tight"
           style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}
         >
-          Klar til at komme i gang?
+          {t.heading}
         </h2>
         <p className="mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.60)' }}>
-          Opret din gratis konto i dag
+          {t.subtext}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
@@ -43,14 +39,14 @@ export function FinalCtaSection({ locale }: Props) {
             className="inline-flex items-center justify-center rounded px-8 py-4 text-sm font-bold text-white transition-opacity hover:opacity-85 min-h-11"
             style={{ backgroundColor: 'var(--copper)' }}
           >
-            Opret konto gratis
+            {t.btnSignUp}
           </Link>
           <Link
             href={`/${locale}/cars`}
             className="inline-flex items-center justify-center rounded border-2 px-8 py-4 text-sm font-bold text-white transition-opacity hover:opacity-70 min-h-11"
             style={{ borderColor: 'rgba(255,255,255,0.35)' }}
           >
-            Se aktive auktioner
+            {t.btnBrowse}
           </Link>
         </div>
       </div>

@@ -93,7 +93,7 @@ export function HeroSection({ locale, isSignedIn, userType }: Props) {
         <div>
           <img
             src="/images/heroimage.png"
-            alt="Next Auction bilauktion"
+            alt={t.imageAlt}
             style={{
               width: '100%',
               maxHeight: '500px',

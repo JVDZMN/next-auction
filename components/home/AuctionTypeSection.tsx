@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useInView } from '@/lib/use-in-view'
 import { cloudinaryBlurUrl } from '@/lib/cloudinary'
+import { useDict } from '@/lib/i18n/context'
 
 export interface AuctionCar {
   id: string
@@ -18,9 +19,9 @@ export interface AuctionCar {
   ownerUserType: 'PRIVATE' | 'BUSINESS'
 }
 
-function timeLeft(iso: string): string {
+function timeLeft(iso: string, endedLabel: string): string {
   const ms = new Date(iso).getTime() - Date.now()
-  if (ms <= 0) return 'Afsluttet'
+  if (ms <= 0) return endedLabel
   const d = Math.floor(ms / 86_400_000)
   const h = Math.floor((ms % 86_400_000) / 3_600_000)
   const m = Math.floor((ms % 3_600_000) / 60_000)
@@ -29,7 +30,21 @@ function timeLeft(iso: string): string {
   return `${m}m`
 }
 
-function MiniCard({ car, locale }: { car: AuctionCar; locale: string }) {
+function MiniCard({
+  car,
+  locale,
+  labels,
+}: {
+  car: AuctionCar
+  locale: string
+  labels: {
+    ended: string
+    business: string
+    private: string
+    currentBid: string
+    endsIn: string
+  }
+}) {
   const isBusiness = car.ownerUserType === 'BUSINESS'
 
   return (
@@ -60,7 +75,7 @@ function MiniCard({ car, locale }: { car: AuctionCar; locale: string }) {
           className="absolute bottom-2 right-2 rounded px-2 py-0.5 text-[10px] font-bold text-white"
           style={{ backgroundColor: isBusiness ? 'var(--dark-section)' : 'var(--copper)' }}
         >
-          {isBusiness ? '🏢 Erhverv' : '🏠 Privat'}
+          {isBusiness ? `🏢 ${labels.business}` : `🏠 ${labels.private}`}
         </span>
       </div>
 
@@ -73,15 +88,15 @@ function MiniCard({ car, locale }: { car: AuctionCar; locale: string }) {
         )}
         <div className="mt-3 flex items-end justify-between">
           <div>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Aktuelt bud</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{labels.currentBid}</p>
             <p className="text-sm font-bold" style={{ color: 'var(--copper)' }}>
-              {car.currentPrice.toLocaleString('da-DK')} kr
+              {car.currentPrice.toLocaleString(locale === 'da' ? 'da-DK' : 'en-US')} kr
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Slutter om</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{labels.endsIn}</p>
             <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
-              {timeLeft(car.auctionEndDate)}
+              {timeLeft(car.auctionEndDate, labels.ended)}
             </p>
           </div>
         </div>
@@ -101,9 +116,18 @@ interface Props {
 }
 
 export function AuctionTypeSection({ locale, label, heading, subtext, cars, viewAllHref, dark }: Props) {
+  const cards = useDict().home.auctionCards
   const [ref, inView] = useInView<HTMLDivElement>({ rootMargin: '-60px' })
 
   if (cars.length === 0) return null
+
+  const cardLabels = {
+    ended: cards.ended,
+    business: cards.business,
+    private: cards.private,
+    currentBid: cards.currentBid,
+    endsIn: cards.endsIn,
+  }
 
   return (
     <section
@@ -136,13 +160,13 @@ export function AuctionTypeSection({ locale, label, heading, subtext, cars, view
             className="hidden text-sm font-bold sm:block hover:opacity-70 transition-opacity"
             style={{ color: 'var(--copper)' }}
           >
-            Se alle →
+            {cards.viewAll}
           </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {cars.map(car => (
-            <MiniCard key={car.id} car={car} locale={locale} />
+            <MiniCard key={car.id} car={car} locale={locale} labels={cardLabels} />
           ))}
         </div>
 
@@ -152,7 +176,7 @@ export function AuctionTypeSection({ locale, label, heading, subtext, cars, view
             className="text-sm font-bold hover:opacity-70 transition-opacity"
             style={{ color: 'var(--copper)' }}
           >
-            Se alle auktioner →
+            {cards.viewAllMobile}
           </Link>
         </div>
       </div>
