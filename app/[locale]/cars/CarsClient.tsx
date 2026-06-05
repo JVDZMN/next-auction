@@ -17,7 +17,6 @@ const CarsMap = dynamic<CarsMapProps>(
     ),
   }
 )
-import { Header } from '@/components/Header'
 import { CarCard } from '@/components/CarCard'
 import { CarCardSkeleton } from '@/components/CarCardSkeleton'
 import { getAllBrands, getModelsByBrand } from '@/lib/car-brands'
@@ -273,7 +272,6 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
 
       <main className="max-w-400 mx-auto px-4 lg:px-6 py-6">
         <div className="flex gap-6">

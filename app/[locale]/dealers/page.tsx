@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { toLocale } from '@/lib/i18n'
-import { Header } from '@/components/Header'
 
 export const metadata = {
   title: 'Forhandlere – Next Auction',
@@ -41,7 +40,6 @@ export default async function DealersPage({
 
   return (
     <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh' }}>
-      <Header />
 
       {/* Page header */}
       <div style={{ backgroundColor: 'var(--dark-section)' }} className="relative overflow-hidden py-16 sm:py-20">

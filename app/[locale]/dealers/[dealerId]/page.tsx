@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { toLocale } from '@/lib/i18n'
-import { Header } from '@/components/Header'
 import { CarCard } from '@/components/CarCard'
 
 export default async function DealerProfilePage({
@@ -45,7 +44,6 @@ export default async function DealerProfilePage({
 
   return (
     <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh' }}>
-      <Header />
 
       {/* Dealer header */}
       <div style={{ backgroundColor: 'var(--dark-section)' }} className="relative overflow-hidden py-16 sm:py-20">
