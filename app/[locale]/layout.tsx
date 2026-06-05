@@ -8,6 +8,7 @@ import { getDictionary, toLocale, locales } from '@/lib/i18n'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
 import { Header } from '@/components/Header'
+import { Footer } from '@/components/home/NewsletterAndFooter'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/react'
 import '../globals.css'
@@ -55,6 +56,7 @@ export default async function LocaleLayout({
               <TooltipProvider>
                 <Header />
                 {children}
+                <Footer locale={locale} />
                 <Toaster richColors position="bottom-center" />
               </TooltipProvider>
             </NotificationProvider>

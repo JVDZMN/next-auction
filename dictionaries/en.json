@@ -465,5 +465,209 @@
     "noActiveCars": "No active auctions from this dealer.",
     "approvedDealer": "Approved dealer",
     "previousSales": "Previous sales"
+  },
+  "terms": {
+    "metaTitle": "Terms and Conditions – Next Auction",
+    "metaDescription": "Read the terms and conditions for using the Next Auction platform.",
+    "label": "Legal",
+    "heading": "Terms and Conditions",
+    "lastUpdated": "Last updated: 1 June 2026",
+    "backHome": "← Back to home",
+    "tableOfContents": "Contents",
+    "linkPrivacy": "Privacy Policy →",
+    "linkFaq": "FAQ →",
+    "sections": [
+      {
+        "id": "1",
+        "title": "About Next Auction",
+        "body": "Next Auction is a digital marketplace platform for vehicles. We connect private and commercial car sellers with potential buyers through online auctions.\nNext Auction acts as an intermediary and is not itself the owner or seller of the listed vehicles. Next Auction provides the technical platform and is not a party to the agreement between buyer and seller."
+      },
+      {
+        "id": "2",
+        "title": "Bidding",
+        "body": "All bids are binding offers. The highest bid at the close of the auction is considered a binding offer to the seller.\nThe seller contacts the highest bidder directly after the auction closes to arrange the transfer.\nNo payment takes place via the Next Auction platform. Trade and payment are agreed directly between buyer and seller."
+      },
+      {
+        "id": "3",
+        "title": "Seller's Responsibility",
+        "body": "The seller is solely responsible for:\n- The content and accuracy of the listing\n- Legal ownership of the vehicle\n- Accurate description of the vehicle's condition and mileage\nNext Auction does not inspect vehicles."
+      },
+      {
+        "id": "4",
+        "title": "Buyer's Responsibility",
+        "body": "Buyers are always encouraged to:\n- Physically inspect the vehicle before placing a bid\n- Obtain an independent technical assessment\n- Check the vehicle's history\nPurchases are made at the buyer's own risk."
+      },
+      {
+        "id": "5",
+        "title": "User Types",
+        "body": "Private users: Max 2 vehicles per year (SKAT rules).\nBusiness users: Requires a valid CVR number and approval by a Next Auction administrator."
+      },
+      {
+        "id": "6",
+        "title": "Prohibited Conduct",
+        "body": "The following is not permitted:\n- False or misleading information\n- Sale of stolen or encumbered vehicles\n- Manipulation of the bidding process\n- Registration under a false name\nViolation results in immediate exclusion from the platform."
+      },
+      {
+        "id": "7",
+        "title": "Next Auction's Liability",
+        "body": "Next Auction is solely an intermediary and accepts no liability for:\n- The actual condition of the vehicle\n- Completion of the transaction\n- Disputes between buyer and seller\n- Technical errors that may affect bidding"
+      },
+      {
+        "id": "8",
+        "title": "GDPR and Data",
+        "body": "Next Auction processes your personal data in accordance with GDPR and Danish data protection law. Read our privacy policy for details on collection, storage, and your rights."
+      },
+      {
+        "id": "9",
+        "title": "Contact",
+        "body": "If you have questions about these terms, please contact us:\nE-mail: support@next-auction.dk\nTerms last updated: 1 June 2026."
+      }
+    ]
+  },
+  "privacy": {
+    "metaTitle": "Privacy Policy – Next Auction",
+    "metaDescription": "Read about how Next Auction processes your personal data.",
+    "label": "GDPR",
+    "heading": "Privacy Policy",
+    "lastUpdated": "Last updated: 1 June 2026",
+    "backHome": "← Back to home",
+    "tableOfContents": "Contents",
+    "intro": "We take your privacy seriously. This policy explains in plain language what information we collect, why we collect it, and what rights you have.",
+    "linkTerms": "Terms and Conditions →",
+    "linkFaq": "FAQ →",
+    "sections": [
+      {
+        "id": "1",
+        "title": "Data Controller",
+        "body": "Next Auction is the data controller for the personal data we collect via the platform.\n\nContact: support@next-auction.dk"
+      },
+      {
+        "id": "2",
+        "title": "What data do we collect?",
+        "body": "We collect the following categories of personal data:\n\n- Contact information: name and email address when creating an account\n- Profile information: details you provide in your profile\n- Transaction data: information about your bids and auctions\n- Technical data: IP address, browser and device type for technical operation and security\n- Communications: messages sent via our messaging system"
+      },
+      {
+        "id": "3",
+        "title": "Purpose and legal basis",
+        "body": "We process your data for the following purposes:\n\n- Service delivery (GDPR art. 6(1)(b)): account creation and operation, bidding and auctions\n- Security and abuse prevention (GDPR art. 6(1)(f)): protecting the platform from fraud and abuse\n- Legal obligations (GDPR art. 6(1)(c)): retention of data required by Danish law\n- Marketing (GDPR art. 6(1)(a)): newsletter and updates, only with your explicit consent"
+      },
+      {
+        "id": "4",
+        "title": "Retention",
+        "body": "We retain your data for as long as your account is active, and for up to 2 years after inactivity.\n\nTechnical logs are deleted on an ongoing basis and retained for a maximum of 90 days."
+      },
+      {
+        "id": "5",
+        "title": "Third-party disclosure",
+        "body": "We do not share your personal data with third parties without your consent, unless required by law.\n\nWe use the following data processors:\n- Vercel (hosting) — USA, EU standard contracts\n- Neon (database) — EU\n- Cloudinary (images) — USA, EU standard contracts\n- Resend (transactional emails) — USA, EU standard contracts\n- Upstash (caching) — EU"
+      },
+      {
+        "id": "6",
+        "title": "Your rights",
+        "body": "Under GDPR you have the following rights:\n\n- Right of access: you can at any time request to see the data we hold about you\n- Rectification: you can ask us to correct inaccurate data\n- Erasure: you can ask us to delete your data\n- Restriction: in certain cases you can request restriction of processing\n- Data portability: you can receive your data in a machine-readable format\n- Objection: you can object to processing based on legitimate interest\n\nContact us at support@next-auction.dk. We respond within 30 days."
+      },
+      {
+        "id": "7",
+        "title": "Cookies",
+        "body": "Next Auction uses cookies for the technical operation of the platform (session, authentication). These cookies are necessary and do not require consent.\n\nWe do not use tracking cookies or third-party advertising cookies."
+      },
+      {
+        "id": "8",
+        "title": "Complaints",
+        "body": "If you have objections, you can complain to:\n\nDatatilsynet (Danish Data Protection Agency)\nCarl Jacobsens Vej 35, 2500 Valby\nwww.datatilsynet.dk\n\nWe encourage you to contact us first so we can resolve any issues directly."
+      }
+    ]
+  },
+  "faqPage": {
+    "metaTitle": "FAQ – Next Auction",
+    "metaDescription": "Answers to the most frequently asked questions about Next Auction.",
+    "label": "Help and support",
+    "heading": "Frequently Asked Questions",
+    "backHome": "← Back to home",
+    "contactHeading": "Didn't find an answer?",
+    "contactBody": "Contact us directly — we respond within 24 hours.",
+    "contactCta": "Write to us",
+    "categories": [
+      {
+        "label": "General",
+        "items": [
+          {
+            "q": "What is Next Auction?",
+            "a": "A digital platform that connects car buyers and sellers through real-time auctions. Next Auction is not a party to the transaction — we facilitate contact and auctions."
+          },
+          {
+            "q": "Is it free to use?",
+            "a": "Yes, creating an account and placing bids is free."
+          },
+          {
+            "q": "Is Next Auction responsible for the transaction?",
+            "a": "No. Next Auction is a matchmaking platform. The transaction is made directly between buyer and seller. We are not a party to the agreement."
+          },
+          {
+            "q": "How do I create an account?",
+            "a": "Click 'Create Account' in the top menu and choose between a private or business account."
+          }
+        ]
+      },
+      {
+        "label": "For Buyers",
+        "items": [
+          {
+            "q": "Are bids legally binding?",
+            "a": "Yes, placed bids are legally binding under Danish sale of goods law."
+          },
+          {
+            "q": "What happens when I win an auction?",
+            "a": "The seller contacts you directly to arrange the handover of the vehicle."
+          },
+          {
+            "q": "Can I withdraw my bid?",
+            "a": "No. A bid cannot be withdrawn once placed."
+          },
+          {
+            "q": "Should I inspect the car before bidding?",
+            "a": "Yes, we always recommend a physical inspection before placing a bid. Purchases are made at your own risk."
+          }
+        ]
+      },
+      {
+        "label": "For Sellers",
+        "items": [
+          {
+            "q": "How many cars can I sell?",
+            "a": "Private users: max 2 cars per year (SKAT rules). Business users: unlimited with a valid CVR number."
+          },
+          {
+            "q": "Am I responsible for the listing content?",
+            "a": "Yes, the seller is fully responsible for all information in the listing and for legal ownership of the vehicle."
+          },
+          {
+            "q": "What if nobody bids?",
+            "a": "The auction closes without a sale. You can create a new auction."
+          },
+          {
+            "q": "When does the seller receive payment?",
+            "a": "Payment is agreed directly between buyer and seller. No payment goes through Next Auction."
+          }
+        ]
+      },
+      {
+        "label": "Rules",
+        "items": [
+          {
+            "q": "What is prohibited on the platform?",
+            "a": "False information, bid manipulation, and selling stolen vehicles are strictly prohibited and will result in permanent exclusion."
+          },
+          {
+            "q": "How are disputes resolved?",
+            "a": "Next Auction does not mediate disputes. Buyer and seller must resolve disagreements directly."
+          },
+          {
+            "q": "What are SKAT rules for private sellers?",
+            "a": "Private individuals may sell a maximum of 2 vehicles per calendar year without it being considered commercial activity by SKAT."
+          }
+        ]
+      }
+    ]
   }
 }

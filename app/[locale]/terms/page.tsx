@@ -1,85 +1,19 @@
 import Link from 'next/link'
-import { toLocale } from '@/lib/i18n'
+import { getDictionary, toLocale } from '@/lib/i18n'
+import type { Metadata } from 'next'
 
-export const metadata = {
-  title: 'Vilkår og betingelser – Next Auction',
-  description: 'Læs vilkår og betingelser for brug af Next Auction platformen.',
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale: rawLocale } = await params
+  const dict = await getDictionary(toLocale(rawLocale))
+  return {
+    title: dict.terms.metaTitle,
+    description: dict.terms.metaDescription,
+  }
 }
-
-const SECTIONS = [
-  {
-    id: '1',
-    title: 'Om Next Auction',
-    body: `Next Auction er en digital formidlingsplatform for køb og salg af køretøjer. Vi er ikke part i handlen mellem køber og sælger.`,
-  },
-  {
-    id: '2',
-    title: 'Platformens rolle',
-    body: `Next Auction stiller alene en teknisk platform til rådighed. Alle handler indgås direkte mellem køber og sælger uden Next Auctions mellemkomst.
-
-Next Auction påtager sig intet ansvar for:
-- Køretøjets stand, kilometerstand eller historik
-- Sælgers oplysningers rigtighed
-- Handelens gennemførelse
-- Eventuelle tvister mellem køber og sælger`,
-  },
-  {
-    id: '3',
-    title: 'Brugertyper',
-    body: `Private brugere kan sælge op til 2 biler pr. kalenderår i overensstemmelse med SKATs regler for private salg. Salg ud over denne grænse betragtes som erhvervsmæssigt af SKAT.
-
-Erhvervsbrugere skal have gyldigt CVR-nummer og skal godkendes af en administrator inden adgang til erhvervsmarkedet.`,
-  },
-  {
-    id: '4',
-    title: 'Budgivningsregler',
-    body: `Afgivne bud er juridisk bindende i henhold til dansk Købelov § 6. Ved at afgive et bud forpligter budgiver sig til at købe køretøjet til den pågældende pris, hvis budet er det højeste ved auktionens afslutning.
-
-Bud kan ikke tilbagetrækkes efter afgivelse.`,
-  },
-  {
-    id: '5',
-    title: 'Sælgers ansvar',
-    body: `Sælger er eneansvarlig for:
-- Annoncens indhold og rigtighed
-- Lovlig ejendomsret til køretøjet
-- Korrekt beskrivelse af køretøjets stand`,
-  },
-  {
-    id: '6',
-    title: 'Købers ansvar',
-    body: `Køber opfordres til at:
-- Besigtige køretøjet inden budafgivelse
-- Indhente uafhængig teknisk vurdering
-- Tjekke køretøjets historik (tjekbil.dk)
-
-Køb sker på købers eget ansvar.`,
-  },
-  {
-    id: '7',
-    title: 'Forbudt indhold',
-    body: `Følgende er ikke tilladt på platformen:
-- Falske eller vildledende oplysninger
-- Salg af stjålne køretøjer
-- Manipulation af budprocessen
-
-Overtrædelse medfører øjeblikkelig udelukkelse fra platformen.`,
-  },
-  {
-    id: '8',
-    title: 'GDPR og data',
-    body: `Next Auction behandler dine personoplysninger i overensstemmelse med GDPR og dansk databeskyttelseslov. Læs vores privatlivspolitik for detaljer om indsamling, opbevaring og dine rettigheder.`,
-  },
-  {
-    id: '9',
-    title: 'Kontakt',
-    body: `Har du spørgsmål til disse vilkår, er du velkommen til at kontakte os:
-
-E-mail: support@next-auction.dk
-
-Vilkårene er sidst opdateret: 1. juni 2026.`,
-  },
-]
 
 export default async function TermsPage({
   params,
@@ -88,10 +22,11 @@ export default async function TermsPage({
 }) {
   const { locale: rawLocale } = await params
   const locale = toLocale(rawLocale)
+  const dict = await getDictionary(locale)
+  const t = dict.terms
 
   return (
     <main style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh' }}>
-      {/* Header */}
       <div style={{ backgroundColor: 'var(--dark-section)' }} className="relative overflow-hidden py-20 sm:py-28">
         <div
           aria-hidden
@@ -106,28 +41,32 @@ export default async function TermsPage({
           }}
         />
         <div className="relative z-10 mx-auto max-w-3xl px-6 sm:px-10">
-          <Link href={`/${locale}`} className="mb-6 inline-block text-sm font-medium hover:opacity-70 transition-opacity" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            ← Tilbage til forsiden
+          <Link
+            href={`/${locale}`}
+            className="mb-6 inline-block text-sm font-medium hover:opacity-70 transition-opacity"
+            style={{ color: 'rgba(243,240,236,0.7)' }}
+          >
+            {t.backHome}
           </Link>
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
-            Juridisk
+            {t.label}
           </p>
-          <h1 className="text-4xl font-black text-white sm:text-5xl">
-            Vilkår og betingelser
+          <h1 className="text-4xl font-black sm:text-5xl" style={{ color: 'var(--page-bg)' }}>
+            {t.heading}
           </h1>
-          <p className="mt-4 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Senest opdateret: 1. juni 2026
+          <p className="mt-4 text-sm" style={{ color: 'rgba(243,240,236,0.6)' }}>
+            {t.lastUpdated}
           </p>
         </div>
       </div>
 
-      {/* Content */}
       <div className="mx-auto max-w-3xl px-6 sm:px-10 py-16 sm:py-20">
-        {/* Table of contents */}
         <nav className="mb-12 rounded-xl border p-6" style={{ borderColor: 'rgba(0,0,0,0.08)', backgroundColor: 'white' }}>
-          <p className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--copper)' }}>Indhold</p>
+          <p className="mb-4 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--copper)' }}>
+            {t.tableOfContents}
+          </p>
           <ol className="flex flex-col gap-2">
-            {SECTIONS.map(s => (
+            {t.sections.map(s => (
               <li key={s.id}>
                 <a
                   href={`#section-${s.id}`}
@@ -142,7 +81,7 @@ export default async function TermsPage({
         </nav>
 
         <div className="flex flex-col gap-12">
-          {SECTIONS.map(s => (
+          {t.sections.map(s => (
             <section key={s.id} id={`section-${s.id}`}>
               <h2 className="mb-4 text-xl font-black" style={{ color: 'var(--text-body)' }}>
                 <span style={{ color: 'var(--copper)' }}>{s.id}.</span> {s.title}
@@ -154,15 +93,12 @@ export default async function TermsPage({
           ))}
         </div>
 
-        <div className="mt-14 flex flex-wrap gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
+        <div className="mt-14 flex flex-wrap gap-4 text-sm">
           <Link href={`/${locale}/privacy`} className="hover:opacity-70 transition-opacity" style={{ color: 'var(--copper)' }}>
-            Privatlivspolitik →
+            {t.linkPrivacy}
           </Link>
           <Link href={`/${locale}/faq`} className="hover:opacity-70 transition-opacity" style={{ color: 'var(--copper)' }}>
-            FAQ →
-          </Link>
-          <Link href={`/${locale}/faq`} className="hover:opacity-70 transition-opacity" style={{ color: 'var(--copper)' }}>
-            FAQ →
+            {t.linkFaq}
           </Link>
         </div>
       </div>

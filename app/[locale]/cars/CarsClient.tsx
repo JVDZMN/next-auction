@@ -273,7 +273,7 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
   return (
     <div className="min-h-screen bg-background">
 
-      <main className="max-w-400 mx-auto px-4 lg:px-6 py-6">
+      <main className="max-w-400 mx-auto px-4 lg:px-6 pt-20 pb-6">
         <div className="flex gap-6">
         <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-4 gap-3">

@@ -465,5 +465,209 @@
     "noActiveCars": "Ingen aktive auktioner fra denne forhandler.",
     "approvedDealer": "Godkendt forhandler",
     "previousSales": "Tidligere salg"
+  },
+  "terms": {
+    "metaTitle": "Vilkår og betingelser – Next Auction",
+    "metaDescription": "Læs vilkår og betingelser for brug af Next Auction platformen.",
+    "label": "Juridisk",
+    "heading": "Vilkår og betingelser",
+    "lastUpdated": "Senest opdateret: 1. juni 2026",
+    "backHome": "← Tilbage til forsiden",
+    "tableOfContents": "Indhold",
+    "linkPrivacy": "Privatlivspolitik →",
+    "linkFaq": "FAQ →",
+    "sections": [
+      {
+        "id": "1",
+        "title": "Om Next Auction",
+        "body": "Next Auction er en digital formidlingsplatform for køretøjer. Vi forbinder private og erhvervsmæssige bilsælgere med potentielle købere via onlineauktioner.\nNext Auction agerer som mellemmand og er ikke selv ejer eller sælger af de annoncerede køretøjer. Next Auction stiller den tekniske platform til rådighed og er ikke part i aftaleforholdet mellem køber og sælger."
+      },
+      {
+        "id": "2",
+        "title": "Budgivning",
+        "body": "Alle bud er bindende tilbud. Højeste bud ved auktionens afslutning betragtes som et bindende tilbud til sælger.\nSælger kontakter højestbydende direkte efter auktionens afslutning for at aftale overdragelse.\nIngen betaling sker via Next Auctions platform. Handel og betaling aftales direkte mellem køber og sælger."
+      },
+      {
+        "id": "3",
+        "title": "Sælgers ansvar",
+        "body": "Sælger er eneansvarlig for:\n- Annoncens indhold og rigtighed\n- Lovlig ejendomsret til køretøjet\n- Korrekt beskrivelse af køretøjets stand og kilometerstand\nNext Auction foretager ingen inspektion af køretøjer."
+      },
+      {
+        "id": "4",
+        "title": "Købers ansvar",
+        "body": "Køber opfordres altid til at:\n- Besigtige køretøjet fysisk inden budafgivelse\n- Indhente uafhængig teknisk vurdering\n- Tjekke køretøjets historik\nKøb sker på købers eget ansvar."
+      },
+      {
+        "id": "5",
+        "title": "Brugertyper",
+        "body": "Private brugere: Maks. 2 køretøjer om året (SKAT-regler).\nErhvervsbrugere: Kræver gyldigt CVR-nummer og godkendelse af Next Auction administrator."
+      },
+      {
+        "id": "6",
+        "title": "Forbudt adfærd",
+        "body": "Følgende er ikke tilladt:\n- Falske eller vildledende oplysninger\n- Salg af stjålne eller behæftede køretøjer\n- Manipulation af budprocessen\n- Registrering i falsk navn\nOvertrædelse medfører øjeblikkelig udelukkelse fra platformen."
+      },
+      {
+        "id": "7",
+        "title": "Next Auctions ansvar",
+        "body": "Next Auction er alene formidler og påtager sig intet ansvar for:\n- Køretøjets faktiske stand\n- Handelens gennemførelse\n- Tvister mellem køber og sælger\n- Tekniske fejl der måtte påvirke budgivning"
+      },
+      {
+        "id": "8",
+        "title": "GDPR og data",
+        "body": "Next Auction behandler dine personoplysninger i overensstemmelse med GDPR og dansk databeskyttelseslov. Læs vores privatlivspolitik for detaljer om indsamling, opbevaring og dine rettigheder."
+      },
+      {
+        "id": "9",
+        "title": "Kontakt",
+        "body": "Har du spørgsmål til disse vilkår, kontakt os:\nE-mail: support@next-auction.dk\nVilkårene er sidst opdateret: 1. juni 2026."
+      }
+    ]
+  },
+  "privacy": {
+    "metaTitle": "Privatlivspolitik – Next Auction",
+    "metaDescription": "Læs om hvordan Next Auction behandler dine personoplysninger.",
+    "label": "GDPR",
+    "heading": "Privatlivspolitik",
+    "lastUpdated": "Senest opdateret: 1. juni 2026",
+    "backHome": "← Tilbage til forsiden",
+    "tableOfContents": "Indhold",
+    "intro": "Vi tager dit privatliv alvorligt. Denne politik forklarer i klart sprog, hvilke oplysninger vi indsamler, hvorfor vi indsamler dem, og hvilke rettigheder du har.",
+    "linkTerms": "Vilkår og betingelser →",
+    "linkFaq": "FAQ →",
+    "sections": [
+      {
+        "id": "1",
+        "title": "Dataansvarlig",
+        "body": "Next Auction er dataansvarlig for de personoplysninger, vi indsamler via platformen.\n\nKontakt: support@next-auction.dk"
+      },
+      {
+        "id": "2",
+        "title": "Hvilke oplysninger indsamler vi?",
+        "body": "Vi indsamler følgende kategorier af personoplysninger:\n\n- Kontaktoplysninger: navn og e-mailadresse ved oprettelse af konto\n- Profiloplysninger: oplysninger du selv angiver i din profil\n- Transaktionsdata: oplysninger om dine bud og auktioner\n- Tekniske data: IP-adresse, browser og enhedstype til teknisk drift og sikkerhed\n- Kommunikation: beskeder sendt via vores beskedsystem"
+      },
+      {
+        "id": "3",
+        "title": "Formål og retsgrundlag",
+        "body": "Vi behandler dine oplysninger til følgende formål:\n\n- Levering af tjenesten (GDPR art. 6, stk. 1, litra b): oprettelse og drift af din konto, budgivning og auktioner\n- Sikkerhed og misbrug (GDPR art. 6, stk. 1, litra f): beskyttelse af platformen mod svindel og misbrug\n- Juridiske forpligtelser (GDPR art. 6, stk. 1, litra c): opbevaring krævet af dansk lovgivning\n- Markedsføring (GDPR art. 6, stk. 1, litra a): nyhedsbrev og opdateringer, kun med dit udtrykkelige samtykke"
+      },
+      {
+        "id": "4",
+        "title": "Opbevaring",
+        "body": "Vi opbevarer dine oplysninger så længe din konto er aktiv, og i op til 2 år efter inaktivitet.\n\nTekniske logs slettes løbende og opbevares maksimalt i 90 dage."
+      },
+      {
+        "id": "5",
+        "title": "Videregivelse til tredjepart",
+        "body": "Vi videregiver ikke dine personoplysninger til tredjepart uden dit samtykke, medmindre vi er forpligtet hertil ved lov.\n\nVi anvender følgende databehandlere:\n- Vercel (hosting) — USA, EU-standardkontrakter\n- Neon (database) — EU\n- Cloudinary (billeder) — USA, EU-standardkontrakter\n- Resend (transaktionsmails) — USA, EU-standardkontrakter\n- Upstash (caching) — EU"
+      },
+      {
+        "id": "6",
+        "title": "Dine rettigheder",
+        "body": "Du har i henhold til GDPR følgende rettigheder:\n\n- Indsigtsret: du kan til enhver tid bede om at se dine oplysninger\n- Berigtigelse: du kan bede os rette forkerte oplysninger\n- Sletning: du kan bede os slette dine oplysninger\n- Begrænsning: du kan i visse tilfælde bede om begrænsning af behandlingen\n- Dataportabilitet: du kan modtage dine data i et maskinlæsbart format\n- Indsigelse: du kan gøre indsigelse mod behandling baseret på legitim interesse\n\nKontakt os på support@next-auction.dk. Vi svarer inden for 30 dage."
+      },
+      {
+        "id": "7",
+        "title": "Cookies",
+        "body": "Next Auction anvender cookies til teknisk drift af platformen (session, autentificering). Disse cookies er nødvendige og kræver ikke samtykke.\n\nVi anvender ikke tracking-cookies eller tredjeparts annoncecookies."
+      },
+      {
+        "id": "8",
+        "title": "Klage",
+        "body": "Har du indsigelser, kan du klage til:\n\nDatatilsynet\nCarl Jacobsens Vej 35, 2500 Valby\nwww.datatilsynet.dk\n\nVi opfordrer dig til at kontakte os først, så vi kan løse eventuelle problemer direkte."
+      }
+    ]
+  },
+  "faqPage": {
+    "metaTitle": "FAQ – Next Auction",
+    "metaDescription": "Svar på de mest stillede spørgsmål om Next Auction.",
+    "label": "Hjælp og support",
+    "heading": "Ofte stillede spørgsmål",
+    "backHome": "← Tilbage til forsiden",
+    "contactHeading": "Fandt du ikke svar på dit spørgsmål?",
+    "contactBody": "Kontakt os direkte — vi svarer inden for 24 timer.",
+    "contactCta": "Skriv til os",
+    "categories": [
+      {
+        "label": "Generelt",
+        "items": [
+          {
+            "q": "Hvad er Next Auction?",
+            "a": "En digital platform der forbinder bilkøbere og sælgere via realtidsauktioner. Next Auction er ikke part i handlen — vi formidler kontakt og auktioner."
+          },
+          {
+            "q": "Er det gratis at bruge?",
+            "a": "Ja, det er gratis at oprette konto og afgive bud."
+          },
+          {
+            "q": "Er Next Auction ansvarlig for handlen?",
+            "a": "Nej. Next Auction er en formidlingsplatform. Handlen indgås direkte mellem køber og sælger. Vi er ikke part i aftaleforholdet."
+          },
+          {
+            "q": "Hvordan opretter jeg en konto?",
+            "a": "Klik på 'Opret konto' i øverste menu og vælg privat- eller erhvervskonto."
+          }
+        ]
+      },
+      {
+        "label": "For Købere",
+        "items": [
+          {
+            "q": "Er buddene juridisk bindende?",
+            "a": "Ja, afgivne bud er juridisk bindende i henhold til dansk Købelov."
+          },
+          {
+            "q": "Hvad sker der når jeg vinder en auktion?",
+            "a": "Sælger kontakter dig direkte for at aftale overdragelse af køretøjet."
+          },
+          {
+            "q": "Kan jeg fortryde mit bud?",
+            "a": "Nej. Et bud kan ikke tilbagekaldes, når det er afgivet."
+          },
+          {
+            "q": "Bør jeg besigtige bilen inden jeg byder?",
+            "a": "Ja, vi anbefaler altid fysisk besigtigelse inden budafgivelse. Køb sker på eget ansvar."
+          }
+        ]
+      },
+      {
+        "label": "For Sælgere",
+        "items": [
+          {
+            "q": "Hvor mange biler kan jeg sælge?",
+            "a": "Private brugere: maks. 2 biler om året (SKATs regler). Erhvervsbrugere: ubegrænset med gyldigt CVR-nummer."
+          },
+          {
+            "q": "Er jeg ansvarlig for annoncens indhold?",
+            "a": "Ja, sælger er fuldt ansvarlig for alle oplysninger i annoncen og for lovlig ejendomsret til køretøjet."
+          },
+          {
+            "q": "Hvad hvis ingen byder?",
+            "a": "Auktionen afsluttes uden salg. Du kan oprette en ny auktion."
+          },
+          {
+            "q": "Hvornår modtager sælger betaling?",
+            "a": "Betaling aftales direkte mellem køber og sælger. Ingen betaling sker via Next Auction."
+          }
+        ]
+      },
+      {
+        "label": "Regler",
+        "items": [
+          {
+            "q": "Hvad er forbudt på platformen?",
+            "a": "Falske oplysninger, manipulation af bud og salg af stjålne biler er strengt forbudt og medfører permanent udelukkelse."
+          },
+          {
+            "q": "Hvordan løses tvister?",
+            "a": "Next Auction mægler ikke i tvister. Køber og sælger skal løse uenigheder direkte."
+          },
+          {
+            "q": "Hvad er SKATs regler for private sælgere?",
+            "a": "Private personer kan sælge maks. 2 køretøjer pr. kalenderår, uden at det betragtes som erhvervsmæssig virksomhed af SKAT."
+          }
+        ]
+      }
+    ]
   }
 }

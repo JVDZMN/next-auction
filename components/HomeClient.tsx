@@ -1,7 +1,7 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { HeroSection }       from './home/HeroSection'
+import { NewsletterSection } from './home/NewsletterAndFooter'
 import { HowItWorksSection } from './home/HowItWorksSection'
 import { AuctionTypeSection } from './home/AuctionTypeSection'
 import type { AuctionCar }   from './home/AuctionTypeSection'
@@ -9,8 +9,6 @@ import { SellerTypeSection } from './home/SellerTypeSection'
 import { FaqPreviewSection } from './home/FaqPreviewSection'
 import { FinalCtaSection }   from './home/FinalCtaSection'
 import { useDict } from '@/lib/i18n/context'
-
-const NewsletterAndFooter = dynamic(() => import('./home/NewsletterAndFooter').then(m => ({ default: m.NewsletterAndFooter })))
 
 export type TopCar = AuctionCar
 
@@ -69,7 +67,7 @@ export function HomeClient({ locale, isSignedIn, userType, privateCars, business
       {/* 6. Final CTA */}
       <FinalCtaSection locale={locale} />
 
-      <NewsletterAndFooter locale={locale} />
+      <NewsletterSection />
     </main>
   )
 }
