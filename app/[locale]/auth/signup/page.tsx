@@ -1,19 +1,19 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useEffect, FormEvent } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useLocale } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
-import { AlertTriangle } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { AlertTriangle, CheckCircle2, Info, Building2, User } from 'lucide-react'
 
 function GoogleIcon() {
   return (
@@ -26,107 +26,312 @@ function GoogleIcon() {
   )
 }
 
-export default function SignUpPage() {
-  const router  = useRouter()
-  const locale  = useLocale()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error,     setError]     = useState('')
-  const [formData,  setFormData]  = useState({ name: '', email: '', password: '', confirmPassword: '' })
+type CvrResult = { name: string; city: string; industry: string } | null
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+function SignUpContent() {
+  const router   = useRouter()
+  const locale   = useLocale()
+  const params   = useSearchParams()
+  const defaultTab = (params.get('tab') === 'business' ? 'business' : 'private') as 'private' | 'business'
+
+  const [tab, setTab]           = useState<'private' | 'business'>(defaultTab)
+  const [isLoading, setLoading] = useState(false)
+  const [error, setError]       = useState('')
+  const [success, setSuccess]   = useState(false)
+
+  // Private form
+  const [priv, setPriv] = useState({ name: '', email: '', password: '', confirm: '' })
+
+  // Business form
+  const [biz, setBiz]       = useState({ name: '', cvr: '', email: '', password: '', confirm: '' })
+  const [cvrResult, setCvrResult]   = useState<CvrResult>(null)
+  const [cvrLoading, setCvrLoading] = useState(false)
+  const [cvrError, setCvrError]     = useState('')
+
+  // CVR auto-lookup when 8 digits typed
+  useEffect(() => {
+    if (biz.cvr.length !== 8) { setCvrResult(null); setCvrError(''); return }
+    let cancelled = false
+    setCvrLoading(true)
+    setCvrError('')
+    fetch(`/api/cvr?cvr=${biz.cvr}`)
+      .then(r => r.json())
+      .then((data: { name?: string; city?: string; industry?: string; error?: string }) => {
+        if (cancelled) return
+        if (data.error) { setCvrError('Virksomhed ikke fundet — tjek CVR-nummeret'); setCvrResult(null) }
+        else { setCvrResult({ name: data.name ?? '', city: data.city ?? '', industry: data.industry ?? '' }); setCvrError('') }
+      })
+      .catch(() => { if (!cancelled) setCvrError('Kunne ikke hente CVR-oplysninger') })
+      .finally(() => { if (!cancelled) setCvrLoading(false) })
+    return () => { cancelled = true }
+  }, [biz.cvr])
+
+  const handlePrivateSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError('')
-    if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); setIsLoading(false); return }
-    if (formData.password.length < 6) { setError('Password must be at least 6 characters'); setIsLoading(false); return }
-
+    if (priv.password !== priv.confirm) { setError('Adgangskoderne matcher ikke'); return }
+    if (priv.password.length < 6) { setError('Adgangskode skal være mindst 6 tegn'); return }
+    setLoading(true)
     try {
       const res  = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password, locale }),
+        body: JSON.stringify({ name: priv.name, email: priv.email, password: priv.password, locale, userType: 'PRIVATE', skatDisclaimerAccepted: true }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to create account')
-
+      if (!res.ok) throw new Error(data.error || 'Oprettelse mislykkedes')
       router.push(`/${locale}/auth/signin?registered=1`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'Der opstod en fejl')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
+  const handleBusinessSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (!cvrResult) { setError('Verificer dit CVR-nummer inden du fortsætter'); return }
+    if (biz.password !== biz.confirm) { setError('Adgangskoderne matcher ikke'); return }
+    if (biz.password.length < 6) { setError('Adgangskode skal være mindst 6 tegn'); return }
+    setLoading(true)
+    try {
+      const res  = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: biz.name || cvrResult.name, email: biz.email, password: biz.password, locale, userType: 'BUSINESS', cvrNumber: biz.cvr }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Ansøgning mislykkedes')
+      setSuccess(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Der opstod en fejl')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Business success screen
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: 'var(--page-bg)' }}>
+        <div className="w-full max-w-md text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(196,125,58,0.12)' }}>
+              <CheckCircle2 className="h-8 w-8" style={{ color: 'var(--copper)' }} />
+            </div>
+          </div>
+          <h1 className="mb-3 text-2xl font-black" style={{ color: 'var(--text-body)' }}>Ansøgning modtaget</h1>
+          <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            Din ansøgning om erhvervskonto er modtaget.<br />
+            Vi vender tilbage inden for 1–2 hverdage.
+          </p>
+          <Link
+            href={`/${locale}/auth/signin`}
+            className="inline-block rounded px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-85"
+            style={{ backgroundColor: 'var(--dark-section)' }}
+          >
+            Gå til log ind
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Create account</CardTitle>
-          <CardDescription>Join Next Auction to start buying and selling</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: 'var(--page-bg)' }}>
+      <div className="w-full max-w-md">
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" type="text" required placeholder="John Doe"
-                value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required placeholder="your@email.com"
-                value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required minLength={6} placeholder="••••••••"
-                value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input id="confirmPassword" type="password" required minLength={6} placeholder="••••••••"
-                value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} />
-            </div>
-            <div className="flex items-start gap-2.5">
-              <Checkbox id="terms-consent" required className="mt-0.5 shrink-0" />
-              <Label htmlFor="terms-consent" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
-                Jeg accepterer{' '}
-                <Link href={`/${locale}/terms`} className="underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: 'var(--text-body)' }}>
-                  vilkår og betingelser
-                </Link>
-                {' '}og{' '}
-                <Link href={`/${locale}/privacy`} className="underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: 'var(--text-body)' }}>
-                  privatlivspolitik
-                </Link>
-              </Label>
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Creating account…</> : 'Create Account'}
-            </Button>
-          </form>
+        {/* Logo */}
+        <div className="mb-8 text-center">
+          <Link href={`/${locale}`} className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-body)' }}>
+            Next<span style={{ color: 'var(--copper)' }}>Auction</span>
+          </Link>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Opret din konto</p>
+        </div>
 
-          <div className="relative">
-            <Separator />
-            <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">or</span>
+        {/* Tab card */}
+        <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: 'white', borderColor: 'rgba(0,0,0,0.08)' }}>
+
+          {/* Tab header */}
+          <div className="p-4 pb-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <Tabs value={tab} onValueChange={(v) => { setTab(v as 'private' | 'business'); setError('') }}>
+              <TabsList className="w-full grid grid-cols-2 h-11">
+                <TabsTrigger value="private" className="gap-2 text-sm font-semibold">
+                  <User className="h-4 w-4" /> Privat
+                </TabsTrigger>
+                <TabsTrigger value="business" className="gap-2 text-sm font-semibold">
+                  <Building2 className="h-4 w-4" /> Erhverv
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
-          <Button variant="outline" className="w-full gap-3" disabled={isLoading}
-            onClick={() => signIn('google', { callbackUrl: `/${locale}` })}>
-            <GoogleIcon /> Sign up with Google
-          </Button>
+          <div className="p-6 space-y-5">
+            {error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href={`/${locale}/auth/signin`} className="font-medium text-primary hover:underline">Sign in</Link>
-          </p>
-        </CardContent>
-      </Card>
+            {/* ── PRIVATE TAB ── */}
+            {tab === 'private' && (
+              <>
+                {/* SKAT info */}
+                <div
+                  className="flex gap-3 rounded-lg p-4"
+                  style={{ backgroundColor: 'rgba(196,125,58,0.07)', border: '1px solid rgba(196,125,58,0.25)' }}
+                >
+                  <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'var(--copper)' }} />
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-body)' }}>
+                    Som privatperson må du sælge maks. <strong>2 biler om året</strong> (SKATs regler).
+                  </p>
+                </div>
+
+                <form onSubmit={handlePrivateSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="priv-name">Fulde navn</Label>
+                    <Input id="priv-name" type="text" required className="h-11 text-base" placeholder="Jens Hansen"
+                      value={priv.name} onChange={e => setPriv({ ...priv, name: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="priv-email">Email</Label>
+                    <Input id="priv-email" type="email" required className="h-11 text-base" placeholder="din@email.dk"
+                      value={priv.email} onChange={e => setPriv({ ...priv, email: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="priv-pw">Adgangskode</Label>
+                    <Input id="priv-pw" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
+                      value={priv.password} onChange={e => setPriv({ ...priv, password: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="priv-confirm">Bekræft adgangskode</Label>
+                    <Input id="priv-confirm" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
+                      value={priv.confirm} onChange={e => setPriv({ ...priv, confirm: e.target.value })} />
+                  </div>
+
+                  <div className="flex items-start gap-2.5 pt-1">
+                    <Checkbox id="priv-terms" required className="mt-0.5 shrink-0" />
+                    <Label htmlFor="priv-terms" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
+                      Jeg accepterer{' '}
+                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>vilkår og betingelser</Link>
+                      {' '}og{' '}
+                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>privatlivspolitik</Link>
+                    </Label>
+                  </div>
+
+                  <Button type="submit" className="w-full h-11 text-sm font-bold text-white" disabled={isLoading}
+                    style={{ backgroundColor: 'var(--copper)' }}>
+                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Opretter konto…</> : 'Opret Privatkonto'}
+                  </Button>
+                </form>
+              </>
+            )}
+
+            {/* ── BUSINESS TAB ── */}
+            {tab === 'business' && (
+              <>
+                <Alert style={{ borderColor: 'rgba(180,130,0,0.3)', backgroundColor: 'rgba(255,200,0,0.07)' }}>
+                  <AlertTriangle className="h-4 w-4" style={{ color: 'rgb(160,110,0)' }} />
+                  <AlertDescription style={{ color: 'rgb(120,80,0)' }}>
+                    Din konto skal godkendes af en administrator inden du kan byde eller oprette annoncer. Dette tager normalt 1–2 hverdage.
+                  </AlertDescription>
+                </Alert>
+
+                <form onSubmit={handleBusinessSubmit} className="space-y-4">
+                  {/* CVR field */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="biz-cvr">CVR-nummer</Label>
+                    <Input id="biz-cvr" type="text" required inputMode="numeric" maxLength={8} className="h-11 text-base font-mono tracking-widest" placeholder="12345678"
+                      value={biz.cvr} onChange={e => setBiz({ ...biz, cvr: e.target.value.replace(/\D/g, '') })} />
+                    {cvrLoading && (
+                      <p className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <Spinner className="h-3 w-3" /> Henter CVR-oplysninger…
+                      </p>
+                    )}
+                    {cvrResult && (
+                      <div className="flex items-center gap-2 rounded-md px-3 py-2 text-xs" style={{ backgroundColor: 'rgba(0,160,60,0.08)', border: '1px solid rgba(0,160,60,0.2)', color: 'rgb(0,120,40)' }}>
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        <span><strong>{cvrResult.name}</strong> · {cvrResult.city} · Aktiv</span>
+                      </div>
+                    )}
+                    {cvrError && (
+                      <p className="text-xs" style={{ color: 'rgb(180,0,0)' }}>{cvrError}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="biz-name">Virksomhedsnavn</Label>
+                    <Input id="biz-name" type="text" required className="h-11 text-base" placeholder={cvrResult?.name || 'Firma ApS'}
+                      value={biz.name} onChange={e => setBiz({ ...biz, name: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="biz-email">Email</Label>
+                    <Input id="biz-email" type="email" required className="h-11 text-base" placeholder="info@firma.dk"
+                      value={biz.email} onChange={e => setBiz({ ...biz, email: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="biz-pw">Adgangskode</Label>
+                    <Input id="biz-pw" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
+                      value={biz.password} onChange={e => setBiz({ ...biz, password: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="biz-confirm">Bekræft adgangskode</Label>
+                    <Input id="biz-confirm" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
+                      value={biz.confirm} onChange={e => setBiz({ ...biz, confirm: e.target.value })} />
+                  </div>
+
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    Vi verificerer dit CVR-nummer mod Erhvervsstyrelsens register for at forhindre svindel.
+                  </p>
+
+                  <div className="flex items-start gap-2.5 pt-1">
+                    <Checkbox id="biz-terms" required className="mt-0.5 shrink-0" />
+                    <Label htmlFor="biz-terms" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
+                      Jeg accepterer{' '}
+                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>vilkår og betingelser</Link>
+                      {' '}og{' '}
+                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>privatlivspolitik</Link>
+                    </Label>
+                  </div>
+
+                  <Button type="submit" className="w-full h-11 text-sm font-bold text-white" disabled={isLoading}
+                    style={{ backgroundColor: 'var(--dark-section)' }}>
+                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />Sender ansøgning…</> : 'Ansøg om Erhvervskonto'}
+                  </Button>
+                </form>
+              </>
+            )}
+
+            <Separator />
+
+            <Button variant="outline" className="w-full h-11 gap-3" disabled={isLoading}
+              onClick={() => signIn('google', { callbackUrl: `/${locale}` })}>
+              <GoogleIcon /> Fortsæt med Google
+            </Button>
+
+            <p className="text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+              Har du allerede en konto?{' '}
+              <Link href={`/${locale}/auth/signin`} className="font-medium underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: 'var(--text-body)' }}>
+                Log ind
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--page-bg)' }}>
+        <Spinner className="h-6 w-6" />
+      </div>
+    }>
+      <SignUpContent />
+    </Suspense>
   )
 }

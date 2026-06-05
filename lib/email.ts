@@ -365,3 +365,29 @@ export async function sendMessageNotification({
     `,
   })
 }
+
+export async function sendBusinessSignupNotification({
+  adminEmail,
+  companyName,
+  userEmail,
+  cvrNumber,
+}: {
+  adminEmail: string
+  companyName: string
+  userEmail: string
+  cvrNumber: string
+}) {
+  return sendEmail({
+    to: adminEmail,
+    subject: `Ny erhvervskonto-ansøgning: ${companyName}`,
+    html: `
+      <h2>Ny erhvervskonto venter godkendelse</h2>
+      <p><strong>Virksomhed:</strong> ${companyName}</p>
+      <p><strong>CVR:</strong> ${cvrNumber}</p>
+      <p><strong>Email:</strong> ${userEmail}</p>
+      <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/dashboard" style="display:inline-block;padding:10px 20px;background:#c47d3a;color:white;text-decoration:none;border-radius:4px;margin-top:12px">
+        Gå til admin
+      </a>
+    `,
+  })
+}

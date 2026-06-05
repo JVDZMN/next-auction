@@ -7,6 +7,9 @@ import { useDict } from '@/lib/i18n/context'
 
 interface Props { locale: string }
 
+const FOOTER_LINK_STYLE = { color: 'rgba(255,255,255,0.50)' }
+const FOOTER_LINK_HOVER  = { color: 'rgba(255,255,255,0.90)' }
+
 export function NewsletterAndFooter({ locale }: Props) {
   const dict = useDict().home
   const tn   = dict.newsletter
@@ -24,9 +27,9 @@ export function NewsletterAndFooter({ locale }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       {/* Newsletter */}
-      <section className="flex-1 flex flex-col justify-center py-16 sm:py-20" style={{ backgroundColor: 'var(--page-bg)' }}>
+      <section className="py-16 sm:py-20" style={{ backgroundColor: 'var(--page-bg)' }}>
         <div className="mx-auto max-w-lg px-6 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>{tn.label}</p>
           <h2 className="mb-3 text-3xl font-black" style={{ color: 'var(--text-body)' }}>{tn.heading}</h2>
@@ -41,7 +44,7 @@ export function NewsletterAndFooter({ locale }: Props) {
               <motion.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={submit} className="flex flex-col gap-3 sm:flex-row">
                 <input
                   type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder={tn.placeholder}
-                  className="flex-1 rounded border px-4 py-3 text-sm focus:outline-none"
+                  className="flex-1 rounded border px-4 py-3 text-base focus:outline-none"
                   style={{ borderColor: 'rgba(75,75,75,0.13)', color: 'var(--text-body)', backgroundColor: 'white' }}
                 />
                 <button type="submit" disabled={loading} className="rounded px-6 py-3 text-sm font-bold text-white whitespace-nowrap hover:scale-105 active:scale-95 transition-transform duration-150" style={{ backgroundColor: 'var(--copper)', opacity: loading ? 0.7 : 1 }}>
@@ -55,60 +58,83 @@ export function NewsletterAndFooter({ locale }: Props) {
 
       {/* Footer */}
       <footer style={{ backgroundColor: 'var(--dark-section)' }}>
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:px-10 md:grid-cols-2">
+        {/* 3-column grid */}
+        <div className="mx-auto max-w-7xl px-6 sm:px-10 py-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+
+          {/* Col 1 — Brand */}
           <div>
             <p className="text-2xl font-black" style={{ color: 'var(--text-light)' }}>
               Next<span style={{ color: 'var(--copper)' }}>Auction</span>
             </p>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)' }}>
-              {tf.tagline}
+            <p className="mt-3 max-w-xs text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              Danmarks digitale bilauktionsplatform
             </p>
-            <div className="mt-8 flex flex-wrap gap-6">
-              {[
-                { label: tf.browse,   href: `/${locale}/cars` },
-                { label: tf.signIn,   href: `/${locale}/auth/signin` },
-                { label: tf.register, href: `/${locale}/auth/signup` },
-                { label: tf.listCar,  href: `/${locale}/cars/create` },
-              ].map(({ label, href }) => (
-                <Link key={label} href={href} className="text-sm font-medium transition-colors"
-                  style={{ color: 'rgba(255,255,255,0.50)' }}
-                  onMouseEnter={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.90)')}
-                  onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.50)')}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
           </div>
 
-          <div className="flex items-start justify-start md:justify-end">
-            <div className="flex flex-col items-center gap-3">
-              <svg width="68" height="80" viewBox="0 0 68 80" fill="none">
-                <path d="M34 4 L64 16 L64 44 Q64 66 34 76 Q4 66 4 44 L4 16 Z" fill="rgba(255,255,255,0.06)" stroke={'var(--copper)'} strokeWidth="1.5" />
-                <path d="M22 40 l9 9 L46 34" stroke={'var(--text-light)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: 'var(--copper)' }}>{tf.certified}</p>
-            </div>
+          {/* Col 2 — Navigation */}
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--copper)' }}>
+              Navigation
+            </p>
+            <ul className="flex flex-col gap-3">
+              {[
+                { label: tf.browse,   href: `/${locale}/cars` },
+                { label: 'Forhandlere', href: `/${locale}/dealers` },
+                { label: tf.register, href: `/${locale}/auth/signup` },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm font-medium transition-colors"
+                    style={FOOTER_LINK_STYLE}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = FOOTER_LINK_HOVER.color)}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = FOOTER_LINK_STYLE.color)}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 3 — Legal */}
+          <div>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--copper)' }}>
+              Juridisk
+            </p>
+            <ul className="flex flex-col gap-3">
+              {[
+                { label: tf.terms,   href: `/${locale}/terms` },
+                { label: tf.privacy, href: `/${locale}/privacy` },
+                { label: tf.faq,     href: `/${locale}/faq` },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm font-medium transition-colors"
+                    style={FOOTER_LINK_STYLE}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = FOOTER_LINK_HOVER.color)}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = FOOTER_LINK_STYLE.color)}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 px-6 py-4 sm:flex-row sm:px-10" style={{ borderTop: '1px solid rgba(255,255,255,0.09)' }}>
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.32)' }}>{tf.copyright}</p>
-          <div className="flex gap-6">
-            {[
-              { label: tf.privacy, href: `/${locale}/privacy` },
-              { label: tf.terms,   href: `/${locale}/terms` },
-              { label: tf.faq,     href: `/${locale}/faq` },
-            ].map(({ label, href }) => (
-              <Link key={label} href={href} className="text-xs transition-colors"
-                style={{ color: 'rgba(255,255,255,0.32)' }}
-                onMouseEnter={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.80)')}
-                onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.32)')}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
+        {/* Bottom bar */}
+        <div
+          className="mx-auto max-w-7xl px-6 sm:px-10 py-5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.30)' }}>
+            {tf.copyright}
+          </p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>
+            Next Auction er en formidlingsplatform. Vi er ikke part i handlen mellem køber og sælger.
+          </p>
         </div>
       </footer>
     </div>
