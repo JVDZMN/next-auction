@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
-import { useInView } from '@/lib/use-in-view'
 
 const FAQ_ITEMS = [
   {
@@ -30,46 +30,54 @@ const FAQ_ITEMS = [
 interface Props { locale: string }
 
 export function FaqPreviewSection({ locale }: Props) {
-  const [ref, inView] = useInView<HTMLDivElement>({ rootMargin: '-60px' })
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const els = sectionRef.current?.querySelectorAll('.fade-in-up')
+    if (!els) return
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
+      { threshold: 0.1 }
+    )
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--dark-section)' }}>
-      <div className="mx-auto max-w-3xl px-6 sm:px-10">
+    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--page-bg)' }}>
+      <div ref={sectionRef} className="mx-auto max-w-3xl px-6 sm:px-10">
 
-        <div
-          className="mb-12 text-center"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 0.55s ease, transform 0.55s ease',
-          }}
-        >
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
-            Spørgsmål og svar
-          </p>
-          <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-light)' }}>
-            Ofte stillede spørgsmål
+        {/* Header */}
+        <div className="mb-12 text-center fade-in-up">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
+            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
+              Ofte stillede spørgsmål
+            </p>
+            <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
+          </div>
+          <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-body)', letterSpacing: '-0.01em' }}>
+            Vi svarer på dine spørgsmål
           </h2>
         </div>
 
-        <div
-          ref={ref}
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 0.55s ease 0.1s, transform 0.55s ease 0.1s',
-          }}
-        >
-          <Accordion multiple className="flex flex-col divide-y" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {/* Accordion */}
+        <div className="fade-in-up delay-1 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <Accordion multiple className="flex flex-col divide-y" style={{ borderColor: 'var(--border)' }}>
             {FAQ_ITEMS.map(({ q, a }) => (
-              <AccordionItem key={q} value={q} className="border-b-0 py-1" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+              <AccordionItem
+                key={q}
+                value={q}
+                className="border-b-0 px-6"
+                style={{ backgroundColor: 'var(--card-bg)' }}
+              >
                 <AccordionTrigger
-                  className="py-4 text-left text-base font-semibold no-underline hover:no-underline hover:opacity-80"
-                  style={{ color: 'var(--text-light)' }}
+                  className="py-5 text-left text-base font-semibold no-underline hover:no-underline hover:opacity-70"
+                  style={{ color: 'var(--text-body)' }}
                 >
                   {q}
                 </AccordionTrigger>
-                <AccordionContent className="pb-5 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                <AccordionContent className="pb-5 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                   {a}
                 </AccordionContent>
               </AccordionItem>

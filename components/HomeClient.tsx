@@ -1,16 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { HeroSection }          from './home/HeroSection'
-import { FeatureBoxesSection }  from './home/FeatureBoxesSection'
-import { AboutSection }         from './home/AboutSection'
-import { BuyersStepsSection }   from './home/BuyersStepsSection'
-import { SellersStepsSection }  from './home/SellersStepsSection'
-import { SellerTypeSection }    from './home/SellerTypeSection'
-import { AuctionTypeSection }   from './home/AuctionTypeSection'
-import type { AuctionCar }      from './home/AuctionTypeSection'
-import { FaqPreviewSection }    from './home/FaqPreviewSection'
-import { FinalCtaSection }      from './home/FinalCtaSection'
+import { HeroSection }       from './home/HeroSection'
+import { HowItWorksSection } from './home/HowItWorksSection'
+import { AuctionTypeSection } from './home/AuctionTypeSection'
+import type { AuctionCar }   from './home/AuctionTypeSection'
+import { SellerTypeSection } from './home/SellerTypeSection'
+import { FaqPreviewSection } from './home/FaqPreviewSection'
+import { FinalCtaSection }   from './home/FinalCtaSection'
 
 const NewsletterAndFooter = dynamic(() => import('./home/NewsletterAndFooter').then(m => ({ default: m.NewsletterAndFooter })))
 
@@ -25,55 +22,48 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ locale, isSignedIn, userType, privateCars, businessCars }: HomeClientProps) {
-  const allCars = [...privateCars, ...businessCars]
-
   return (
     <main>
-      {/* 1. Hero */}
+      {/* 1. Hero — two-column, light bg, hero-cars.png */}
       <HeroSection locale={locale} isSignedIn={isSignedIn} userType={userType} />
 
-      {/* 2. Feature boxes */}
-      <FeatureBoxesSection />
+      {/* 2. How it works — 4 steps, step 02 copper */}
+      <HowItWorksSection />
 
-      {/* 3. About */}
-      <AboutSection locale={locale} topCars={allCars} />
-
-      {/* 4–5. How it works steps — skip for logged-in users who already know */}
-      {!isSignedIn && <BuyersStepsSection locale={locale} />}
-      {!isSignedIn && <SellersStepsSection locale={locale} />}
-
-      {/* 6. Private vs Business signup cards — only for non-logged-in */}
-      {!isSignedIn && <SellerTypeSection locale={locale} />}
-
-      {/* 7. Private auctions — hidden for BUSINESS users */}
+      {/* 3. Active auctions — filtered by userType */}
       {userType !== 'BUSINESS' && privateCars.length > 0 && (
         <AuctionTypeSection
           locale={locale}
-          label="For Private"
-          heading="Private Auktioner"
+          label="Aktive Auktioner"
+          heading="Find Din Næste Bil"
           subtext="Køb bil direkte fra private sælgere"
           cars={privateCars}
           viewAllHref={`/${locale}/cars?segment=private`}
         />
       )}
-
-      {/* 8. Business auctions — hidden for PRIVATE users */}
       {userType !== 'PRIVATE' && businessCars.length > 0 && (
         <AuctionTypeSection
           locale={locale}
-          label="For Erhverv"
-          heading="Erhvervsauktioner"
-          subtext="Professionelle forhandlere og virksomheder"
+          label="Erhvervsauktioner"
+          heading="Professionelle Forhandlere"
+          subtext="Godkendte erhvervsforhandlere og virksomheder"
           cars={businessCars}
           viewAllHref={`/${locale}/cars?segment=business`}
           dark
         />
       )}
+      {/* Logged-out: show all available cars */}
+      {!isSignedIn && privateCars.length === 0 && businessCars.length === 0 && (
+        <div />
+      )}
 
-      {/* 9. FAQ preview */}
+      {/* 4. Private vs Business — only for non-logged-in */}
+      {!isSignedIn && <SellerTypeSection locale={locale} />}
+
+      {/* 5. FAQ preview */}
       <FaqPreviewSection locale={locale} />
 
-      {/* 10. Final CTA */}
+      {/* 6. Final CTA */}
       <FinalCtaSection locale={locale} />
 
       <NewsletterAndFooter locale={locale} />

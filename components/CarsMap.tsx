@@ -49,7 +49,11 @@ export function CarsMap({ cars, locale }: CarsMapProps) {
     clusterRef.current = cluster
     map.addLayer(cluster)
 
+    // Leaflet needs a size refresh after the container becomes visible in the DOM
+    const t = setTimeout(() => map.invalidateSize(), 50)
+
     return () => {
+      clearTimeout(t)
       map.remove()
       mapRef.current  = null
       clusterRef.current = null

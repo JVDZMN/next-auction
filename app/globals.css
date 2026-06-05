@@ -6,9 +6,12 @@
 
 @theme inline {
   /* ── Brand Palette ───────────────────────────────────────────── */
-  --color-page-bg:      var(--page-bg);
-  --color-section-alt:  var(--section-alt);
-  --color-dark-section: var(--dark-section);
+  --color-page-bg:        var(--page-bg);
+  --color-section-alt:    var(--section-alt);
+  --color-dark-section:   var(--dark-section);
+  --color-dark-section-2: var(--dark-section-2);
+  --color-copper-light:   var(--copper-light);
+  --color-copper-dark:    var(--copper-dark);
   --color-card-bg:      var(--card-bg);
   --color-text-body:    var(--text-body);
   --color-text-muted:   var(--text-muted);
@@ -72,6 +75,12 @@
   --brand:        #1e5f74;   /* deep teal primary                        */
   --brand-mid:    #277a96;   /* mid teal — accents & borders             */
   --copper:       #c47d3a;   /* warm amber — CTA buttons & accent        */
+  --copper-light: #d97706;
+  --copper-dark:  #92400e;
+  --dark-section-2: #1e3a4f;
+  --border-dark:  rgba(255,255,255,0.12);
+  --copper-bg-light:  rgba(196,125,58,0.08);
+  --copper-bg-medium: rgba(196,125,58,0.15);
   /* ────────────────────────────────────────────────────────────────── */
 
   /* shadcn base tokens — driven by the palette above */
@@ -194,3 +203,17 @@
   margin: 0;
   width: 220px !important;
 }
+
+/* ── Scroll animations ──────────────────────────────────────────── */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-in-up.delay-1 { transition-delay: 0.1s; }
+.fade-in-up.delay-2 { transition-delay: 0.2s; }
+.fade-in-up.delay-3 { transition-delay: 0.3s; }

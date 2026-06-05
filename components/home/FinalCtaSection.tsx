@@ -1,55 +1,58 @@
 'use client'
 
 import Link from 'next/link'
-import { useInView } from '@/lib/use-in-view'
+import { useEffect, useRef } from 'react'
 
 interface Props { locale: string }
 
 export function FinalCtaSection({ locale }: Props) {
-  const [ref, inView] = useInView<HTMLDivElement>({ rootMargin: '-60px' })
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const els = sectionRef.current?.querySelectorAll('.fade-in-up')
+    if (!els) return
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
+      { threshold: 0.1 }
+    )
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section
-      className="relative overflow-hidden py-24 sm:py-32"
-      style={{
-        background: 'linear-gradient(135deg, var(--copper) 0%, #a0622a 100%)',
-      }}
+      className="py-24 sm:py-32"
+      style={{ backgroundColor: 'var(--dark-section)' }}
     >
-      {/* Diagonal accent overlay */}
       <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          right: 0, top: 0, bottom: 0,
-          width: '40%',
-          background: 'rgba(0,0,0,0.15)',
-          clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0% 100%)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      <div
-        ref={ref}
-        className="relative z-10 mx-auto max-w-2xl px-6 text-center"
-        style={{
-          opacity: inView ? 1 : 0,
-          transform: inView ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-        }}
+        ref={sectionRef}
+        className="mx-auto max-w-2xl px-6 text-center fade-in-up"
       >
-        <h2 className="mb-3 text-4xl font-black text-white sm:text-5xl leading-tight">
+        <h2
+          className="mb-4 font-black text-white leading-tight"
+          style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}
+        >
           Klar til at komme i gang?
         </h2>
-        <p className="mb-10 text-lg text-white/80">
+        <p className="mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.60)' }}>
           Opret din gratis konto i dag
         </p>
-        <Link
-          href={`/${locale}/auth/signup`}
-          className="inline-block rounded px-9 py-4 text-base font-bold hover:scale-105 active:scale-95 transition-transform duration-150 shadow-xl"
-          style={{ backgroundColor: 'var(--dark-section)', color: 'white' }}
-        >
-          Kom i gang nu →
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href={`/${locale}/auth/signup`}
+            className="inline-flex items-center justify-center rounded px-8 py-4 text-sm font-bold text-white transition-opacity hover:opacity-85 min-h-11"
+            style={{ backgroundColor: 'var(--copper)' }}
+          >
+            Opret konto gratis
+          </Link>
+          <Link
+            href={`/${locale}/cars`}
+            className="inline-flex items-center justify-center rounded border-2 px-8 py-4 text-sm font-bold text-white transition-opacity hover:opacity-70 min-h-11"
+            style={{ borderColor: 'rgba(255,255,255,0.35)' }}
+          >
+            Se aktive auktioner
+          </Link>
+        </div>
       </div>
     </section>
   )

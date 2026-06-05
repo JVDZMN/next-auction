@@ -1,102 +1,90 @@
 'use client'
 
 import Link from 'next/link'
-import { User, Building2 } from 'lucide-react'
-import { useInView } from '@/lib/use-in-view'
+import { useEffect, useRef } from 'react'
 
-const PRIVATE_FEATURES = ['Helt gratis', 'Enkel opsætning', 'Bred eksponering']
-const BUSINESS_FEATURES = ['Ubegrænset antal biler', 'Prioriteret placering', 'Erhvervsprofil']
+const PRIVATE_FEATURES = ['Gratis', 'Max 2 biler/år', 'Direkte handel']
+const BUSINESS_FEATURES = ['Ubegrænset antal biler', 'Erhvervsprofil', 'Prioriteret placering']
 
 interface Props { locale: string }
 
 export function SellerTypeSection({ locale }: Props) {
-  const [ref, inView] = useInView<HTMLDivElement>({ rootMargin: '-60px' })
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const els = sectionRef.current?.querySelectorAll('.fade-in-up')
+    if (!els) return
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
+      { threshold: 0.1 }
+    )
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--section-alt)' }}>
-      <div
-        ref={ref}
-        className="mx-auto max-w-5xl px-6 sm:px-10 grid grid-cols-1 md:grid-cols-2 gap-0 overflow-hidden rounded-2xl shadow-2xl"
-        style={{
-          opacity: inView ? 1 : 0,
-          transform: inView ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-        }}
-      >
-        {/* Left — Private, copper background */}
-        <div
-          className="relative flex flex-col p-10 overflow-hidden"
-          style={{ backgroundColor: 'var(--copper)' }}
-        >
-          {/* Diagonal accent */}
+    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--card-bg)' }}>
+      <div ref={sectionRef} className="mx-auto max-w-6xl px-6 sm:px-10">
+
+        {/* Header */}
+        <div className="mb-14 text-center fade-in-up">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
+            <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
+              For alle
+            </p>
+            <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
+          </div>
+          <h2 className="text-3xl font-black sm:text-4xl" style={{ color: 'var(--text-body)', letterSpacing: '-0.01em' }}>
+            To markeder. Én platform.
+          </h2>
+        </div>
+
+        {/* Two cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Private card — white bg, copper left border */}
           <div
-            aria-hidden
+            className="fade-in-up rounded-2xl p-10 flex flex-col"
             style={{
-              position: 'absolute',
-              right: 0, top: 0, bottom: 0,
-              width: '40%',
-              background: 'rgba(0,0,0,0.12)',
-              clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)',
-              pointerEvents: 'none',
+              backgroundColor: 'var(--card-bg)',
+              border: '1px solid var(--border)',
+              borderLeft: '4px solid var(--copper)',
             }}
-          />
-
-          <div className="relative z-10">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <User className="h-6 w-6 text-white" strokeWidth={1.6} />
-            </div>
-            <h3 className="mb-1 text-2xl font-black text-white">Privat Sælger</h3>
-            <p className="mb-7 text-sm text-white/75">Sælg op til 2 biler om året</p>
-
-            <ul className="mb-10 flex flex-col gap-3">
+          >
+            <span className="mb-4 text-5xl font-black leading-none" style={{ color: 'var(--copper)' }}>01</span>
+            <h3 className="mb-1 text-2xl font-black" style={{ color: 'var(--text-body)' }}>Privat</h3>
+            <p className="mb-8 text-sm" style={{ color: 'var(--text-muted)' }}>
+              Køb og sælg bil som privatperson
+            </p>
+            <ul className="mb-10 flex flex-col gap-3 flex-1">
               {PRIVATE_FEATURES.map(f => (
-                <li key={f} className="flex items-center gap-3 text-sm font-medium text-white">
-                  <span className="font-black">✓</span>
+                <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color: 'var(--text-body)' }}>
+                  <span className="font-black" style={{ color: 'var(--copper)' }}>✓</span>
                   {f}
                 </li>
               ))}
             </ul>
-
             <Link
-              href={`/${locale}/auth/signup`}
-              className="inline-block rounded px-6 py-3 text-sm font-bold transition-all duration-150 hover:scale-105 active:scale-95"
-              style={{ backgroundColor: 'var(--dark-section)', color: 'white' }}
+              href={`/${locale}/auth/signup?tab=private`}
+              className="inline-flex items-center justify-center rounded px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-85 min-h-11"
+              style={{ backgroundColor: 'var(--copper)' }}
             >
               Opret Privatkonto
             </Link>
           </div>
-        </div>
 
-        {/* Right — Business, dark navy */}
-        <div
-          className="relative flex flex-col p-10 overflow-hidden"
-          style={{ backgroundColor: 'var(--dark-section)' }}
-        >
-          {/* Diagonal accent */}
+          {/* Business card — dark bg */}
           <div
-            aria-hidden
-            style={{
-              position: 'absolute',
-              right: 0, top: 0, bottom: 0,
-              width: '40%',
-              background: 'var(--copper)',
-              clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)',
-              opacity: 0.08,
-              pointerEvents: 'none',
-            }}
-          />
-
-          <div className="relative z-10">
-            <div
-              className="mb-5 flex h-12 w-12 items-center justify-center rounded-full"
-              style={{ backgroundColor: 'rgba(196,125,58,0.15)', border: '1.5px solid var(--copper)' }}
-            >
-              <Building2 className="h-6 w-6" style={{ color: 'var(--copper)' }} strokeWidth={1.6} />
-            </div>
-            <h3 className="mb-1 text-2xl font-black" style={{ color: 'var(--text-light)' }}>Erhvervssælger</h3>
-            <p className="mb-7 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>Professionelt salg med CVR</p>
-
-            <ul className="mb-10 flex flex-col gap-3">
+            className="fade-in-up delay-1 rounded-2xl p-10 flex flex-col"
+            style={{ backgroundColor: 'var(--dark-section)' }}
+          >
+            <span className="mb-4 text-5xl font-black leading-none" style={{ color: 'var(--copper)' }}>02</span>
+            <h3 className="mb-1 text-2xl font-black" style={{ color: 'var(--text-light)' }}>Erhverv</h3>
+            <p className="mb-8 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              Professionelt salg med CVR-nummer
+            </p>
+            <ul className="mb-10 flex flex-col gap-3 flex-1">
               {BUSINESS_FEATURES.map(f => (
                 <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                   <span className="font-black" style={{ color: 'var(--copper)' }}>✓</span>
@@ -104,15 +92,15 @@ export function SellerTypeSection({ locale }: Props) {
                 </li>
               ))}
             </ul>
-
             <Link
-              href={`/${locale}/auth/signup?type=business`}
-              className="inline-block rounded px-6 py-3 text-sm font-bold text-white hover:scale-105 active:scale-95 transition-transform duration-150"
-              style={{ backgroundColor: 'var(--copper)' }}
+              href={`/${locale}/auth/signup?tab=business`}
+              className="inline-flex items-center justify-center rounded border-2 px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-80 min-h-11"
+              style={{ borderColor: 'rgba(255,255,255,0.3)' }}
             >
               Ansøg om Erhvervskonto
             </Link>
           </div>
+
         </div>
       </div>
     </section>

@@ -31,7 +31,7 @@ import { Slider } from '@/components/ui/slider'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
-import { SlidersHorizontal, X } from 'lucide-react'
+import { SlidersHorizontal, X, Map } from 'lucide-react'
 
 const FUEL_OPTIONS = [
   { value: 'Benzin',       label: 'Benzin' },
@@ -95,9 +95,9 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
   ])
 
   // Start with server-fetched data — no skeleton on first load
-  const [data,       setData]       = useState<CarsResponse | null>(initialData)
-  const [loading,    setLoading]    = useState(false)
-  const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
+  const [data,    setData]    = useState<CarsResponse | null>(initialData)
+  const [loading, setLoading] = useState(false)
+  const [showMap, setShowMap] = useState(false)
   const availableModels = brand ? getModelsByBrand(brand) : []
 
   const carsWithCoords = (data?.cars ?? []).filter(
@@ -304,19 +304,20 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Mobile filter sheet */}
             <Sheet>
-              <SheetTrigger render={<button />} className="md:hidden inline-flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors">
+              <SheetTrigger render={<button />} className="md:hidden inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-md border transition-colors" style={{ borderColor: 'rgba(0,0,0,0.15)', color: 'var(--text-body)' }}>
                 <SlidersHorizontal className="h-4 w-4" />
-                Filters
+                Filtre
                 {activeFilterCount > 0 && <Badge className="h-4 px-1 text-[10px]">{activeFilterCount}</Badge>}
               </SheetTrigger>
               <SheetContent side="left" className="w-72 overflow-y-auto">
                 <SheetHeader className="mb-4">
                   <SheetTitle className="flex items-center justify-between">
-                    Filters
+                    Filtre
                     {activeFilterCount > 0 && (
                       <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs gap-1">
-                        <X className="h-3 w-3" /> Clear all
+                        <X className="h-3 w-3" /> Ryd alt
                       </Button>
                     )}
                   </SheetTitle>
@@ -325,8 +326,20 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
               </SheetContent>
             </Sheet>
 
+            {/* Map toggle — visible on all screen sizes */}
+            <button
+              onClick={() => setShowMap(m => !m)}
+              className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-md border transition-colors"
+              style={showMap
+                ? { backgroundColor: 'var(--copper)', color: 'white', borderColor: 'var(--copper)' }
+                : { color: 'var(--text-body)', borderColor: 'rgba(0,0,0,0.15)', backgroundColor: 'transparent' }}
+            >
+              <Map className="h-4 w-4" />
+              {showMap ? 'Skjul kort' : 'Vis kort'}
+            </button>
+
             <Select value={sortBy} onValueChange={v => { setSortBy(v ?? ''); setPage(1) }}>
-              <SelectTrigger className="w-44 h-8 text-xs">
+              <SelectTrigger className="w-44 h-9 text-xs">
                 <SelectValue>{sortLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -336,28 +349,16 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
           </div>
         </div>
 
-        {/* Mobile: list / map toggle */}
-        <div className="flex lg:hidden gap-2 mb-4 p-1 bg-gray-100 rounded-lg w-fit">
-          <button
-            onClick={() => setMobileView('list')}
-            className={mobileView === 'list' ? 'px-4 py-2 rounded-md bg-white shadow text-sm font-semibold' : 'px-4 py-2 rounded-md text-sm text-gray-500'}
-          >📋 List</button>
-          <button
-            onClick={() => setMobileView('map')}
-            className={mobileView === 'map' ? 'px-4 py-2 rounded-md bg-white shadow text-sm font-semibold' : 'px-4 py-2 rounded-md text-sm text-gray-500'}
-          >🗺️ Map</button>
-        </div>
-
-        {/* Mobile map view */}
-        {mobileView === 'map' && (
+        {/* Mobile map view — full height when toggled */}
+        {showMap && (
           <div className="lg:hidden h-[70vh] rounded-xl overflow-hidden border mb-4">
             <CarsMap cars={carsWithCoords} locale={locale} />
           </div>
         )}
 
-        <div className={`flex gap-6 ${mobileView === 'map' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`flex gap-6 ${showMap ? 'hidden lg:flex' : 'flex'}`}>
           <aside className="hidden md:block w-56 shrink-0">
-            <div className="rounded-xl border bg-card p-4 sticky top-20">
+            <div className="rounded-xl border bg-card p-4 sticky top-18">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-semibold">Filters</span>
                 {activeFilterCount > 0 && (
@@ -433,12 +434,14 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
         </div>{/* end inner flex: filter sidebar + car grid */}
         </div>{/* end left column */}
 
-        {/* Desktop sticky map */}
-        <div className="hidden lg:block w-105 shrink-0">
-          <div className="sticky top-4 h-[calc(100vh-2rem)] rounded-xl overflow-hidden border">
-            <CarsMap cars={carsWithCoords} locale={locale} />
+        {/* Desktop sticky map — shown when toggled */}
+        {showMap && (
+          <div className="hidden lg:block w-105 shrink-0">
+            <div className="sticky top-18 h-[calc(100vh-5rem)] rounded-xl overflow-hidden border">
+              <CarsMap cars={carsWithCoords} locale={locale} />
+            </div>
           </div>
-        </div>
+        )}
       </div>{/* end outer flex */}
       </main>
     </div>
