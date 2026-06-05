@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma, ownerSelect, bidderSelect } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { requireAuth } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 
 export async function GET(
   request: NextRequest,
@@ -31,6 +32,15 @@ export async function GET(
       const session = await requireAuth()
       if (!session || session.user.id !== car.owner.id) {
         return NextResponse.json({ error: 'Car not found' }, { status: 404 })
+      }
+    }
+
+    // Market separation: logged-in users may only view cars in their own segment
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (token?.userType) {
+      const carOwnerType = (car.owner as { userType?: string }).userType
+      if (carOwnerType && token.userType !== carOwnerType) {
+        return NextResponse.json({ error: 'wrong_segment' }, { status: 403 })
       }
     }
 

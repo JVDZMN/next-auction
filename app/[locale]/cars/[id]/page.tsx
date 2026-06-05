@@ -102,6 +102,13 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   const fetchCar = useCallback(async () => {
     try {
       const response = await fetch(`/api/cars/${id}`)
+      if (response.status === 403) {
+        const data = await response.json().catch(() => ({}))
+        if (data.error === 'wrong_segment') {
+          router.replace(`/${locale}/cars`)
+          return
+        }
+      }
       if (!response.ok) throw new Error('Failed to fetch car')
       setCar(await response.json())
     } catch (err) {
@@ -109,7 +116,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, locale, router])
 
   // Price updates come via BiddingSection's Pusher subscription (onPriceUpdate callback below).
   // Keeping a second subscription here caused channel conflicts — both sides called
