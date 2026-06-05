@@ -15,7 +15,7 @@ export function HeroSection({ locale, isSignedIn, userType }: Props) {
 
   return (
     <section style={{ backgroundColor: 'var(--page-bg)' }} className="overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 sm:px-10 py-16 sm:py-20 lg:py-24">
+      <div className="mx-auto max-w-7xl px-6 sm:px-10 pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-36 lg:pb-24">
         <div className="flex flex-col gap-10 lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
 
         {/* Left — content */}

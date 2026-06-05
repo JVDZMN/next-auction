@@ -1,6 +1,5 @@
 'use client'
 
-import { Header } from '@/components/Header'
 import { Spinner } from '@/components/ui/spinner'
 
 interface Props {
@@ -11,7 +10,6 @@ interface Props {
 export function PageLayout({ children, maxWidth = 'max-w-7xl' }: Props) {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <main className={`${maxWidth} mx-auto px-4 py-12`}>{children}</main>
     </div>
   )
