@@ -152,7 +152,10 @@ function DashboardContent() {
   const {
     unreadMessages, carsWithNewBids, outbidCarIds,
     unreadPerSender, msgUsers,
-    markMessagesRead, markCarBidsRead, markOutbidRead, markSenderRead,
+    markMessagesRead,
+    markCarBidsRead, markAllCarsWithNewBidsRead,
+    markOutbidRead, markAllOutbidRead,
+    markSenderRead,
   } = useNotifications()
 
   const [activeTab, setActiveTab] = useState(searchParams?.get('tab') ?? 'listings')
@@ -218,6 +221,18 @@ function DashboardContent() {
   useEffect(() => {
     if (activeTab !== 'messages') return
     markMessagesRead()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'bids') return
+    markAllOutbidRead()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'listings') return
+    markAllCarsWithNewBidsRead()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 

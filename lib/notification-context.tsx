@@ -16,7 +16,9 @@ type NotifCtx = {
   refresh: () => void
   markMessagesRead: () => Promise<void>
   markCarBidsRead: (carId: string) => Promise<void>
+  markAllCarsWithNewBidsRead: () => Promise<void>
   markOutbidRead: (carId: string) => Promise<void>
+  markAllOutbidRead: () => Promise<void>
   markSenderRead: (senderId: string) => void
 }
 
@@ -30,7 +32,9 @@ const NotifContext = createContext<NotifCtx>({
   refresh: () => {},
   markMessagesRead: async () => {},
   markCarBidsRead: async () => {},
+  markAllCarsWithNewBidsRead: async () => {},
   markOutbidRead: async () => {},
+  markAllOutbidRead: async () => {},
   markSenderRead: () => {},
 })
 
@@ -108,6 +112,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setCarsWithNewBids(prev => prev.filter(id => id !== carId))
   }, [])
 
+  const markAllCarsWithNewBidsRead = useCallback(async () => {
+    setCarsWithNewBids([])
+    await fetch('/api/messages/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope: 'all_bids' }),
+    }).catch(() => {})
+  }, [])
+
   const markOutbidRead = useCallback(async (carId: string) => {
     await fetch('/api/messages/notifications', {
       method: 'PATCH',
@@ -115,6 +128,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       body: JSON.stringify({ scope: 'outbid', carId }),
     }).catch(() => {})
     setOutbidCarIds(prev => prev.filter(id => id !== carId))
+  }, [])
+
+  const markAllOutbidRead = useCallback(async () => {
+    setOutbidCarIds([])
+    await fetch('/api/messages/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope: 'all_outbid' }),
+    }).catch(() => {})
   }, [])
 
   const markSenderRead = useCallback((senderId: string) => {
@@ -131,7 +153,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     <NotifContext.Provider value={{
       unreadMessages, carsWithNewBids, outbidCarIds, totalCount,
       unreadPerSender, msgUsers,
-      refresh, markMessagesRead, markCarBidsRead, markOutbidRead, markSenderRead,
+      refresh, markMessagesRead,
+      markCarBidsRead, markAllCarsWithNewBidsRead,
+      markOutbidRead, markAllOutbidRead,
+      markSenderRead,
     }}>
       {children}
     </NotifContext.Provider>

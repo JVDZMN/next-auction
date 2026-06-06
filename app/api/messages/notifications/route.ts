@@ -139,9 +139,19 @@ export async function PATCH(request: NextRequest) {
         where: { userId: session.user.id, read: false, type: 'new_bid', carId },
         data: { read: true },
       })
+    } else if (scope === 'all_bids') {
+      await prisma.notification.updateMany({
+        where: { userId: session.user.id, read: false, type: 'new_bid' },
+        data: { read: true },
+      })
     } else if (scope === 'outbid' && carId) {
       await prisma.notification.updateMany({
         where: { userId: session.user.id, read: false, type: 'outbid', carId },
+        data: { read: true },
+      })
+    } else if (scope === 'all_outbid') {
+      await prisma.notification.updateMany({
+        where: { userId: session.user.id, read: false, type: 'outbid' },
         data: { read: true },
       })
     } else {
