@@ -59,15 +59,12 @@ export function hasPermission(
 }
 
 export function getCarFilter(role: string | undefined) {
-  if (role === 'PRIVATE_USER') {
-    return { owner: { role: 'PRIVATE_USER' as const } }
-  }
   if (role === 'BUSINESS_USER') {
     return { owner: { role: 'BUSINESS_USER' as const } }
   }
   if (role === 'ADMIN') {
     return {}
   }
-  // Guest: show private cars by default
-  return { owner: { role: 'PRIVATE_USER' as const } }
+  // Guest and PRIVATE_USER (including legacy 'User' role): C2C market — exclude B2B listings
+  return { owner: { role: { not: 'BUSINESS_USER' as const } } }
 }

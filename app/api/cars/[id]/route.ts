@@ -35,11 +35,14 @@ export async function GET(
       }
     }
 
-    // Market separation: logged-in users may only view cars in their own segment
+    // Market separation: logged-in users may only view cars in their own segment.
+    // Uses is-business comparison to handle both legacy 'User' and new 'PRIVATE_USER' roles.
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
     if (token?.role && token.role !== 'ADMIN') {
       const carOwnerRole = (car.owner as { role?: string }).role
-      if (carOwnerRole && token.role !== carOwnerRole) {
+      const callerIsBusiness  = token.role === 'BUSINESS_USER'
+      const ownerIsBusiness   = carOwnerRole === 'BUSINESS_USER'
+      if (carOwnerRole && callerIsBusiness !== ownerIsBusiness) {
         return NextResponse.json({ error: 'wrong_segment' }, { status: 403 })
       }
     }
