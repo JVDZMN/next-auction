@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
 import type { CarsMapProps } from '@/components/CarsMap'
 import { FilterPanel, KM_MAX } from '@/components/cars/FilterPanel'
@@ -45,7 +44,6 @@ export interface CarsResponse { cars: CarListing[]; total: number; page: number;
 export function CarsClient({ initialData, role }: { initialData: CarsResponse; role?: string }) {
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const { data: session } = useSession()
   const locale       = useLocale()
   const brands       = getAllBrands()
 

@@ -5,15 +5,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CheckCircle } from 'lucide-react'
 
 interface Seller {
-  id: string; name: string | null; email: string
-  sellerVerified?: boolean; _count?: { cars: number }
+  id: string; name: string | null; email: string; _count?: { cars: number }
+}
+interface FullUser {
+  id: string; name: string | null; email: string; role: string
+  sellerVerified: boolean; createdAt: string; _count?: { cars: number; bids: number }
 }
 
 interface Props {
   sellers: Seller[]
-  allUsers: { id: string; sellerVerified: boolean }[]
+  allUsers: FullUser[]
   actionLoading: string | null
-  onToggleVerify: (seller: Seller) => void
+  onToggleVerify: (user: FullUser) => void
 }
 
 export function SellersTab({ sellers, allUsers, actionLoading, onToggleVerify }: Props) {
@@ -46,7 +49,7 @@ export function SellersTab({ sellers, allUsers, actionLoading, onToggleVerify }:
                   <TableCell className="text-right font-semibold">{seller._count?.cars ?? 0}</TableCell>
                   <TableCell className="text-right">
                     {full && (
-                      <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!!actionLoading} onClick={() => onToggleVerify({ ...seller, sellerVerified: full.sellerVerified })}>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" disabled={!!actionLoading} onClick={() => onToggleVerify(full)}>
                         {full.sellerVerified ? 'Unverify' : 'Verify'}
                       </Button>
                     )}

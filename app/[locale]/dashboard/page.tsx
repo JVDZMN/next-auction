@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout"
 import { useLocale } from "@/lib/i18n/context"
@@ -39,7 +38,6 @@ interface User {
 }
 
 function DashboardContent() {
-  const { data: session } = useSession()
   const router       = useRouter()
   const locale       = useLocale()
   const searchParams = useSearchParams()

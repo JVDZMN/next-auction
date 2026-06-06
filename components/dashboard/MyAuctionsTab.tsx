@@ -93,7 +93,9 @@ export function MyAuctionsTab({ cars, isPrivate, isBusiness, carsListedThisYear,
   const router = useRouter()
   const [expandedCarId, setExpandedCarId] = useState<string | null>(null)
   const [bidsByCarId,   setBidsByCarId]   = useState<Record<string, BidEntry[]>>({})
-  const [bidLogLoading, setBidLogLoading] = useState(false)
+
+  // Loading is derived: if a car is expanded but its bids haven't arrived yet, it's loading.
+  const bidLogLoading = expandedCarId !== null && bidsByCarId[expandedCarId] === undefined
 
   function toggleExpand(carId: string) {
     if (expandedCarId === carId) { setExpandedCarId(null); return }
@@ -103,12 +105,10 @@ export function MyAuctionsTab({ cars, isPrivate, isBusiness, carsListedThisYear,
 
   useEffect(() => {
     if (!expandedCarId || bidsByCarId[expandedCarId] !== undefined) return
-    setBidLogLoading(true)
     fetch(`/api/bids?carId=${expandedCarId}`)
       .then(r => r.json())
       .then(d => setBidsByCarId(prev => ({ ...prev, [expandedCarId]: d.bids ?? [] })))
       .catch(() => setBidsByCarId(prev => ({ ...prev, [expandedCarId]: [] })))
-      .finally(() => setBidLogLoading(false))
   }, [expandedCarId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

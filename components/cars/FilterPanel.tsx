@@ -50,7 +50,7 @@ export function FilterPanel({ filters, brands, availableModels, onChange }: Prop
 
       <div className="space-y-1.5">
         <Label>Brand</Label>
-        <Select value={brand || '__all__'} onValueChange={v => set({ brand: v === '__all__' ? '' : v, model: '' })}>
+        <Select value={brand || '__all__'} onValueChange={v => set({ brand: v === '__all__' ? '' : (v ?? ''), model: '' })}>
           <SelectTrigger className="h-8 text-xs w-full"><SelectValue>{brand || 'All brands'}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">All brands</SelectItem>
@@ -62,7 +62,7 @@ export function FilterPanel({ filters, brands, availableModels, onChange }: Prop
       <div className="space-y-1.5">
         <Label>Model</Label>
         {availableModels.length > 0 ? (
-          <Select value={model || '__all__'} onValueChange={v => set({ model: v === '__all__' ? '' : v })}>
+          <Select value={model || '__all__'} onValueChange={v => set({ model: v === '__all__' ? '' : (v ?? '') })}>
             <SelectTrigger className="h-8 text-xs w-full"><SelectValue>{model || 'All models'}</SelectValue></SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">All models</SelectItem>
@@ -81,7 +81,7 @@ export function FilterPanel({ filters, brands, availableModels, onChange }: Prop
 
       <div className="space-y-1.5">
         <Label>Brændstof</Label>
-        <Select value={fuel || '__all__'} onValueChange={v => set({ fuel: v === '__all__' ? '' : v })}>
+        <Select value={fuel || '__all__'} onValueChange={v => set({ fuel: v === '__all__' ? '' : (v ?? '') })}>
           <SelectTrigger className="h-8 text-xs w-full"><SelectValue>{FUEL_OPTIONS.find(f => f.value === fuel)?.label ?? 'Alle'}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">Alle</SelectItem>
@@ -115,7 +115,7 @@ export function FilterPanel({ filters, brands, availableModels, onChange }: Prop
 
       <div className="space-y-1.5">
         <Label>Syn</Label>
-        <Select value={synStatus || '__all__'} onValueChange={v => set({ synStatus: v === '__all__' ? '' : v })}>
+        <Select value={synStatus || '__all__'} onValueChange={v => set({ synStatus: v === '__all__' ? '' : (v ?? '') })}>
           <SelectTrigger className="h-8 text-xs w-full"><SelectValue>{SYN_OPTIONS.find(s => s.value === synStatus)?.label ?? 'Alle'}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">Alle</SelectItem>

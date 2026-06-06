@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuctionCountdown } from '@/components/AuctionCountdown'
 
 interface Props {
-  year: number; km: number; power: number; condition: string
-  fuel: string; startingPrice: number; auctionEndDate: string
+  year: number; km: number; power: number; condition: string | null
+  fuel: string | null; startingPrice: number; auctionEndDate: string
   bidIncrement?: number | null; status: string
 }
 
