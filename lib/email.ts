@@ -140,7 +140,7 @@ export async function sendAuctionClosedSellerEmail({
   outcome,
   finalPrice,
   winnerName,
-  winnerEmail,
+  winnerEmail: _winnerEmail,
 }: {
   to: string
   sellerName: string

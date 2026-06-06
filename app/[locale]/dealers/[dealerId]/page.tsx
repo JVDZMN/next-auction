@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { toLocale, getDictionary } from '@/lib/i18n'
@@ -81,7 +82,7 @@ export default async function DealerProfilePage({
               style={{ backgroundColor: 'var(--copper)' }}
             >
               {dealer.image
-                ? <img src={dealer.image} alt={dealer.name ?? ''} className="h-16 w-16 rounded-full object-cover" />
+                ? <Image src={dealer.image} alt={dealer.name ?? ''} width={64} height={64} className="h-16 w-16 rounded-full object-cover" />
                 : (dealer.name ?? '?').slice(0, 2).toUpperCase()
               }
             </div>

@@ -1,7 +1,7 @@
-const fs = require('fs');
+import { readFileSync, writeFileSync } from 'fs';
 
-const da = JSON.parse(fs.readFileSync('dictionaries/da.json', 'utf8'));
-const en = JSON.parse(fs.readFileSync('dictionaries/en.json', 'utf8'));
+const da = JSON.parse(readFileSync('dictionaries/da.json', 'utf8'));
+const en = JSON.parse(readFileSync('dictionaries/en.json', 'utf8'));
 
 // Nav extensions
 const navKeysDa = {
@@ -84,6 +84,6 @@ en.home.buyerSteps = {
   step3desc: "Highest bid at end wins."
 };
 
-fs.writeFileSync('dictionaries/da.json', JSON.stringify(da, null, 2));
-fs.writeFileSync('dictionaries/en.json', JSON.stringify(en, null, 2));
+writeFileSync('dictionaries/da.json', JSON.stringify(da, null, 2));
+writeFileSync('dictionaries/en.json', JSON.stringify(en, null, 2));
 console.log('Dictionaries updated successfully.');

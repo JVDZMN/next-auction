@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { toLocale, getDictionary } from '@/lib/i18n'
@@ -98,7 +99,7 @@ export default async function DealersPage({
                     style={{ backgroundColor: 'var(--dark-section)' }}
                   >
                     {dealer.image
-                      ? <img src={dealer.image} alt={dealer.name ?? ''} className="h-14 w-14 rounded-full object-cover" />
+                      ? <Image src={dealer.image} alt={dealer.name ?? ''} width={56} height={56} className="h-14 w-14 rounded-full object-cover" />
                       : (dealer.name ?? '?').slice(0, 2).toUpperCase()
                     }
                   </div>

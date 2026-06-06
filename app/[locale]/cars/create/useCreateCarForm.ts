@@ -31,7 +31,7 @@ export function useCreateCarForm() {
   const [dawaCoords, setDawaCoords] = useState<[number, number] | null>(null)
   const [isDraft, setIsDraft] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
-  const [serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
+  const [_serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
   const [availableModels, setAvailableModels] = useState<string[]>([])
   const [availableSubModels, setAvailableSubModels] = useState<string[]>([])
 

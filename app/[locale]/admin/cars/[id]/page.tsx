@@ -1,6 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import { useLocale } from '@/lib/i18n/context'
@@ -57,6 +58,7 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchData() }, [id])
 
   const fetchData = async () => {
@@ -107,7 +109,7 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
             <CardContent className="pt-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {car.images.map((image, index) => (
-                  <img key={index} src={image} alt={`${car.brand} ${car.model} ${index + 1}`} className="w-full h-48 object-cover rounded-md" />
+                  <Image key={index} src={image} alt={`${car.brand} ${car.model} ${index + 1}`} width={400} height={192} className="w-full h-48 object-cover rounded-md" />
                 ))}
               </div>
             </CardContent>

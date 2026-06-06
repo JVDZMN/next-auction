@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { Role } from '@prisma/client'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await requireAdmin()
     if (!session) {

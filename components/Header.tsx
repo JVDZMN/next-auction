@@ -32,7 +32,6 @@ export function Header() {
   const locale        = useLocale()
   const t             = useDict().nav
   const isAdmin       = session?.user?.role === 'ADMIN'
-  const isPrivate     = session?.user?.role === 'PRIVATE_USER'
   const isBusiness    = session?.user?.role === 'BUSINESS_USER'
   const { totalCount } = useNotifications()
   const [sheetOpen, setSheetOpen] = useState(false)

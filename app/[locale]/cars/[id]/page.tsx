@@ -74,10 +74,12 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   const [confirmAccept, setConfirmAccept] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     fetchCar()
     fetch(`/api/cars/${id}/view`, { method: 'POST' }).catch(() => {})
   }, [id])
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const isOwner = !!session?.user?.id && session.user.id === car?.owner?.id
 

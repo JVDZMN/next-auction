@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useDict } from '@/lib/i18n/context'
 
 interface Props { locale: string; isSignedIn: boolean; role?: string }
@@ -91,15 +92,13 @@ export function HeroSection({ locale, isSignedIn, role }: Props) {
 
         {/* Right — hero image */}
         <div>
-          <img
+          <Image
             src="/images/heroimage.png"
             alt={t.imageAlt}
-            style={{
-              width: '100%',
-              maxHeight: '500px',
-              objectFit: 'contain',
-              display: 'block',
-            }}
+            width={600}
+            height={500}
+            style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }}
+            priority
           />
         </div>
 

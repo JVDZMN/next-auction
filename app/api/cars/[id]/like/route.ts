@@ -30,7 +30,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
       },
     })
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch {
     // Unique constraint violation means already liked
     return NextResponse.json({ error: 'Already liked or error' }, { status: 400 })
   }

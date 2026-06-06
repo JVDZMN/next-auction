@@ -15,6 +15,15 @@ const eslintConfig = defineConfig([
     // Utility scripts use CommonJS require() and are not part of the app
     "scripts/**",
   ]),
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+    },
+  },
 ]);
 
 export default eslintConfig;
