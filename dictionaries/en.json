@@ -453,9 +453,14 @@
     "pageTitle": "Dealers – Next Auction",
     "pageDescription": "Approved commercial dealers on Next Auction.",
     "label": "Commercial Market",
+    "title": "Dealers",
     "heading": "Dealers",
+    "subtitle": "Approved business sellers",
+    "search": "Search for dealer...",
     "approvedCount": "approved commercial dealers",
+    "activeListings": "active auctions",
     "empty": "No approved dealers yet.",
+    "noResults": "No dealers found",
     "unnamed": "Unnamed dealer",
     "activeAuctions": "Active auctions",
     "completedSales": "Completed sales",
@@ -465,6 +470,14 @@
     "noActiveCars": "No active auctions from this dealer.",
     "approvedDealer": "Approved dealer",
     "previousSales": "Previous sales"
+  },
+  "dealer": {
+    "activeAuctions": "Active Auctions",
+    "completedAuctions": "Completed Auctions",
+    "memberSince": "Dealer since",
+    "editProfile": "Edit profile",
+    "noActive": "No active auctions",
+    "viewAll": "View all →"
   },
   "terms": {
     "metaTitle": "Terms and Conditions – Next Auction",

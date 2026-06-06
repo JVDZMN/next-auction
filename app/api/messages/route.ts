@@ -29,17 +29,17 @@ export async function POST(request: NextRequest) {
     const [car, sender] = await Promise.all([
       prisma.car.findUnique({
         where: { id: carId },
-        select: { ownerId: true, brand: true, model: true, owner: { select: { userType: true } } },
+        select: { ownerId: true, brand: true, model: true, owner: { select: { role: true } } },
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { userType: true },
+        select: { role: true },
       }),
     ])
     if (!car) {
       return NextResponse.json({ error: 'Car not found' }, { status: 404 });
     }
-    if (sender && car.owner.userType !== sender.userType) {
+    if (sender && car.owner.role !== sender.role) {
       return NextResponse.json({ error: 'Du kan ikke sende beskeder på tværs af markedstyper' }, { status: 403 })
     }
     const finalReceiverId = receiverId || car.ownerId;

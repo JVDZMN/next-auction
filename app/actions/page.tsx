@@ -18,7 +18,7 @@ export default async function AdminUsersPage({
   // Fetch pending business users
   const pendingUsers = await prisma.user.findMany({
     where: {
-      userType: 'BUSINESS',
+      role: 'BUSINESS_USER',
       isApprovedByAdmin: false,
     },
     orderBy: { createdAt: 'desc' },

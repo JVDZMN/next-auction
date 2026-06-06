@@ -1,13 +1,12 @@
 import { DefaultSession, DefaultUser } from 'next-auth'
-import { Role, UserType } from '@prisma/client'
+import { Role } from '@prisma/client'
 
 declare module 'next-auth' {
   interface Session {
     user: {
       id: string
-      role: Role
+      role: 'PRIVATE_USER' | 'BUSINESS_USER' | 'ADMIN'
       mitIdVerified: boolean
-      userType: UserType
       isApprovedByAdmin: boolean
     } & DefaultSession['user']
   }
@@ -15,7 +14,6 @@ declare module 'next-auth' {
     id: string
     role: Role
     mitIdVerified?: boolean
-    userType?: UserType
     isApprovedByAdmin?: boolean
   }
 }
@@ -25,7 +23,6 @@ declare module 'next-auth/jwt' {
     id: string
     role: Role
     mitIdVerified?: boolean
-    userType?: UserType
     isApprovedByAdmin?: boolean
   }
 }

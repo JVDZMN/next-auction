@@ -32,11 +32,11 @@ export async function createCar(input: unknown): Promise<CreateCarResult> {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { userType: true, skatDisclaimerAccepted: true, isApprovedByAdmin: true }
+    select: { role: true, skatDisclaimerAccepted: true, isApprovedByAdmin: true }
   })
   if (!user) return { error: 'User not found' }
 
-  if (user.userType === 'PRIVATE') {
+  if (user.role === 'PRIVATE_USER') {
     if (!user.skatDisclaimerAccepted) {
       return { error: 'You must accept the SKAT disclaimer before listing a car.' }
     }
@@ -59,7 +59,7 @@ export async function createCar(input: unknown): Promise<CreateCarResult> {
   }
 
   // 2. B2B Gatekeeper: Ensure BUSINESS users are approved by an admin
-  if (user.userType === 'BUSINESS' && !user.isApprovedByAdmin) {
+  if (user.role === 'BUSINESS_USER' && !user.isApprovedByAdmin) {
     return { error: 'Din erhvervskonto afventer godkendelse fra en administrator.' }
   }
 

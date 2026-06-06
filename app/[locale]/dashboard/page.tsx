@@ -42,7 +42,7 @@ interface BidEntry {
 }
 interface User {
   id: string; name: string | null; email: string; image?: string | null
-  role: string; createdAt: string; userType?: 'PRIVATE' | 'BUSINESS'
+  role: string; createdAt: string
   cars: UserCar[]
   bids: Array<{
     id: string; amount: number; createdAt: string
@@ -276,13 +276,19 @@ function DashboardContent() {
   if (loading) return <LoadingPage maxWidth="max-w-5xl" />
   if (error || !user) return <ErrorPage message={error || "Failed to load"} maxWidth="max-w-5xl" />
 
+  // ADMIN users go straight to the admin dashboard
+  if (user.role === 'ADMIN') {
+    router.replace(`/${locale}/admin/dashboard`)
+    return <LoadingPage maxWidth="max-w-5xl" />
+  }
+
   const activeCars        = user.cars.filter(c => c.status === 'active' && !c.isDraft)
   const totalViews        = user.cars.reduce((s, c) => s + c.views, 0)
   const totalBidsReceived = user.cars.reduce((s, c) => s + c._count.bids, 0)
   const soldCars          = user.cars.filter(c => c.status === 'completed')
   const initials          = (user.name ?? user.email).slice(0, 2).toUpperCase()
-  const isPrivate         = user.userType === 'PRIVATE'
-  const isBusiness        = user.userType === 'BUSINESS'
+  const isPrivate         = user.role === 'PRIVATE_USER'
+  const isBusiness        = user.role === 'BUSINESS_USER'
   const thisYear          = new Date().getFullYear()
   const carsListedThisYear = user.cars.filter(c => new Date(c.createdAt).getFullYear() === thisYear).length
 
@@ -301,8 +307,8 @@ function DashboardContent() {
               <p className="text-sm text-muted-foreground">{user.email}</p>
               <div className="flex gap-2 mt-1.5 flex-wrap">
                 <Badge variant="secondary">{user.role}</Badge>
-                {isPrivate  && <Badge variant="outline" style={{ borderColor: 'var(--copper)', color: 'var(--copper)' }}>🏠 Privat</Badge>}
-                {isBusiness && <Badge variant="outline" style={{ borderColor: 'var(--brand)', color: 'var(--brand)' }}>🏢 Erhverv</Badge>}
+                {isPrivate  && <Badge variant="outline" style={{ borderColor: 'var(--copper)', color: 'var(--copper)' }}>Privat</Badge>}
+                {isBusiness && <Badge variant="outline" style={{ borderColor: 'var(--brand)', color: 'var(--brand)' }}>Erhverv</Badge>}
                 <Badge variant="outline">Tilmeldt {new Date(user.createdAt).toLocaleDateString('da-DK')}</Badge>
               </div>
               {isPrivate && (
@@ -372,6 +378,10 @@ function DashboardContent() {
               </span>
             )}
           </TabsTrigger>
+
+          {isBusiness && (
+            <TabsTrigger value="profile">Min virksomhed</TabsTrigger>
+          )}
         </TabsList>
 
         {/* ─── My Auctions ────────────────────────────────────────────────── */}
@@ -711,6 +721,28 @@ function DashboardContent() {
             )}
           </div>
         </TabsContent>
+        {/* ─── Business Profile ────────────────────────────────────────────── */}
+        {isBusiness && (
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Virksomhedsprofil</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Rediger din offentlige forhandlerprofil synlig på forhandlersiden.
+                </p>
+                <Link
+                  href={`/${locale}/dashboard/profile`}
+                  className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white"
+                  style={{ backgroundColor: 'var(--copper)', minHeight: 44 }}
+                >
+                  Rediger profil →
+                </Link>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </PageLayout>
   )

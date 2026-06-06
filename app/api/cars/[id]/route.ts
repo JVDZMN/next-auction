@@ -37,9 +37,9 @@ export async function GET(
 
     // Market separation: logged-in users may only view cars in their own segment
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-    if (token?.userType) {
-      const carOwnerType = (car.owner as { userType?: string }).userType
-      if (carOwnerType && token.userType !== carOwnerType) {
+    if (token?.role && token.role !== 'ADMIN') {
+      const carOwnerRole = (car.owner as { role?: string }).role
+      if (carOwnerRole && token.role !== carOwnerRole) {
         return NextResponse.json({ error: 'wrong_segment' }, { status: 403 })
       }
     }

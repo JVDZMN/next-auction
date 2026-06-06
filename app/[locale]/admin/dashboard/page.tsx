@@ -90,7 +90,7 @@ export default function AdminDashboard() {
   // ── User actions ─────────────────────────────────────────────────────────
 
   async function toggleRole(user: User) {
-    const newRole = user.role === 'Admin' ? 'User' : 'Admin'
+    const newRole = user.role === 'ADMIN' ? 'PRIVATE_USER' : 'ADMIN'
     setActionLoading(`role-${user.id}`)
     try {
       const res = await fetch(`/api/admin/users/${user.id}/role`, {
@@ -331,10 +331,10 @@ export default function AdminDashboard() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className={cn('h-7 w-7', user.role === 'Admin' ? 'text-purple-600' : 'text-muted-foreground')}
+                            className={cn('h-7 w-7', user.role === 'ADMIN' ? 'text-purple-600' : 'text-muted-foreground')}
                             disabled={!!actionLoading || user.id === session?.user?.id}
                             onClick={() => toggleRole(user)}
-                            title={user.role === 'Admin' ? 'Remove Admin' : 'Make Admin'}
+                            title={user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}
                           >
                             <UserCog className="h-3.5 w-3.5" />
                           </Button>

@@ -68,7 +68,7 @@ export default function CreateCarPage() {
     handleSubmit,
   } = useCreateCarForm()
   const { data: session } = useSession()
-  const isPrivate = session?.user?.userType === 'PRIVATE'
+  const isPrivate = session?.user?.role === 'PRIVATE_USER'
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (

@@ -54,14 +54,14 @@ interface CarListing {
   currentPrice: number; images: string[]; fuel: string | null; km: number
   city: string | null; bodyType: string | null; condition: string
   auctionEndDate: string; _count: { bids: number }
-  owner: { name: string | null; userType?: 'PRIVATE' | 'BUSINESS' }
+  owner: { name: string | null; role?: string }
   latitude: number | null; longitude: number | null
 }
 export interface CarsResponse { cars: CarListing[]; total: number; page: number; pageSize: number; totalPages: number }
 
 const KM_MAX = 500_000
 
-export function CarsClient({ initialData, userType }: { initialData: CarsResponse; userType?: 'PRIVATE' | 'BUSINESS' }) {
+export function CarsClient({ initialData, role }: { initialData: CarsResponse; role?: string }) {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
@@ -71,7 +71,7 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
   // If logged in, segment is locked to the user's own market.
   // If not logged in, the tab is user-controlled.
   const forcedSegment: 'private' | 'business' | undefined =
-    userType === 'PRIVATE' ? 'private' : userType === 'BUSINESS' ? 'business' : undefined
+    role === 'PRIVATE_USER' ? 'private' : role === 'BUSINESS_USER' ? 'business' : undefined
 
   const [brand,      setBrand]     = useState(searchParams?.get('brand')     ?? '')
   const [model,      setModel]     = useState(searchParams?.get('model')     ?? '')
@@ -391,7 +391,7 @@ export function CarsClient({ initialData, userType }: { initialData: CarsRespons
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {data?.cars.map((car, i) => (
                     <CarCard key={car.id} {...car} bidCount={car._count.bids} priority={i < 3}
-                      ownerUserType={car.owner.userType} />
+                      ownerRole={car.owner.role} />
                   ))}
                 </div>
 

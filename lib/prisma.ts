@@ -20,7 +20,7 @@ export const ownerSelect = {
   id: true,
   name: true,
   email: true,
-  userType: true,
+  role: true,
   isApprovedByAdmin: true,
   sellerVerified: true,
 } as const

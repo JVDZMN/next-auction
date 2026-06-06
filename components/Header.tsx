@@ -20,7 +20,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Shield, LogOut, BadgeCheck, Menu } from 'lucide-react'
+import { LogOut, BadgeCheck, Menu } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -31,9 +31,9 @@ export function Header() {
   const { data: session, status } = useSession()
   const locale        = useLocale()
   const t             = useDict().nav
-  const isAdmin       = session?.user?.role === 'Admin'
-  const isPrivate     = session?.user?.userType === 'PRIVATE'
-  const isBusiness    = session?.user?.userType === 'BUSINESS'
+  const isAdmin       = session?.user?.role === 'ADMIN'
+  const isPrivate     = session?.user?.role === 'PRIVATE_USER'
+  const isBusiness    = session?.user?.role === 'BUSINESS_USER'
   const { totalCount } = useNotifications()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -68,10 +68,9 @@ export function Header() {
         { label: t.createListing, href: `/${locale}/cars/create` },
       ]
     : [
-        { label: t.browseCars,   href: `/${locale}/cars` },
-        { label: t.dealers,      href: `/${locale}/dealers` },
-        { label: t.signIn,       href: `/${locale}/auth/signin` },
-        { label: t.signUp,       href: `/${locale}/auth/signup` },
+        { label: t.browseCars, href: `/${locale}/cars` },
+        { label: t.signIn,     href: `/${locale}/auth/signin` },
+        { label: t.signUp,     href: `/${locale}/auth/signup` },
       ]
 
   return (
@@ -100,7 +99,7 @@ export function Header() {
           >
             {isBusiness ? t.browseBusiness : t.browseCars}
           </Link>
-          {!isPrivate && (
+          {(isBusiness || isAdmin) && (
             <Link href={`/${locale}/dealers`} className={NAV_LINK} style={NAV_LINK_STYLE}
               onMouseEnter={e => ((e.target as HTMLElement).style.color = 'white')}
               onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.65)')}
@@ -125,11 +124,6 @@ export function Header() {
                   {totalCount > 99 ? '99+' : totalCount}
                 </span>
               )}
-            </Link>
-          )}
-          {isAdmin && (
-            <Link href={`/${locale}/admin/dashboard`} className={cn(NAV_LINK, 'inline-flex items-center gap-1')} style={NAV_LINK_STYLE}>
-              <Shield className="h-3.5 w-3.5" /> {t.admin}
             </Link>
           )}
         </nav>

@@ -34,11 +34,11 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
   const [car, bidder] = await Promise.all([
     client.car.findUnique({
       where: { id: carId },
-      include: { owner: { select: { id: true, email: true, name: true, userType: true } } },
+      include: { owner: { select: { id: true, email: true, name: true, role: true } } },
     }),
     client.user.findUnique({
       where: { id: userId },
-      select: { userType: true, isApprovedByAdmin: true },
+      select: { role: true, isApprovedByAdmin: true },
     }),
   ])
 
@@ -53,8 +53,8 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
     ownerId: car.ownerId,
     bidderId: userId,
     bidIncrement: car.bidIncrement,
-    ownerUserType:    car.owner.userType,
-    bidderUserType:   bidder.userType,
+    ownerRole:        car.owner.role as 'PRIVATE_USER' | 'BUSINESS_USER',
+    bidderRole:       bidder.role as 'PRIVATE_USER' | 'BUSINESS_USER',
     bidderIsApproved: bidder.isApprovedByAdmin,
   })
 

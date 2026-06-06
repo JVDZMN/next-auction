@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { toLocale, getDictionary } from '@/lib/i18n'
 import { CarCard } from '@/components/CarCard'
+import { requireAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 
 export default async function DealerProfilePage({
   params,
@@ -13,9 +15,15 @@ export default async function DealerProfilePage({
   const locale = toLocale(rawLocale)
   const now    = new Date()
 
+  const session = await requireAuth()
+  const role    = session?.user?.role
+  if (!hasPermission(role, 'canViewDealers')) {
+    redirect(`/${locale}/auth/signin?callbackUrl=/${locale}/dealers/${dealerId}`)
+  }
+
   const [dealer, dict] = await Promise.all([
     prisma.user.findUnique({
-      where: { id: dealerId, userType: 'BUSINESS', isApprovedByAdmin: true },
+      where: { id: dealerId, role: 'BUSINESS_USER', isApprovedByAdmin: true },
       select: {
         id: true,
         name: true,
@@ -28,7 +36,7 @@ export default async function DealerProfilePage({
             id: true, year: true, brand: true, model: true, subModel: true,
             images: true, condition: true, fuel: true, km: true, city: true,
             bodyType: true, currentPrice: true, auctionEndDate: true,
-            owner: { select: { name: true, userType: true } },
+            owner: { select: { name: true, role: true } },
             _count: { select: { bids: true } },
             status: true,
           },
@@ -119,7 +127,7 @@ export default async function DealerProfilePage({
                   auctionEndDate={car.auctionEndDate.toISOString()}
                   subModel={car.subModel ?? undefined}
                   bidCount={car._count.bids}
-                  ownerUserType="BUSINESS"
+                  ownerRole="BUSINESS_USER"
                   priority={i < 3}
                 />
               ))}
@@ -140,7 +148,7 @@ export default async function DealerProfilePage({
                   auctionEndDate={car.auctionEndDate.toISOString()}
                   subModel={car.subModel ?? undefined}
                   bidCount={car._count.bids}
-                  ownerUserType="BUSINESS"
+                  ownerRole="BUSINESS_USER"
                 />
               ))}
             </div>

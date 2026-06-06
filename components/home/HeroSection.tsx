@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { useDict } from '@/lib/i18n/context'
 
-interface Props { locale: string; isSignedIn: boolean; userType?: 'PRIVATE' | 'BUSINESS' }
+interface Props { locale: string; isSignedIn: boolean; role?: string }
 
-export function HeroSection({ locale, isSignedIn, userType }: Props) {
-  const isBusiness = userType === 'BUSINESS'
+export function HeroSection({ locale, isSignedIn, role }: Props) {
+  const isBusiness = role === 'BUSINESS_USER'
   const t = useDict().home.hero
 
   const trustItems = [t.trustItem1, t.trustItem2, t.trustItem3]

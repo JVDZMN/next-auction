@@ -28,7 +28,7 @@ type CarCardProps = {
   isLiked?: boolean
   priority?: boolean
   owner: { name: string | null }
-  ownerUserType?: 'PRIVATE' | 'BUSINESS'
+  ownerRole?: string
 }
 
 function getTimeRemaining(endDate: string | Date): { label: string; urgent: boolean } {
@@ -42,7 +42,7 @@ function getTimeRemaining(endDate: string | Date): { label: string; urgent: bool
   return { label: `${mins}m`, urgent: true }
 }
 
-export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, priority = false, ownerUserType }: CarCardProps) {
+export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, priority = false, ownerRole }: CarCardProps) {
   const locale = useLocale()
   const router = useRouter()
   const { label, urgent } = getTimeRemaining(auctionEndDate)
@@ -73,12 +73,12 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
           )}
 
           {/* Segment badge */}
-          {ownerUserType && (
+          {ownerRole && (
             <Badge
               className="absolute bottom-2 right-2 text-[10px] font-bold text-white border-0"
-              style={{ backgroundColor: ownerUserType === 'BUSINESS' ? 'var(--dark-section)' : 'var(--copper)' }}
+              style={{ backgroundColor: ownerRole === 'BUSINESS_USER' ? 'var(--dark-section)' : 'var(--copper)' }}
             >
-              {ownerUserType === 'BUSINESS' ? '🏢 Erhverv' : '🏠 Privat'}
+              {ownerRole === 'BUSINESS_USER' ? 'Erhverv' : 'Privat'}
             </Badge>
           )}
 

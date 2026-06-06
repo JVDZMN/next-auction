@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       
       // Admin users
       prisma.user.findMany({
-        where: { role: Role.Admin },
+        where: { role: Role.ADMIN },
         select: {
           id: true,
           name: true,

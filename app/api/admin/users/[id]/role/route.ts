@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 
-const ALLOWED_ROLES = ['User', 'Admin'] as const
+const ALLOWED_ROLES = ['PRIVATE_USER', 'BUSINESS_USER', 'ADMIN'] as const
 
 export async function PATCH(
   request: NextRequest,
@@ -20,7 +20,7 @@ export async function PATCH(
     }
 
     // Prevent self-demotion
-    if (id === session.user.id && role !== 'Admin') {
+    if (id === session.user.id && role !== 'ADMIN') {
       return NextResponse.json({ error: 'Cannot demote your own account' }, { status: 400 })
     }
 

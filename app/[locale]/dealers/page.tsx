@@ -1,11 +1,14 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { toLocale, getDictionary } from '@/lib/i18n'
+import { requireAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 
 async function fetchDealers() {
   const now = new Date()
   const dealers = await prisma.user.findMany({
-    where: { userType: 'BUSINESS', isApprovedByAdmin: true },
+    where: { role: 'BUSINESS_USER', isApprovedByAdmin: true },
     select: {
       id: true,
       name: true,
@@ -31,6 +34,13 @@ export default async function DealersPage({
 }) {
   const { locale: rawLocale } = await params
   const locale  = toLocale(rawLocale)
+
+  const session = await requireAuth()
+  const role    = session?.user?.role
+  if (!hasPermission(role, 'canViewDealers')) {
+    redirect(`/${locale}/auth/signin?callbackUrl=/${locale}/dealers`)
+  }
+
   const [dealers, dict] = await Promise.all([fetchDealers(), getDictionary(locale)])
   const t = dict.dealers
   const dateLocale = locale === 'da' ? 'da-DK' : 'en-GB'

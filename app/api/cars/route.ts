@@ -4,7 +4,7 @@ import { prisma, ownerSelect, latestBidInclude } from '@/lib/prisma'
 import { serverError } from '@/lib/api'
 import { CarStatus } from '@prisma/client'
 import { sendEmail } from '@/lib/email'
-import { getUserTypeFilter } from '@/lib/car-filters'
+import { getCarFilter } from '@/lib/permissions'
 import { getToken } from 'next-auth/jwt'
 
 async function notifySavedSearches(car: { id: string; brand: string; model: string; year: number; currentPrice: number; fuel: string | null }) {
@@ -76,9 +76,9 @@ export async function GET(request: NextRequest) {
     const pageSize  = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || 12)))
     const sortBy    = searchParams.get('sortBy') || 'newest'
 
-    // Resolve the caller's userType — used to scope the market segment
+    // Resolve the caller's role — used to scope the market segment
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-    const callerUserType = token?.userType as 'PRIVATE' | 'BUSINESS' | undefined
+    const callerRole = token?.role as string | undefined
 
     let likedByUserId: string | undefined
     if (likedOnly) {
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
       ...(synStatus === 'valid'   && { nextInspection: { gt: new Date() } }),
       ...(synStatus === 'expired' && { nextInspection: { lte: new Date() } }),
       ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
-      ...getUserTypeFilter(callerUserType),
+      ...getCarFilter(callerRole),
     }
 
     const [total, cars] = await Promise.all([
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     // Fetch fresh user data to accurately check userType and SKAT compliance
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, userType: true, skatDisclaimerAccepted: true, isApprovedByAdmin: true }
+      select: { id: true, role: true, skatDisclaimerAccepted: true, isApprovedByAdmin: true }
     });
 
     if (!user) {
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. C2C Gatekeeper: Check SKAT rules for PRIVATE users
-    if (user.userType === 'PRIVATE') {
+    if (user.role === 'PRIVATE_USER') {
       if (!user.skatDisclaimerAccepted) {
         return NextResponse.json(
           { error: 'Du skal acceptere SKATs vilkår før du kan oprette en auktion.' },
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. B2B Gatekeeper: Ensure BUSINESS users are approved by an admin
-    if (user.userType === 'BUSINESS' && !user.isApprovedByAdmin) {
+    if (user.role === 'BUSINESS_USER' && !user.isApprovedByAdmin) {
       return NextResponse.json(
         { error: 'Din erhvervskonto afventer godkendelse fra en administrator.' },
         { status: 403 }

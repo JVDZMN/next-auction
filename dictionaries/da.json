@@ -453,9 +453,14 @@
     "pageTitle": "Forhandlere – Next Auction",
     "pageDescription": "Godkendte erhvervsforhandlere på Next Auction.",
     "label": "Erhvervsmarked",
+    "title": "Forhandlere",
     "heading": "Forhandlere",
+    "subtitle": "Godkendte erhvervssælgere",
+    "search": "Søg efter forhandler...",
     "approvedCount": "godkendte erhvervsforhandlere",
+    "activeListings": "aktive auktioner",
     "empty": "Ingen godkendte forhandlere endnu.",
+    "noResults": "Ingen forhandlere fundet",
     "unnamed": "Unavngivet forhandler",
     "activeAuctions": "Aktive auktioner",
     "completedSales": "Afsluttede salg",
@@ -465,6 +470,14 @@
     "noActiveCars": "Ingen aktive auktioner fra denne forhandler.",
     "approvedDealer": "Godkendt forhandler",
     "previousSales": "Tidligere salg"
+  },
+  "dealer": {
+    "activeAuctions": "Aktive Auktioner",
+    "completedAuctions": "Afsluttede Auktioner",
+    "memberSince": "Forhandler siden",
+    "editProfile": "Rediger profil",
+    "noActive": "Ingen aktive auktioner",
+    "viewAll": "Se alle →"
   },
   "terms": {
     "metaTitle": "Vilkår og betingelser – Next Auction",

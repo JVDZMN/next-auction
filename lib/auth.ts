@@ -2,7 +2,8 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { Role } from '@prisma/client';
+import { Role } from '@prisma/client'
+
 import bcrypt from 'bcrypt';
 import type { SessionStrategy } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
@@ -90,11 +91,11 @@ export const authOptions = {
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { mitIdVerified: true, emailVerified: true, userType: true, isApprovedByAdmin: true },
+          select: { mitIdVerified: true, emailVerified: true, role: true, isApprovedByAdmin: true },
         });
         token.mitIdVerified     = dbUser?.mitIdVerified     ?? false;
         token.emailVerified     = !!dbUser?.emailVerified;
-        token.userType          = dbUser?.userType;
+        if (dbUser?.role) token.role = dbUser.role;
         token.isApprovedByAdmin = dbUser?.isApprovedByAdmin ?? false;
       }
       return token;
@@ -112,9 +113,8 @@ export const authOptions = {
         session.user.role =
           typeof token.role === 'string' && Object.values(Role).includes(token.role as Role)
             ? (token.role as Role)
-            : Role.User;
+            : Role.PRIVATE_USER;
         session.user.mitIdVerified     = (token.mitIdVerified as boolean) ?? false;
-        session.user.userType          = token.userType ?? 'PRIVATE';
         session.user.isApprovedByAdmin = (token.isApprovedByAdmin as boolean) ?? false;
       }
       return session;
@@ -157,6 +157,6 @@ export async function requireAdmin() {
     where: { id: session.user.id },
     select: { role: true },
   })
-  if (!user || user.role !== Role.Admin) return null
+  if (!user || user.role !== Role.ADMIN) return null
   return session
 }

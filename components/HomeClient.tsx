@@ -15,24 +15,24 @@ export type TopCar = AuctionCar
 interface HomeClientProps {
   locale: string
   isSignedIn: boolean
-  userType?: 'PRIVATE' | 'BUSINESS'
+  role?: string
   privateCars: AuctionCar[]
   businessCars: AuctionCar[]
 }
 
-export function HomeClient({ locale, isSignedIn, userType, privateCars, businessCars }: HomeClientProps) {
+export function HomeClient({ locale, isSignedIn, role, privateCars, businessCars }: HomeClientProps) {
   const t = useDict().home.auctionTypes
 
   return (
     <main>
       {/* 1. Hero — two-column, light bg, hero-cars.png */}
-      <HeroSection locale={locale} isSignedIn={isSignedIn} userType={userType} />
+      <HeroSection locale={locale} isSignedIn={isSignedIn} role={role} />
 
       {/* 2. How it works — 4 steps, step 02 copper */}
       <HowItWorksSection />
 
-      {/* 3. Active auctions — filtered by userType */}
-      {userType !== 'BUSINESS' && privateCars.length > 0 && (
+      {/* 3. Active auctions — filtered by role */}
+      {role !== 'BUSINESS_USER' && privateCars.length > 0 && (
         <AuctionTypeSection
           locale={locale}
           label={t.privateLabel}
@@ -42,7 +42,7 @@ export function HomeClient({ locale, isSignedIn, userType, privateCars, business
           viewAllHref={`/${locale}/cars?segment=private`}
         />
       )}
-      {userType !== 'PRIVATE' && businessCars.length > 0 && (
+      {role !== 'PRIVATE_USER' && businessCars.length > 0 && (
         <AuctionTypeSection
           locale={locale}
           label={t.businessLabel}

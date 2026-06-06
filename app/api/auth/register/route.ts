@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
       skatDisclaimerAccepted,
     } = body
 
+    // Accept either userType (legacy) or role directly
+
+
     // Prefer locale sent by the client; fall back to Accept-Language header
     const raw = bodyLocale ?? request.headers.get('accept-language')?.slice(0, 2).toLowerCase() ?? ''
     const locale = locales.includes(raw as (typeof locales)[number]) ? raw : defaultLocale
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Adgangskode skal være mindst 6 tegn' }, { status: 400 })
     }
 
-    const isBusiness = userType === 'BUSINESS'
+    const isBusiness = userType === 'BUSINESS' || userType === 'BUSINESS_USER'
 
     if (isBusiness) {
       if (!cvrNumber || !/^\d{8}$/.test(cvrNumber)) {
@@ -56,12 +59,12 @@ export async function POST(request: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        userType:              isBusiness ? 'BUSINESS' : 'PRIVATE',
+        role:                  isBusiness ? 'BUSINESS_USER' : 'PRIVATE_USER',
         cvrNumber:             isBusiness ? cvrNumber : undefined,
         skatDisclaimerAccepted: skatDisclaimerAccepted ?? false,
         isApprovedByAdmin:     !isBusiness,
       },
-      select: { id: true, name: true, email: true, userType: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
     })
 
     // Verification email

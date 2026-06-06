@@ -77,7 +77,7 @@ function SignUpContent() {
       const res  = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: priv.name, email: priv.email, password: priv.password, locale, userType: 'PRIVATE', skatDisclaimerAccepted: true }),
+        body: JSON.stringify({ name: priv.name, email: priv.email, password: priv.password, locale, userType: 'PRIVATE_USER', skatDisclaimerAccepted: true }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || t.errCreateFailed)
@@ -100,7 +100,7 @@ function SignUpContent() {
       const res  = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: biz.name || cvrResult.name, email: biz.email, password: biz.password, locale, userType: 'BUSINESS', cvrNumber: biz.cvr }),
+        body: JSON.stringify({ name: biz.name || cvrResult.name, email: biz.email, password: biz.password, locale, userType: 'BUSINESS_USER', cvrNumber: biz.cvr }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || t.errApplyFailed)

@@ -92,7 +92,7 @@ function makeCar(currentPrice = 10_000) {
     auctionEndDate: FUTURE,
     antiSnipingMinutes: 2,
     bidIncrement: null,
-    owner: { id: 'owner-1', email: 'owner@example.com', name: 'Owner', userType: 'PRIVATE' as const },
+    owner: { id: 'owner-1', email: 'owner@example.com', name: 'Owner', role: 'PRIVATE_USER' as const },
   }
 }
 
@@ -112,7 +112,7 @@ beforeEach(() => {
   mockProxyBidFindFirst.mockResolvedValue(null)
   mockBidFindMany.mockResolvedValue([])
   mockBidCount.mockResolvedValue(1)
-  mockUserFindUnique.mockResolvedValue({ userType: 'PRIVATE', isApprovedByAdmin: true })
+  mockUserFindUnique.mockResolvedValue({ role: 'PRIVATE_USER', isApprovedByAdmin: true })
   mockUserFindMany.mockResolvedValue([])
   mockNotificationCreateMany.mockResolvedValue({})
   mockCarUpdate.mockImplementation(async ({ data }: { data: unknown }) => data)

@@ -4,11 +4,9 @@ import { requireAuth } from '@/lib/auth'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { CarStatus, FuelType } from '@prisma/client'
-import { getUserTypeFilter } from '@/lib/car-filters'
+import { getCarFilter } from '@/lib/permissions'
 
-const KM_MAX = 500_000
-
-async function fetchCars(params: Record<string, string>, callerUserType: 'PRIVATE' | 'BUSINESS' | undefined): Promise<CarsResponse> {
+async function fetchCars(params: Record<string, string>, callerRole: string | undefined): Promise<CarsResponse> {
   const brand     = params.brand     || undefined
   const model     = params.model     || undefined
   const city      = params.city      || undefined
@@ -67,7 +65,7 @@ async function fetchCars(params: Record<string, string>, callerUserType: 'PRIVAT
     ...(synStatus === 'valid'   && { nextInspection: { gt: new Date() } }),
     ...(synStatus === 'expired' && { nextInspection: { lte: new Date() } }),
     ...(likedByUserId && { likedBy: { some: { userId: likedByUserId } } }),
-    ...getUserTypeFilter(callerUserType),
+    ...getCarFilter(callerRole),
   }
 
   const [total, cars] = await Promise.all([
@@ -104,7 +102,7 @@ export default async function CarsPage({
 }) {
   const params      = await searchParams
   const session     = await getServerSession(authOptions)
-  const userType    = session?.user?.userType as 'PRIVATE' | 'BUSINESS' | undefined
-  const initialData = await fetchCars(params, userType)
-  return <CarsClient initialData={initialData} userType={userType} />
+  const role        = session?.user?.role
+  const initialData = await fetchCars(params, role)
+  return <CarsClient initialData={initialData} role={role} />
 }

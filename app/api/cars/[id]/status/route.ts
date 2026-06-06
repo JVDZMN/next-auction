@@ -31,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Only admin can set any status, owner can only cancel or pause their own car
-    const isAdmin = session.user.role === 'Admin';
+    const isAdmin = session.user.role === 'ADMIN';
     const isOwner = car.ownerId === session.user.id;
     if (!isAdmin && !(isOwner && (status === 'cancelled' || status === 'paused'))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

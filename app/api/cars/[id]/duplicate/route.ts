@@ -14,7 +14,7 @@ export async function POST(
 
     const car = await prisma.car.findUnique({ where: { id } })
     if (!car) return NextResponse.json({ error: 'Car not found' }, { status: 404 })
-    if (car.ownerId !== session.user.id && session.user.role !== 'Admin') {
+    if (car.ownerId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

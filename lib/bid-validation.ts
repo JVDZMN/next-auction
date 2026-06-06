@@ -1,3 +1,5 @@
+import { hasPermission } from './permissions'
+
 export type BidValidationInput = {
   amount: number
   currentPrice: number
@@ -6,8 +8,8 @@ export type BidValidationInput = {
   ownerId: string
   bidderId: string
   bidIncrement?: number | null
-  ownerUserType: 'PRIVATE' | 'BUSINESS'
-  bidderUserType: 'PRIVATE' | 'BUSINESS'
+  ownerRole:        'PRIVATE_USER' | 'BUSINESS_USER'
+  bidderRole:       'PRIVATE_USER' | 'BUSINESS_USER'
   bidderIsApproved: boolean
 }
 
@@ -16,6 +18,21 @@ export type BidValidationResult =
   | { valid: false; error: string; httpStatus: number }
 
 export function validateBid(input: BidValidationInput): BidValidationResult {
+  const permission = input.ownerRole === 'BUSINESS_USER'
+    ? 'canBidOnBusinessCars'
+    : 'canBidOnPrivateCars'
+
+  if (!hasPermission(input.bidderRole, permission, input.bidderIsApproved)) {
+    const isCrossType = input.ownerRole !== input.bidderRole
+    return {
+      valid: false,
+      error: isCrossType
+        ? 'Du kan ikke byde på denne type auktion'
+        : 'Din erhvervskonto er endnu ikke godkendt',
+      httpStatus: 403,
+    }
+  }
+
   if (input.status !== 'active') {
     return { valid: false, error: 'Auction is not active', httpStatus: 400 }
   }
@@ -24,35 +41,19 @@ export function validateBid(input: BidValidationInput): BidValidationResult {
     return { valid: false, error: 'Auction has ended', httpStatus: 400 }
   }
 
-  if (input.ownerUserType !== input.bidderUserType) {
-    return {
-      valid: false,
-      error: 'Du kan ikke byde på denne type auktion',
-      httpStatus: 403,
-    }
-  }
-
-  if (input.bidderUserType === 'BUSINESS' && !input.bidderIsApproved) {
-    return {
-      valid: false,
-      error: 'Din erhvervskonto er endnu ikke godkendt',
-      httpStatus: 403,
-    }
-  }
-
   if (input.bidIncrement && input.bidIncrement > 0) {
     const minBid = input.currentPrice + input.bidIncrement
     if (input.amount < minBid) {
       return {
         valid: false,
-        error: `Minimum bid increment is $${input.bidIncrement}. Minimum bid: $${minBid.toFixed(2)}`,
+        error: `Minimum bid increment is ${input.bidIncrement}. Minimum bid: ${minBid.toFixed(2)}`,
         httpStatus: 400,
       }
     }
   } else if (input.amount <= input.currentPrice) {
     return {
       valid: false,
-      error: `Bid must be higher than current price: $${input.currentPrice}`,
+      error: `Bid must be higher than current price: ${input.currentPrice}`,
       httpStatus: 400,
     }
   }

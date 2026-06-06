@@ -16,7 +16,7 @@ export interface AuctionCar {
   currentPrice: number
   auctionEndDate: string
   bidCount: number
-  ownerUserType: 'PRIVATE' | 'BUSINESS'
+  ownerRole: 'PRIVATE_USER' | 'BUSINESS_USER'
 }
 
 function timeLeft(iso: string, endedLabel: string): string {
@@ -45,7 +45,7 @@ function MiniCard({
     endsIn: string
   }
 }) {
-  const isBusiness = car.ownerUserType === 'BUSINESS'
+  const isBusiness = car.ownerRole === 'BUSINESS_USER'
 
   return (
     <Link
@@ -75,7 +75,7 @@ function MiniCard({
           className="absolute bottom-2 right-2 rounded px-2 py-0.5 text-[10px] font-bold text-white"
           style={{ backgroundColor: isBusiness ? 'var(--dark-section)' : 'var(--copper)' }}
         >
-          {isBusiness ? `🏢 ${labels.business}` : `🏠 ${labels.private}`}
+          {isBusiness ? labels.business : labels.private}
         </span>
       </div>
 
