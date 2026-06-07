@@ -12,6 +12,7 @@ import { MyAuctionsTab } from "@/components/dashboard/MyAuctionsTab"
 import { MyBidsTab } from "@/components/dashboard/MyBidsTab"
 import { SavedSearchesTab } from "@/components/dashboard/SavedSearchesTab"
 import { MessagesTab } from "@/components/dashboard/MessagesTab"
+import { AnalyticsTab } from "@/components/dashboard/AnalyticsTab"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -151,6 +152,7 @@ function DashboardContent() {
             )}
           </TabsTrigger>
 
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           {isBusiness && <TabsTrigger value="profile">Min virksomhed</TabsTrigger>}
         </TabsList>
 
@@ -181,6 +183,10 @@ function DashboardContent() {
             markSenderRead={markSenderRead}
             markMessagesRead={markMessagesRead}
           />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <AnalyticsTab isBusiness={isBusiness} />
         </TabsContent>
 
         {isBusiness && (

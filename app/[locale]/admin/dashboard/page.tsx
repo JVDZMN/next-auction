@@ -18,6 +18,7 @@ import { UsersTab } from '@/components/admin/UsersTab'
 import { SellersTab } from '@/components/admin/SellersTab'
 import { BiddersTab } from '@/components/admin/BiddersTab'
 import { CarsTab } from '@/components/admin/CarsTab'
+import { ChartsTab } from '@/components/admin/ChartsTab'
 
 interface Stats {
   totalUsers: number; totalCars: number; activeCars: number; totalBids: number
@@ -148,8 +149,9 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap h-auto gap-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="charts">Charts</TabsTrigger>
           <TabsTrigger value="users">
             Users <Badge variant="secondary" className="ml-1.5">{data.recentUsers.length}</Badge>
           </TabsTrigger>
@@ -162,6 +164,10 @@ export default function AdminDashboard() {
 
         <TabsContent value="overview">
           <OverviewTab stats={data.stats} recentUsers={data.recentUsers} topBidders={data.topBidders} />
+        </TabsContent>
+
+        <TabsContent value="charts">
+          <ChartsTab />
         </TabsContent>
 
         <TabsContent value="users">
