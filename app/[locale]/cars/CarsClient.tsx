@@ -136,7 +136,7 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
       <main className="max-w-400 mx-auto px-4 lg:px-6 pt-20 pb-6">
         <div className="flex gap-6">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="flex flex-wrap items-start justify-between mb-4 gap-2">
               <div>
                 <h1 className="text-2xl font-bold">Cars for Auction</h1>
                 {data && !loading && <p className="text-sm text-muted-foreground mt-0.5">{data.total.toLocaleString('da-DK')} listings</p>}
@@ -149,7 +149,7 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
                     return (
                       <button type="button" key={seg} disabled={isDisabled}
                         onClick={() => { if (!forcedSegment) { setSegment(seg); setPage(1) } }}
-                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1 px-2 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
                         style={isActive
                           ? { backgroundColor: 'var(--copper)', color: 'white' }
                           : { color: 'var(--text-muted)', backgroundColor: 'transparent' }}
@@ -198,7 +198,7 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
                 </button>
 
                 <Select value={sortBy} onValueChange={v => { setSortBy(v ?? ''); setPage(1) }}>
-                  <SelectTrigger className="w-44 h-9 text-xs">
+                  <SelectTrigger className="w-32 sm:w-44 h-9 text-xs">
                     <SelectValue>{SORT_OPTIONS.find(o => o.value === sortBy)?.label ?? sortBy}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
