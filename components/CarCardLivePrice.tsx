@@ -17,7 +17,7 @@ export function CarCardLivePrice({ carId, initialPrice, initialBidCount }: Props
 
   useEffect(() => {
     const pusher  = getPusherClient()
-    const channel = pusher.subscribe(`car-${carId}`)
+    const channel = pusher.subscribe(`private-car-${carId}`)
 
     channel.bind('bid-placed', (data: { currentPrice: number; bidCount: number }) => {
       setPrice(data.currentPrice)
@@ -27,6 +27,7 @@ export function CarCardLivePrice({ carId, initialPrice, initialBidCount }: Props
 
     return () => {
       channel.unbind('bid-placed')
+      pusher.unsubscribe(`private-car-${carId}`)
     }
   }, [carId])
 

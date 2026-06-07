@@ -31,7 +31,7 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const mobileLinks: { label: string; href: string }[] = session
+  const mobileLinks: { label: string; href: string; count?: number }[] = session
     ? [
         ...(isBusiness
           ? [
@@ -42,6 +42,7 @@ export function Header() {
         {
           label: isAdmin ? t.admin : (isBusiness ? t.myBusiness : t.myAccount),
           href:  isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`,
+          count: totalCount > 0 ? totalCount : undefined,
         },
         { label: t.createListing, href: `/${locale}/cars/create` },
       ]
@@ -147,19 +148,12 @@ export function Header() {
 
         {/* Mobile right */}
         <div className="flex lg:hidden items-center gap-1">
-          {totalCount > 0 && (
-            <span
-              className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white tabular-nums"
-              style={{ backgroundColor: 'var(--copper)' }}
-            >
-              {totalCount > 99 ? '99+' : totalCount}
-            </span>
-          )}
           <MobileSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}
             mobileLinks={mobileLinks}
             isAuthenticated={!!session}
+            totalCount={totalCount}
             t={t}
             onSignOut={() => signOut()}
           />
