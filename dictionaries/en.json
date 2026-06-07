@@ -591,6 +591,20 @@
       }
     ]
   },
+  "dashboard": {
+    "myAuctions": "My Auctions",
+    "myBids": "My Bids",
+    "savedSearches": "Saved Searches",
+    "messages": "Messages",
+    "analytics": "Analytics",
+    "myCompany": "My Company",
+    "activeAuctions": "Active Auctions",
+    "totalViews": "Total Views",
+    "bidsReceived": "Bids Received",
+    "carsSold": "Cars Sold",
+    "newListing": "+ New listing",
+    "myListings": "My listings (unlimited)"
+  },
   "faqPage": {
     "metaTitle": "FAQ – Next Auction",
     "metaDescription": "Answers to the most frequently asked questions about Next Auction.",

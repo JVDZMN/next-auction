@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { LoadingPage, ErrorPage, PageLayout } from "@/components/PageLayout"
-import { useLocale } from "@/lib/i18n/context"
+import { useLocale, useDict } from "@/lib/i18n/context"
 import { useNotifications } from "@/lib/notification-context"
 import { ProfileCard } from "@/components/dashboard/ProfileCard"
 import { StatsGrid } from "@/components/dashboard/StatsGrid"
@@ -41,6 +41,7 @@ interface User {
 function DashboardContent() {
   const router       = useRouter()
   const locale       = useLocale()
+  const td           = useDict().dashboard
   const searchParams = useSearchParams()
   const {
     unreadMessages, carsWithNewBids, outbidCarIds,
@@ -110,51 +111,53 @@ function DashboardContent() {
 
       {user.cars.length > 0 && (
         <StatsGrid stats={[
-          { label: 'Active Auctions', value: user.cars.filter(c => c.status === 'active' && !c.isDraft).length },
-          { label: 'Total Views',     value: user.cars.reduce((s, c) => s + c.views, 0) },
-          { label: 'Bids Received',   value: user.cars.reduce((s, c) => s + c._count.bids, 0) },
-          { label: 'Cars Sold',       value: user.cars.filter(c => c.status === 'completed').length },
+          { label: td.activeAuctions, value: user.cars.filter(c => c.status === 'active' && !c.isDraft).length },
+          { label: td.totalViews,     value: user.cars.reduce((s, c) => s + c.views, 0) },
+          { label: td.bidsReceived,   value: user.cars.reduce((s, c) => s + c._count.bids, 0) },
+          { label: td.carsSold,       value: user.cars.filter(c => c.status === 'completed').length },
         ]} />
       )}
 
       <Tabs value={activeTab} onValueChange={switchTab}>
-        <TabsList className="mb-4 flex-wrap h-auto gap-1">
-          <TabsTrigger value="listings" className="gap-1.5">
-            My Auctions
-            <Badge variant="secondary" className="ml-1">{user.cars.length}</Badge>
-            {carsWithNewBids.length > 0 && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white tabular-nums animate-pulse">
-                {carsWithNewBids.length}
-              </span>
-            )}
-          </TabsTrigger>
+        <div className="overflow-x-auto dashboard-tabs mb-4">
+          <TabsList className="flex w-max min-w-full gap-1 h-auto">
+            <TabsTrigger value="listings" className="gap-1.5 shrink-0">
+              {td.myAuctions}
+              <Badge variant="secondary" className="ml-1">{user.cars.length}</Badge>
+              {carsWithNewBids.length > 0 && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white tabular-nums animate-pulse">
+                  {carsWithNewBids.length}
+                </span>
+              )}
+            </TabsTrigger>
 
-          <TabsTrigger value="bids" className="gap-1.5">
-            My Bids
-            <Badge variant="secondary" className="ml-1">{user.bids.length}</Badge>
-            {outbidCarIds.length > 0 && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums animate-pulse">
-                {outbidCarIds.length}
-              </span>
-            )}
-          </TabsTrigger>
+            <TabsTrigger value="bids" className="gap-1.5 shrink-0">
+              {td.myBids}
+              <Badge variant="secondary" className="ml-1">{user.bids.length}</Badge>
+              {outbidCarIds.length > 0 && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums animate-pulse">
+                  {outbidCarIds.length}
+                </span>
+              )}
+            </TabsTrigger>
 
-          <TabsTrigger value="searches">
-            Saved Searches <Badge variant="secondary" className="ml-1.5">{user.savedSearches.length}</Badge>
-          </TabsTrigger>
+            <TabsTrigger value="searches" className="shrink-0">
+              {td.savedSearches} <Badge variant="secondary" className="ml-1.5">{user.savedSearches.length}</Badge>
+            </TabsTrigger>
 
-          <TabsTrigger value="messages" className="gap-1.5">
-            <MessageSquare className="h-3.5 w-3.5" /> Messages
-            {unreadMessages > 0 && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums">
-                {unreadMessages > 99 ? '99+' : unreadMessages}
-              </span>
-            )}
-          </TabsTrigger>
+            <TabsTrigger value="messages" className="gap-1.5 shrink-0">
+              <MessageSquare className="h-3.5 w-3.5" /> {td.messages}
+              {unreadMessages > 0 && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white tabular-nums">
+                  {unreadMessages > 99 ? '99+' : unreadMessages}
+                </span>
+              )}
+            </TabsTrigger>
 
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          {isBusiness && <TabsTrigger value="profile">Min virksomhed</TabsTrigger>}
-        </TabsList>
+            <TabsTrigger value="analytics" className="shrink-0">{td.analytics}</TabsTrigger>
+            {isBusiness && <TabsTrigger value="profile" className="shrink-0">{td.myCompany}</TabsTrigger>}
+          </TabsList>
+        </div>
 
         <TabsContent value="listings">
           <MyAuctionsTab

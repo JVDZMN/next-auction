@@ -591,6 +591,20 @@
       }
     ]
   },
+  "dashboard": {
+    "myAuctions": "Mine auktioner",
+    "myBids": "Mine bud",
+    "savedSearches": "Gemte søgninger",
+    "messages": "Beskeder",
+    "analytics": "Statistik",
+    "myCompany": "Min virksomhed",
+    "activeAuctions": "Aktive auktioner",
+    "totalViews": "Visninger i alt",
+    "bidsReceived": "Modtagne bud",
+    "carsSold": "Solgte biler",
+    "newListing": "+ Ny annonce",
+    "myListings": "Mine annoncer (ubegrænset)"
+  },
   "faqPage": {
     "metaTitle": "FAQ – Next Auction",
     "metaDescription": "Svar på de mest stillede spørgsmål om Next Auction.",
