@@ -10,7 +10,7 @@ interface Props {
 export function PageLayout({ children, maxWidth = 'max-w-7xl' }: Props) {
   return (
     <div className="min-h-screen bg-background">
-      <main className={`${maxWidth} mx-auto px-4 py-12`}>{children}</main>
+      <main className={`${maxWidth} mx-auto px-4 pt-20 pb-12`}>{children}</main>
     </div>
   )
 }
