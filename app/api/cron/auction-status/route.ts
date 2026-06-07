@@ -7,6 +7,29 @@ import {
   sendEmail,
 } from '@/lib/email'
 import { emitToCar } from '@/lib/socket-server'
+import { Redis } from '@upstash/redis'
+
+const LOCK_KEY = 'cron:auction-status'
+const LOCK_TTL = 250
+
+async function acquireCronLock(): Promise<boolean> {
+  if (!process.env.UPSTASH_REDIS_REST_URL) return true
+  const redis = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  })
+  const result = await redis.set(LOCK_KEY, '1', { nx: true, ex: LOCK_TTL })
+  return result === 'OK'
+}
+
+async function releaseCronLock() {
+  if (!process.env.UPSTASH_REDIS_REST_URL) return
+  const redis = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  })
+  await redis.del(LOCK_KEY)
+}
 
 // ── Close ended active auctions ───────────────────────────────────────────────
 export async function updateAuctionStatuses() {
@@ -129,6 +152,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const locked = await acquireCronLock().catch(() => true)
+  if (!locked) {
+    return NextResponse.json({ skipped: true, reason: 'Another instance is running' })
+  }
+
   try {
     const [results] = await Promise.all([
       updateAuctionStatuses(),
@@ -141,5 +169,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     return serverError('Failed to update auction statuses', error)
+  } finally {
+    await releaseCronLock().catch(() => {})
   }
 }

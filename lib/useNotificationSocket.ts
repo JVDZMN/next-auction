@@ -21,7 +21,7 @@ export function useNotificationSocket(
   useEffect(() => {
     if (!userId) return
     const pusher  = getPusherClient()
-    const channel = pusher.subscribe(`user-${userId}`)
+    const channel = pusher.subscribe(`private-user-${userId}`)
     const handler = (data: Notification) => cbRef.current(data)
     channel.bind('new-notification', handler)
     return () => {

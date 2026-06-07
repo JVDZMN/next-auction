@@ -7,6 +7,10 @@ export function getPusherClient(): PusherJs {
   if (!client) {
     client = new PusherJs(env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+      channelAuthorization: {
+        endpoint:  '/api/pusher/auth',
+        transport: 'ajax',
+      },
     })
   }
   return client

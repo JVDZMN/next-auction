@@ -6,8 +6,19 @@ import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 import { BidError } from '@/lib/bid-error'
 import { placeBid } from '@/lib/services/bid-service'
 import { logger } from '@/lib/logger'
+import { Redis } from '@upstash/redis'
 
 const BID_RATE_LIMIT = { limit: 5, windowMs: 10_000 } // 5 bids per 10 s per user
+
+async function checkIdempotency(key: string): Promise<'new' | 'duplicate'> {
+  if (!process.env.UPSTASH_REDIS_REST_URL) return 'new'
+  const redis = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  })
+  const result = await redis.set(`idemp:${key}`, '1', { nx: true, ex: 600 })
+  return result === 'OK' ? 'new' : 'duplicate'
+}
 
 export async function POST(request: NextRequest) {
   let userId: string | undefined
@@ -20,6 +31,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     userId = session.user.id
+
+    const idempKey = request.headers.get('idempotency-key')
+    if (idempKey) {
+      const status = await checkIdempotency(`${userId}:${idempKey}`)
+      if (status === 'duplicate') {
+        return NextResponse.json({ error: 'Duplicate request' }, { status: 409 })
+      }
+    }
 
     const rl = await rateLimit(`bid:${userId}`, BID_RATE_LIMIT)
     if (!rl.allowed) {

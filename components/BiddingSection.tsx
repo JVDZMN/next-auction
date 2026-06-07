@@ -100,7 +100,7 @@ export function BiddingSection({
   // Pusher: live price + bid history updates
   useEffect(() => {
     const pusher  = getPusherClient()
-    const channel = pusher.subscribe(`car-${carId}`)
+    const channel = pusher.subscribe(`private-car-${carId}`)
     channel.bind('auction-ended', () => setIsEnded(true))
     channel.bind('bid-placed', (data: { currentPrice: number; bidderId: string; bidderName: string; bidId: string; timestamp: string }) => {
       setLivePrice(data.currentPrice)
@@ -112,7 +112,7 @@ export function BiddingSection({
     return () => {
       channel.unbind('bid-placed')
       channel.unbind('auction-ended')
-      pusher.unsubscribe(`car-${carId}`)
+      pusher.unsubscribe(`private-car-${carId}`)
     }
   }, [carId, canSeeBidHistory, onPriceUpdate])
 

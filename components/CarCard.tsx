@@ -7,7 +7,7 @@ import { LikeButton } from '@/components/LikeButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useLocale } from '@/lib/i18n/context'
-import { cloudinaryBlurUrl } from '@/lib/cloudinary'
+import { cloudinaryBlurUrl, cloudinaryCardUrl } from '@/lib/cloudinary'
 import { CarCardLivePrice } from '@/components/CarCardLivePrice'
 
 type CarCardProps = {
@@ -59,7 +59,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
         <div className="relative aspect-4/3 bg-muted">
           {images?.[0] ? (
             <Image
-              src={images[0]}
+              src={cloudinaryCardUrl(images[0])}
               alt={`${year} ${brand} ${model}`}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
