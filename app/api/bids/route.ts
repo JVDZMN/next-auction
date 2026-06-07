@@ -63,6 +63,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
+function maskName(raw: string): string {
+  if (raw.includes('@')) {
+    const [local, domain] = raw.split('@')
+    return `${local[0]}***@${domain}`
+  }
+  return raw.split(' ').map(p => p.length > 1 ? `${p[0]}***` : p).join(' ')
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -72,6 +80,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'carId is required' }, { status: 400 })
     }
 
+    const session = await requireAuth().catch(() => null)
+    const car = await prisma.car.findUnique({ where: { id: carId }, select: { ownerId: true } })
+    const isPrivileged = session && (session.user.role === 'ADMIN' || session.user.id === car?.ownerId)
+
     const bids = await prisma.bid.findMany({
       where: { carId },
       orderBy: { createdAt: 'desc' },
@@ -79,7 +91,14 @@ export async function GET(request: NextRequest) {
       include: { bidder: { select: bidderSelect } },
     })
 
-    return NextResponse.json({ bids })
+    const result = isPrivileged
+      ? bids
+      : bids.map(b => ({
+          ...b,
+          bidder: { ...b.bidder, name: maskName(b.bidder.name ?? b.bidder.email), email: '' },
+        }))
+
+    return NextResponse.json({ bids: result })
   } catch (error) {
     return serverError('Failed to fetch bids', error)
   }

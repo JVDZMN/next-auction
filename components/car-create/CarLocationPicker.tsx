@@ -77,7 +77,7 @@ export default function CarLocationPicker({ onLocationChange, onClear, externalP
         </p>
       </div>
 
-      <div style={{ height: 350 }} className="rounded-md overflow-hidden border">
+      <div style={{ height: 350 }} className="rounded-md overflow-hidden border isolate">
         <MapContainer
           center={[56.2639, 9.5018]}
           zoom={6}

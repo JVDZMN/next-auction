@@ -80,7 +80,7 @@ export function BiddingSection({
   const isAuctionActive  = status === 'active' && new Date(auctionEndDate) > new Date()
   const isOwner          = Boolean(session?.user?.id && ownerId === session.user.id)
   const isAdmin          = session?.user?.role === 'ADMIN'
-  const canSeeBidHistory = isOwner || isAdmin
+  const canSeeBidHistory = !!session
   const minNextBid       = bidIncrement && bidIncrement > 0 ? livePrice + bidIncrement : livePrice + 1
 
   // useLayoutEffect (not useEffect) prevents a visible flash of the stale price
