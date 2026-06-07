@@ -113,10 +113,20 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
         if (proxyUpdate.count === 1) {
           const proxyBidRecord = await client.bid.create({
             data: { carId, bidderId: competingProxy.bidderId, amount: proxyAmount },
+            include: { bidder: { select: bidderSelect } },
           })
           await client.car.update({
             where: { id: carId },
             data: { winnerBidId: proxyBidRecord.id },
+          })
+          const proxyBidCount = await client.bid.count({ where: { carId } })
+          await emitToCar(carId, 'bid-placed', {
+            currentPrice: proxyAmount,
+            bidId:        proxyBidRecord.id,
+            bidCount:     proxyBidCount,
+            bidderId:     competingProxy.bidderId,
+            bidderName:   maskName(proxyBidRecord.bidder.name ?? proxyBidRecord.bidder.email),
+            timestamp:    new Date().toISOString(),
           })
         }
       }

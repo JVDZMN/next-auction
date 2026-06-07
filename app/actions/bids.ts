@@ -63,5 +63,37 @@ export async function setProxyBid(carId: string, maxAmount: number): Promise<Pro
     create: { carId, bidderId: session.user.id, maxAmount: parse.data.maxAmount },
     update: { maxAmount: parse.data.maxAmount, isActive: true },
   })
+
+  // Skip immediate bid if this user is already winning
+  const topBid = await prisma.bid.findFirst({
+    where: { carId },
+    orderBy: { amount: 'desc' },
+    select: { bidderId: true },
+  })
+  if (topBid?.bidderId === session.user.id) return { id: proxy.id }
+
+  // Resolve all active proxies: winner bids one increment above second-highest max
+  const allProxies = await prisma.proxyBid.findMany({
+    where: { carId, isActive: true },
+    orderBy: { maxAmount: 'desc' },
+    take: 2,
+  })
+  if (allProxies.length === 0) return { id: proxy.id }
+
+  const increment = car.bidIncrement ?? 1
+  const winner = allProxies[0]
+  const initialBid = allProxies.length >= 2
+    ? Math.min(allProxies[1].maxAmount + increment, winner.maxAmount)
+    : car.currentPrice + increment
+
+  if (initialBid <= car.currentPrice || initialBid > winner.maxAmount) return { id: proxy.id }
+
+  try {
+    await placeBidService({ userId: winner.bidderId, carId, amount: initialBid })
+  } catch (err) {
+    if (err instanceof BidError && err.httpStatus !== 409) return { error: err.message }
+    // 409 = lost race to a concurrent bid; proxy is saved and will counter on next bid
+  }
+
   return { id: proxy.id }
 }
