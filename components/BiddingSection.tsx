@@ -97,6 +97,11 @@ export function BiddingSection({
 
   useEffect(() => { if (canSeeBidHistory) fetchBids() }, [carId, canSeeBidHistory, fetchBids])
 
+  const canSeeBidHistoryRef = useRef(canSeeBidHistory)
+  const onPriceUpdateRef    = useRef(onPriceUpdate)
+  useEffect(() => { canSeeBidHistoryRef.current = canSeeBidHistory }, [canSeeBidHistory])
+  useEffect(() => { onPriceUpdateRef.current    = onPriceUpdate    }, [onPriceUpdate])
+
   // Pusher: live price + bid history updates
   useEffect(() => {
     const pusher  = getPusherClient()
@@ -104,8 +109,8 @@ export function BiddingSection({
     channel.bind('auction-ended', () => setIsEnded(true))
     channel.bind('bid-placed', (data: { currentPrice: number; bidderId: string; bidderName: string; bidId: string; timestamp: string }) => {
       setLivePrice(data.currentPrice)
-      onPriceUpdate?.(data.currentPrice)
-      if (canSeeBidHistory) {
+      onPriceUpdateRef.current?.(data.currentPrice)
+      if (canSeeBidHistoryRef.current) {
         setBids(prev => [{ id: data.bidId, amount: data.currentPrice, createdAt: data.timestamp, bidder: { name: data.bidderName, email: '' } }, ...prev])
       }
     })
@@ -114,7 +119,7 @@ export function BiddingSection({
       channel.unbind('auction-ended')
       pusher.unsubscribe(`private-car-${carId}`)
     }
-  }, [carId, canSeeBidHistory, onPriceUpdate])
+  }, [carId])
 
   // Permission guard (after all hooks)
   if (session?.user && session.user.id !== ownerId && session.user.role !== 'ADMIN') {
