@@ -1,19 +1,19 @@
 'use client'
 
-import { Suspense, useState, useEffect, FormEvent } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useLocale, useDict } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlertTriangle, CheckCircle2, Info, Building2, User } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Building2, User } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { PrivateSignupForm } from '@/components/auth/PrivateSignupForm'
+import { BusinessSignupForm } from '@/components/auth/BusinessSignupForm'
 
 function GoogleIcon() {
   return (
@@ -26,13 +26,11 @@ function GoogleIcon() {
   )
 }
 
-type CvrResult = { name: string; city: string; industry: string } | null
-
 function SignUpContent() {
-  const router   = useRouter()
-  const locale   = useLocale()
-  const t        = useDict().signup
-  const params   = useSearchParams()
+  const router  = useRouter()
+  const locale  = useLocale()
+  const t       = useDict().signup
+  const params  = useSearchParams()
   const defaultTab = (params.get('tab') === 'business' ? 'business' : 'private') as 'private' | 'business'
 
   const [tab, setTab]           = useState<'private' | 'business'>(defaultTab)
@@ -40,44 +38,14 @@ function SignUpContent() {
   const [error, setError]       = useState('')
   const [success, setSuccess]   = useState(false)
 
-  // Private form
-  const [priv, setPriv] = useState({ name: '', email: '', password: '', confirm: '' })
-
-  // Business form
-  const [biz, setBiz]           = useState({ name: '', cvr: '', email: '', password: '', confirm: '' })
-  const [cvrResult, setCvrResult]   = useState<CvrResult>(null)
-  const [cvrLoading, setCvrLoading] = useState(false)
-  const [cvrError, setCvrError]     = useState('')
-
-  // CVR auto-lookup when 8 digits typed
-  useEffect(() => {
-    if (biz.cvr.length !== 8) { setCvrResult(null); setCvrError(''); return }
-    let cancelled = false
-    setCvrLoading(true)
-    setCvrError('')
-    fetch(`/api/cvr?cvr=${biz.cvr}`)
-      .then(r => r.json())
-      .then((data: { name?: string; city?: string; industry?: string; error?: string }) => {
-        if (cancelled) return
-        if (data.error) { setCvrError(t.cvrNotFound); setCvrResult(null) }
-        else { setCvrResult({ name: data.name ?? '', city: data.city ?? '', industry: data.industry ?? '' }); setCvrError('') }
-      })
-      .catch(() => { if (!cancelled) setCvrError(t.cvrFetchError) })
-      .finally(() => { if (!cancelled) setCvrLoading(false) })
-    return () => { cancelled = true }
-  }, [biz.cvr, t.cvrNotFound, t.cvrFetchError])
-
-  const handlePrivateSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const handlePrivateSubmit = async ({ name, email, password }: { name: string; email: string; password: string }) => {
     setError('')
-    if (priv.password !== priv.confirm) { setError(t.errPasswordMismatch); return }
-    if (priv.password.length < 6) { setError(t.errPasswordTooShort); return }
     setLoading(true)
     try {
       const res  = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: priv.name, email: priv.email, password: priv.password, locale, userType: 'PRIVATE_USER', skatDisclaimerAccepted: true }),
+        body: JSON.stringify({ name, email, password, locale, userType: 'PRIVATE_USER', skatDisclaimerAccepted: true }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || t.errCreateFailed)
@@ -89,18 +57,14 @@ function SignUpContent() {
     }
   }
 
-  const handleBusinessSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const handleBusinessSubmit = async ({ name, email, password, cvr }: { name: string; email: string; password: string; cvr: string }) => {
     setError('')
-    if (!cvrResult) { setError(t.errVerifyCvr); return }
-    if (biz.password !== biz.confirm) { setError(t.errPasswordMismatch); return }
-    if (biz.password.length < 6) { setError(t.errPasswordTooShort); return }
     setLoading(true)
     try {
       const res  = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: biz.name || cvrResult.name, email: biz.email, password: biz.password, locale, userType: 'BUSINESS_USER', cvrNumber: biz.cvr }),
+        body: JSON.stringify({ name, email, password, locale, userType: 'BUSINESS_USER', cvrNumber: cvr }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || t.errApplyFailed)
@@ -112,7 +76,6 @@ function SignUpContent() {
     }
   }
 
-  // Business success screen
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: 'var(--page-bg)' }}>
@@ -123,9 +86,7 @@ function SignUpContent() {
             </div>
           </div>
           <h1 className="mb-3 text-2xl font-black" style={{ color: 'var(--text-body)' }}>{t.successTitle}</h1>
-          <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            {t.successBody}
-          </p>
+          <p className="mb-8 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{t.successBody}</p>
           <Link
             href={`/${locale}/auth/signin`}
             className="inline-block rounded px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-85"
@@ -141,8 +102,6 @@ function SignUpContent() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: 'var(--page-bg)' }}>
       <div className="w-full max-w-md">
-
-        {/* Logo */}
         <div className="mb-8 text-center">
           <Link href={`/${locale}`} className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-body)' }}>
             Next<span style={{ color: 'var(--copper)' }}>Auction</span>
@@ -150,10 +109,7 @@ function SignUpContent() {
           <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t.pageSubtitle}</p>
         </div>
 
-        {/* Tab card */}
         <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: 'white', borderColor: 'rgba(0,0,0,0.08)' }}>
-
-          {/* Tab header */}
           <div className="p-4 pb-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
             <Tabs value={tab} onValueChange={(v) => { setTab(v as 'private' | 'business'); setError('') }}>
               <TabsList className="w-full grid grid-cols-2 h-11">
@@ -175,133 +131,11 @@ function SignUpContent() {
               </Alert>
             )}
 
-            {/* ── PRIVATE TAB ── */}
             {tab === 'private' && (
-              <>
-                {/* SKAT info */}
-                <div
-                  className="flex gap-3 rounded-lg p-4"
-                  style={{ backgroundColor: 'rgba(196,125,58,0.07)', border: '1px solid rgba(196,125,58,0.25)' }}
-                >
-                  <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: 'var(--copper)' }} />
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-body)' }}>
-                    {t.skatInfoPrefix} <strong>{t.skatInfoHighlight}</strong> {t.skatInfoSuffix}
-                  </p>
-                </div>
-
-                <form onSubmit={handlePrivateSubmit} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="priv-name">{t.labelFullName}</Label>
-                    <Input id="priv-name" type="text" required className="h-11 text-base" placeholder={t.placeholderName}
-                      value={priv.name} onChange={e => setPriv({ ...priv, name: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="priv-email">{t.labelEmail}</Label>
-                    <Input id="priv-email" type="email" required className="h-11 text-base" placeholder={t.placeholderEmail}
-                      value={priv.email} onChange={e => setPriv({ ...priv, email: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="priv-pw">{t.labelPassword}</Label>
-                    <Input id="priv-pw" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
-                      value={priv.password} onChange={e => setPriv({ ...priv, password: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="priv-confirm">{t.labelConfirmPassword}</Label>
-                    <Input id="priv-confirm" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
-                      value={priv.confirm} onChange={e => setPriv({ ...priv, confirm: e.target.value })} />
-                  </div>
-
-                  <div className="flex items-start gap-2.5 pt-1">
-                    <Checkbox id="priv-terms" required className="mt-0.5 shrink-0" />
-                    <Label htmlFor="priv-terms" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
-                      {t.termsPrefix}{' '}
-                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.termsLink}</Link>
-                      {' '}{t.termsConjunction}{' '}
-                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.privacyLink}</Link>
-                    </Label>
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 text-sm font-bold text-white" disabled={isLoading}
-                    style={{ backgroundColor: 'var(--copper)' }}>
-                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />{t.btnCreating}</> : t.btnCreatePrivate}
-                  </Button>
-                </form>
-              </>
+              <PrivateSignupForm isLoading={isLoading} onSubmit={handlePrivateSubmit} />
             )}
-
-            {/* ── BUSINESS TAB ── */}
             {tab === 'business' && (
-              <>
-                <Alert style={{ borderColor: 'rgba(180,130,0,0.3)', backgroundColor: 'rgba(255,200,0,0.07)' }}>
-                  <AlertTriangle className="h-4 w-4" style={{ color: 'rgb(160,110,0)' }} />
-                  <AlertDescription style={{ color: 'rgb(120,80,0)' }}>
-                    {t.bizApprovalWarning}
-                  </AlertDescription>
-                </Alert>
-
-                <form onSubmit={handleBusinessSubmit} className="space-y-4">
-                  {/* CVR field */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="biz-cvr">{t.labelCvr}</Label>
-                    <Input id="biz-cvr" type="text" required inputMode="numeric" maxLength={8} className="h-11 text-base font-mono tracking-widest" placeholder="12345678"
-                      value={biz.cvr} onChange={e => setBiz({ ...biz, cvr: e.target.value.replace(/\D/g, '') })} />
-                    {cvrLoading && (
-                      <p className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                        <Spinner className="h-3 w-3" /> {t.cvrLoading}
-                      </p>
-                    )}
-                    {cvrResult && (
-                      <div className="flex items-center gap-2 rounded-md px-3 py-2 text-xs" style={{ backgroundColor: 'rgba(0,160,60,0.08)', border: '1px solid rgba(0,160,60,0.2)', color: 'rgb(0,120,40)' }}>
-                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                        <span><strong>{cvrResult.name}</strong> · {cvrResult.city} · {t.cvrActive}</span>
-                      </div>
-                    )}
-                    {cvrError && (
-                      <p className="text-xs" style={{ color: 'rgb(180,0,0)' }}>{cvrError}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="biz-name">{t.labelCompanyName}</Label>
-                    <Input id="biz-name" type="text" required className="h-11 text-base" placeholder={cvrResult?.name || t.placeholderCompany}
-                      value={biz.name} onChange={e => setBiz({ ...biz, name: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="biz-email">{t.labelEmail}</Label>
-                    <Input id="biz-email" type="email" required className="h-11 text-base" placeholder={t.placeholderBizEmail}
-                      value={biz.email} onChange={e => setBiz({ ...biz, email: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="biz-pw">{t.labelPassword}</Label>
-                    <Input id="biz-pw" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
-                      value={biz.password} onChange={e => setBiz({ ...biz, password: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="biz-confirm">{t.labelConfirmPassword}</Label>
-                    <Input id="biz-confirm" type="password" required minLength={6} className="h-11 text-base" placeholder="••••••••"
-                      value={biz.confirm} onChange={e => setBiz({ ...biz, confirm: e.target.value })} />
-                  </div>
-
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    {t.cvrVerifyInfo}
-                  </p>
-
-                  <div className="flex items-start gap-2.5 pt-1">
-                    <Checkbox id="biz-terms" required className="mt-0.5 shrink-0" />
-                    <Label htmlFor="biz-terms" className="text-sm leading-relaxed cursor-pointer" style={{ color: 'var(--text-muted)' }}>
-                      {t.termsPrefix}{' '}
-                      <Link href={`/${locale}/terms`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.termsLink}</Link>
-                      {' '}{t.termsConjunction}{' '}
-                      <Link href={`/${locale}/privacy`} target="_blank" className="underline underline-offset-2" style={{ color: 'var(--text-body)' }}>{t.privacyLink}</Link>
-                    </Label>
-                  </div>
-
-                  <Button type="submit" className="w-full h-11 text-sm font-bold text-white" disabled={isLoading}
-                    style={{ backgroundColor: 'var(--dark-section)' }}>
-                    {isLoading ? <><Spinner className="mr-2 h-4 w-4" />{t.btnSending}</> : t.btnApplyBusiness}
-                  </Button>
-                </form>
-              </>
+              <BusinessSignupForm isLoading={isLoading} onSubmit={handleBusinessSubmit} />
             )}
 
             <Separator />

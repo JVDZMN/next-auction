@@ -8,11 +8,12 @@ import { useLocale } from '@/lib/i18n/context'
 import type { Car } from '@/types/car'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ArrowLeft, Trophy, AlertTriangle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ArrowLeft } from 'lucide-react'
+import { AdminBidStats } from '@/components/admin/AdminBidStats'
+import { AdminBidsTable } from '@/components/admin/AdminBidsTable'
+import { DisputeResolution } from '@/components/admin/DisputeResolution'
 
 interface AdminCar extends Omit<Car, 'bids'> {
   bids: Array<{
@@ -87,7 +88,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
       </Button>
 
       <div className="space-y-6">
-        {/* Header */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -103,7 +103,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
           </CardContent>
         </Card>
 
-        {/* Images */}
         {car.images.length > 0 && (
           <Card>
             <CardContent className="pt-6">
@@ -116,7 +115,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
           </Card>
         )}
 
-        {/* Price cards */}
         <div className="grid md:grid-cols-4 gap-4">
           {[
             { label: 'Starting Price', value: `${car.startingPrice.toLocaleString('da-DK')} kr`, accent: false },
@@ -133,31 +131,10 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
           ))}
         </div>
 
-        {/* Bid statistics */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Bid Statistics</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {[
-                { label: 'Total Bids',     value: String(bidStats.totalBids) },
-                { label: 'Unique Bidders', value: String(bidStats.uniqueBidders) },
-                ...(bidStats.highestBid != null ? [{ label: 'Highest Bid', value: `${bidStats.highestBid.toLocaleString('da-DK')} kr` }] : []),
-                ...(bidStats.lowestBid  != null ? [{ label: 'Lowest Bid',  value: `${bidStats.lowestBid.toLocaleString('da-DK')} kr`  }] : []),
-                ...(bidStats.averageBid != null ? [{ label: 'Average Bid', value: `${bidStats.averageBid.toLocaleString('da-DK', { maximumFractionDigits: 0 })} kr` }] : []),
-              ].map(({ label, value }) => (
-                <div key={label} className="text-center p-3 rounded-lg bg-muted/40">
-                  <p className="text-2xl font-bold text-primary">{value}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <AdminBidStats bidStats={bidStats} />
 
-        {/* Owner */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Owner Information</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <p className="font-semibold">{car.owner.name || 'Anonymous'}</p>
             <p className="text-muted-foreground text-sm">{car.owner.email}</p>
             {car.owner.createdAt && (
@@ -166,101 +143,18 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
           </CardContent>
         </Card>
 
-        {/* Bids table */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">All Bids ({car.bids.length})</CardTitle></CardHeader>
-          {car.bids.length === 0 ? (
-            <CardContent><p className="text-muted-foreground text-sm text-center py-8">No bids yet</p></CardContent>
-          ) : (
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Bidder</TableHead>
-                    <TableHead>Activity</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {car.bids.map((bid, index) => (
-                    <TableRow key={bid.id} className={index === 0 ? 'bg-green-50/50' : ''}>
-                      <TableCell>
-                        {index === 0
-                          ? <Trophy className="h-4 w-4 text-green-600" />
-                          : <span className="text-muted-foreground text-xs">#{index + 1}</span>}
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium text-sm">{bid.bidder.name || 'Anonymous'}</p>
-                        <p className="text-xs text-muted-foreground">{bid.bidder.email}</p>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {bid.bidder._count?.cars ?? 0} listings · {bid.bidder._count?.bids ?? 0} bids
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {new Date(bid.createdAt).toLocaleString('da-DK')}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-primary">
-                        {bid.amount.toLocaleString('da-DK')} kr
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          )}
-        </Card>
+        <AdminBidsTable bids={car.bids} />
 
-        {/* Dispute resolution */}
         {car.status === 'disputed' && (
-          <Card className="border-red-200">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2 text-red-700">
-                <AlertTriangle className="h-4 w-4" /> Dispute Filed
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert className="border-red-200 bg-red-50">
-                <AlertDescription className="text-red-800">
-                  <strong>Reason:</strong> {(car as unknown as { disputeReason?: string }).disputeReason ?? 'No reason provided'}
-                </AlertDescription>
-              </Alert>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={async () => {
-                    if (!confirm('Issue a full refund and relist the car?')) return
-                    const res = await fetch(`/api/admin/cars/${car.id}/refund`, { method: 'POST' })
-                    if (res.ok) fetchData()
-                    else alert('Refund failed')
-                  }}
-                >
-                  Refund &amp; Relist
-                </Button>
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  size="sm"
-                  onClick={async () => {
-                    if (!confirm('Confirm the sale (dismiss dispute)?')) return
-                    const res = await fetch(`/api/admin/cars/${car.id}/confirm`, { method: 'POST' })
-                    if (res.ok) fetchData()
-                    else alert('Confirmation failed')
-                  }}
-                >
-                  Confirm Sale
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <DisputeResolution
+            carId={car.id}
+            disputeReason={(car as unknown as { disputeReason?: string }).disputeReason}
+            onSuccess={fetchData}
+          />
         )}
 
-        {/* Specs */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Specifications</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="grid md:grid-cols-3 gap-4">
               {[
                 { label: 'Year',       value: String(car.year) },
@@ -275,7 +169,6 @@ export default function AdminCarDetailPage({ params }: { params: Promise<{ id: s
                 </div>
               ))}
             </div>
-
             {car.description && (
               <>
                 <Separator className="my-4" />

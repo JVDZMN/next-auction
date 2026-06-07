@@ -25,7 +25,8 @@ export function ProxyBidForm({ proxyMax, livePrice, minNextBid, isEnded, isPendi
         <p className="text-xs text-muted-foreground mt-0.5">{labels.description}</p>
       </div>
       {error   && <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>}
-      {success && <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800"><CheckCircle2 className="h-4 w-4" /><AlertDescription>{success}</AlertDescription></Alert>}
+      {success && <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800">
+        <CheckCircle2 className="h-4 w-4" /><AlertDescription>{success}</AlertDescription></Alert>}
       <form onSubmit={onSubmit} className="flex gap-2">
         <Input
           type="number" step="1" min={minNextBid}
