@@ -303,12 +303,24 @@
       }
     }
   },
+  "notifications": {
+    "title": "Notifikationer",
+    "gotoDashboard": "Gå til dashboard",
+    "unreadMessages": "{count} ulæste beskeder",
+    "outbid": "Du er overbud — se auktionen",
+    "newBidOnListing": "Nyt bud på din annonce",
+    "empty": "Ingen notifikationer",
+    "outbidToastTitle": "Du er overbud!",
+    "outbidToastDesc": "Din bid er blevet overgået af en anden køber",
+    "outbidToastAction": "Se auktion"
+  },
   "bidding": {
     "currentBid": "Aktuel pris",
     "placeBid": "Afgiv bud",
     "yourBidLabel": "Dit bud (kr)",
     "minimumBid": "Mindste næste bud",
     "increment": "inkrement",
+    "bidNow": "Byd nu",
     "submit": "Afgiv bud",
     "placing": "Afgiver bud...",
     "success": "Bud afgivet!",

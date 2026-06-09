@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react'
 import Link from 'next/link'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useNotifications } from '@/lib/notification-context'
-import { useLocale } from '@/lib/i18n/context'
+import { useLocale, useDict } from '@/lib/i18n/context'
 
 interface Notif {
   id: string
@@ -25,6 +25,9 @@ export function NotificationBell() {
   const [notifs, setNotifs] = useState<Notif[]>([])
   const [loading, setLoading] = useState(false)
   const locale = useLocale()
+  const dict = useDict()
+  const tn = dict.notifications
+  const tc = dict.common
 
   useEffect(() => {
     if (!open) return
@@ -39,9 +42,9 @@ export function NotificationBell() {
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const liveItems: { label: string; href: string }[] = [
-    ...(unreadMessages > 0 ? [{ label: `${unreadMessages} ulæste beskeder`, href: `/${locale}/dashboard` }] : []),
-    ...outbidCarIds.map(carId => ({ label: 'Du er overbud — se auktionen', href: `/${locale}/cars/${carId}` })),
-    ...carsWithNewBids.map(carId => ({ label: 'Nyt bud på din annonce', href: `/${locale}/cars/${carId}` })),
+    ...(unreadMessages > 0 ? [{ label: tn.unreadMessages.replace('{count}', String(unreadMessages)), href: `/${locale}/dashboard?tab=messages` }] : []),
+    ...outbidCarIds.map(carId => ({ label: tn.outbid, href: `/${locale}/cars/${carId}` })),
+    ...carsWithNewBids.map(carId => ({ label: tn.newBidOnListing, href: `/${locale}/cars/${carId}` })),
   ]
 
   return (
@@ -60,13 +63,13 @@ export function NotificationBell() {
 
       <PopoverContent align="end" className="w-80 p-0 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <span className="text-sm font-semibold">Notifikationer</span>
+          <span className="text-sm font-semibold">{tn.title}</span>
           <Link
             href={`/${locale}/dashboard`}
             onClick={() => setOpen(false)}
             className="text-xs text-muted-foreground hover:underline"
           >
-            Gå til dashboard
+            {tn.gotoDashboard}
           </Link>
         </div>
 
@@ -89,12 +92,12 @@ export function NotificationBell() {
 
           {loading ? (
             <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              Indlæser...
+              {tc.loading}
             </div>
           ) : notifs.length === 0 && liveItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2">
               <Bell className="h-8 w-8 text-muted-foreground/25" />
-              <p className="text-sm text-muted-foreground">Ingen notifikationer</p>
+              <p className="text-sm text-muted-foreground">{tn.empty}</p>
             </div>
           ) : (
             notifs.map(n => (

@@ -12,26 +12,20 @@ interface Props {
   onOpenChange: (open: boolean) => void
   mobileLinks: NavLink[]
   isAuthenticated: boolean
-  totalCount: number
   t: { openMenu: string; signOut: string; language: string }
   onSignOut: () => void
 }
 
-export function MobileSheet({ open, onOpenChange, mobileLinks, isAuthenticated, totalCount, t, onSignOut }: Props) {
+export function MobileSheet({ open, onOpenChange, mobileLinks, isAuthenticated, t, onSignOut }: Props) {
   const closeSheet = () => onOpenChange(false)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger
-        className="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-white/75 hover:text-white hover:bg-white/8 transition-colors"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-md text-white/75 hover:text-white hover:bg-white/8 transition-colors"
         aria-label={t.openMenu}
       >
         <Menu className="h-5 w-5" />
-        {totalCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 h-4 min-w-4 inline-flex items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white tabular-nums" style={{ backgroundColor: 'var(--copper)' }}>
-            {totalCount > 99 ? '99+' : totalCount}
-          </span>
-        )}
       </SheetTrigger>
 
       <SheetContent

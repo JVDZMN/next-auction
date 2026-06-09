@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { useLocale } from '@/lib/i18n/context'
+import { useLocale, useDict } from '@/lib/i18n/context'
 import { useNotifications } from '@/lib/notification-context'
 import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import { BiddingSection } from '@/components/BiddingSection'
@@ -38,6 +38,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   const router = useRouter()
   const { data: session } = useSession()
   const locale = useLocale()
+  const td = useDict()
   const { carsWithNewBids, markCarBidsRead } = useNotifications()
   const { id } = params instanceof Promise ? use(params) : params
 
@@ -322,7 +323,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
         <div className="sticky-bid-bar fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t">
           <div className="flex items-center justify-between px-4 py-3 gap-3">
             <div className="min-w-0">
-              <p className="text-xs text-white/50">Aktuel pris</p>
+              <p className="text-xs text-white/50">{td.cars.detail.currentPrice}</p>
               <p className="text-lg font-black text-white leading-tight">
                 {car.currentPrice.toLocaleString('da-DK')} kr
               </p>
@@ -333,7 +334,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               onClick={() => biddingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               className="btn-copper shrink-0 rounded px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-85"
             >
-              Byd nu
+              {td.bidding.bidNow}
             </button>
           </div>
         </div>

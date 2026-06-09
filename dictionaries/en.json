@@ -303,12 +303,24 @@
       }
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "gotoDashboard": "Go to dashboard",
+    "unreadMessages": "{count} unread messages",
+    "outbid": "You've been outbid — view auction",
+    "newBidOnListing": "New bid on your listing",
+    "empty": "No notifications",
+    "outbidToastTitle": "You've been outbid!",
+    "outbidToastDesc": "Your bid has been surpassed by another buyer",
+    "outbidToastAction": "View auction"
+  },
   "bidding": {
     "currentBid": "Current Bid",
     "placeBid": "Place Your Bid",
     "yourBidLabel": "Your Bid (kr)",
     "minimumBid": "Minimum next bid",
     "increment": "increment",
+    "bidNow": "Bid now",
     "submit": "Place Bid",
     "placing": "Placing Bid...",
     "success": "Bid placed successfully!",

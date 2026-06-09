@@ -21,11 +21,13 @@ const NAV_LINK_STYLE = { color: 'rgba(255,255,255,0.65)' }
 export function Header() {
   const { data: session, status } = useSession()
   const locale        = useLocale()
-  const t             = useDict().nav
+  const dict          = useDict()
+  const t             = dict.nav
+  const tn            = dict.notifications
   const isAdmin       = session?.user?.role === 'ADMIN'
   const isBusiness    = session?.user?.role === 'BUSINESS_USER'
   const router = useRouter()
-  const { totalCount, outbidCarIds } = useNotifications()
+  const { outbidCarIds } = useNotifications()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const prevOutbidRef = useRef<string[] | null>(null)
@@ -43,9 +45,9 @@ export function Header() {
     }
     const newIds = outbidCarIds.filter(id => !prevOutbidRef.current!.includes(id))
     newIds.forEach(carId => {
-      toast.warning('Du er overbud!', {
-        description: 'Din bid er blevet overgået af en anden køber',
-        action: { label: 'Se auktion', onClick: () => router.push(`/${locale}/cars/${carId}`) },
+      toast.warning(tn.outbidToastTitle, {
+        description: tn.outbidToastDesc,
+        action: { label: tn.outbidToastAction, onClick: () => router.push(`/${locale}/cars/${carId}`) },
         duration: 8000,
       })
     })
@@ -63,7 +65,6 @@ export function Header() {
         {
           label: isAdmin ? t.admin : (isBusiness ? t.myBusiness : t.myAccount),
           href:  isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`,
-          count: totalCount > 0 ? totalCount : undefined,
         },
         { label: t.createListing, href: `/${locale}/cars/create` },
       ]
@@ -109,20 +110,12 @@ export function Header() {
           {session && (
             <Link
               href={isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`}
-              className={cn(NAV_LINK, 'inline-flex items-center gap-1.5')}
+              className={NAV_LINK}
               style={NAV_LINK_STYLE}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'white')}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)')}
             >
               {isAdmin ? t.admin : (isBusiness ? t.myBusiness : t.myAccount)}
-              {totalCount > 0 && (
-                <span
-                  className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white tabular-nums"
-                  style={{ backgroundColor: 'var(--copper)' }}
-                >
-                  {totalCount > 99 ? '99+' : totalCount}
-                </span>
-              )}
             </Link>
           )}
         </nav>
@@ -176,7 +169,6 @@ export function Header() {
             onOpenChange={setSheetOpen}
             mobileLinks={mobileLinks}
             isAuthenticated={!!session}
-            totalCount={totalCount}
             t={t}
             onSignOut={() => signOut()}
           />
