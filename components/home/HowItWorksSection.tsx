@@ -29,7 +29,7 @@ export function HowItWorksSection() {
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--card-bg)' }}>
       <div ref={sectionRef} className="mx-auto max-w-6xl px-6 sm:px-10">
 
-        <div className="mb-14 text-center fade-in-up">
+        <div className="mb-14 text-center reveal">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
             <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
@@ -46,7 +46,7 @@ export function HowItWorksSection() {
           {steps.map((step, i) => (
             <div
               key={step.num}
-              className={`fade-in-up delay-${i} rounded-2xl p-8 flex flex-col`}
+              className={`reveal-scale step-card-hover delay-${i + 1} rounded-2xl p-8 flex flex-col`}
               style={step.highlight
                 ? { backgroundColor: 'var(--copper)' }
                 : { backgroundColor: 'var(--page-bg)', border: '1px solid var(--border)' }

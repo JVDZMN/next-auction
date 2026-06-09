@@ -23,17 +23,17 @@ export function FinalCtaSection({ locale }: Props) {
 
   return (
     <section className="py-24 sm:py-32" style={{ backgroundColor: 'var(--dark-section)' }}>
-      <div ref={sectionRef} className="mx-auto max-w-2xl px-6 text-center fade-in-up">
+      <div ref={sectionRef} className="mx-auto max-w-2xl px-6 text-center">
         <h2
-          className="mb-4 font-black text-white leading-tight"
+          className="reveal mb-4 font-black text-white leading-tight"
           style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}
         >
           {t.heading}
         </h2>
-        <p className="mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.60)' }}>
+        <p className="reveal delay-1 mb-10 text-lg" style={{ color: 'rgba(255,255,255,0.60)' }}>
           {t.subtext}
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="reveal delay-2 flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href={`/${locale}/auth/signup`}
             className="inline-flex items-center justify-center rounded px-8 py-4 text-sm font-bold text-white transition-opacity hover:opacity-85 min-h-11"

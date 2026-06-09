@@ -9,6 +9,7 @@ import { SellerTypeSection } from './home/SellerTypeSection'
 import { FaqPreviewSection } from './home/FaqPreviewSection'
 import { FinalCtaSection }   from './home/FinalCtaSection'
 import { useDict } from '@/lib/i18n/context'
+import { useReveal } from '@/lib/useReveal'
 
 export type TopCar = AuctionCar
 
@@ -21,6 +22,7 @@ interface HomeClientProps {
 }
 
 export function HomeClient({ locale, isSignedIn, role, privateCars, businessCars }: HomeClientProps) {
+  useReveal()
   const t = useDict().home.auctionTypes
 
   return (

@@ -44,7 +44,7 @@ export function SellerTypeSection({ locale }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           <div
-            className="fade-in-up rounded-2xl p-10 flex flex-col"
+            className="reveal-left rounded-2xl p-10 flex flex-col"
             style={{
               backgroundColor: 'var(--card-bg)',
               border: '1px solid var(--border)',
@@ -72,7 +72,7 @@ export function SellerTypeSection({ locale }: Props) {
           </div>
 
           <div
-            className="fade-in-up delay-1 rounded-2xl p-10 flex flex-col"
+            className="reveal-right delay-2 rounded-2xl p-10 flex flex-col"
             style={{ backgroundColor: 'var(--dark-section)' }}
           >
             <span className="mb-4 text-5xl font-black leading-none" style={{ color: 'var(--copper)' }}>02</span>

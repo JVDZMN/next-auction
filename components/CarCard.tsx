@@ -48,7 +48,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
   const { label, urgent } = getTimeRemaining(auctionEndDate)
 
   return (
-    <div className="group relative block">
+    <div className="group relative block car-card-hover">
       {/* Like button — outside Link to avoid <button> inside <a> */}
       <div className="absolute top-2 right-2 z-10">
         <LikeButton carId={id} initialLiked={isLiked} />
@@ -56,7 +56,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
 
       <Link href={`/${locale}/cars/${id}`} className="block">
       <Card className="overflow-hidden rounded-[20px] bg-card-bg shadow-sm transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-        <div className="relative aspect-4/3 bg-muted">
+        <div className="relative overflow-hidden bg-muted" style={{ aspectRatio: '16/10' }}>
           {images?.[0] ? (
             <Image
               src={cloudinaryCardUrl(images[0])}
@@ -72,10 +72,13 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No image</div>
           )}
 
+          <div className="card-overlay-top absolute top-0 left-0 right-0 h-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          <div className="card-overlay-bottom absolute bottom-0 left-0 right-0 h-14 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
           {/* Segment badge */}
           {ownerRole && (
             <Badge
-              className="absolute bottom-2 right-2 text-[10px] font-bold text-white border-0"
+              className="absolute bottom-2 right-2 z-10 text-[10px] font-bold text-white border-0"
               style={{ backgroundColor: ownerRole === 'BUSINESS_USER' ? 'var(--dark-section)' : 'var(--copper)' }}
             >
               {ownerRole === 'BUSINESS_USER' ? 'Erhverv' : 'Privat'}
@@ -85,7 +88,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
           {/* Time badge */}
           <Badge
             variant="secondary"
-            className={`absolute top-2 left-2 gap-1 bg-white/90 backdrop-blur-sm ${urgent ? 'text-copper' : 'text-foreground'}`}
+            className={`absolute top-2 left-2 z-10 gap-1 ${urgent ? 'auction-urgent' : 'bg-white/90 backdrop-blur-sm text-foreground'}`}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -95,7 +98,7 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
 
           {/* Fuel / body type badges */}
           {(fuel || bodyType) && (
-            <div className="absolute bottom-2 left-2 flex gap-1">
+            <div className="absolute bottom-2 left-2 z-10 flex gap-1">
               {fuel     && <Badge variant="secondary" className="bg-white/90 text-foreground text-xs">{fuel}</Badge>}
               {bodyType && <Badge variant="secondary" className="bg-white/90 text-foreground text-xs">{bodyType}</Badge>}
             </div>

@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useInView } from '@/lib/use-in-view'
 import { cloudinaryBlurUrl } from '@/lib/cloudinary'
 import { useDict } from '@/lib/i18n/context'
 
@@ -117,7 +116,6 @@ interface Props {
 
 export function AuctionTypeSection({ locale, label, heading, subtext, cars, viewAllHref, dark }: Props) {
   const cards = useDict().home.auctionCards
-  const [ref, inView] = useInView<HTMLDivElement>({ rootMargin: '-60px' })
 
   if (cars.length === 0) return null
 
@@ -134,21 +132,13 @@ export function AuctionTypeSection({ locale, label, heading, subtext, cars, view
       className="py-20 sm:py-28"
       style={{ backgroundColor: dark ? 'var(--dark-section)' : 'var(--page-bg)' }}
     >
-      <div
-        ref={ref}
-        className="mx-auto max-w-6xl px-6 sm:px-10"
-        style={{
-          opacity: inView ? 1 : 0,
-          transform: inView ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.6s ease, transform 0.6s ease',
-        }}
-      >
+      <div className="mx-auto max-w-6xl px-6 sm:px-10">
         <div className="mb-10 flex items-end justify-between">
           <div>
-            <p className="mb-1.5 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
+            <p className="reveal mb-1.5 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
               {label}
             </p>
-            <h2 className="text-3xl font-black sm:text-4xl" style={{ color: dark ? 'var(--text-light)' : 'var(--text-body)' }}>
+            <h2 className="reveal delay-1 text-3xl font-black sm:text-4xl" style={{ color: dark ? 'var(--text-light)' : 'var(--text-body)' }}>
               {heading}
             </h2>
             <p className="mt-2 text-sm" style={{ color: dark ? 'rgba(255,255,255,0.5)' : 'var(--text-muted)' }}>
@@ -165,8 +155,10 @@ export function AuctionTypeSection({ locale, label, heading, subtext, cars, view
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {cars.map(car => (
-            <MiniCard key={car.id} car={car} locale={locale} labels={cardLabels} />
+          {cars.map((car, i) => (
+            <div key={car.id} className={`reveal-scale car-card-hover delay-${i + 1}`}>
+              <MiniCard car={car} locale={locale} labels={cardLabels} />
+            </div>
           ))}
         </div>
 

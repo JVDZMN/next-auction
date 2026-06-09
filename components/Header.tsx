@@ -56,9 +56,9 @@ export function Header() {
     <header
       className="fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out"
       style={{
-        background: isScrolled ? 'rgba(18,37,53,0.92)' : 'rgba(18,37,53,0.55)',
-        backdropFilter: isScrolled ? 'blur(14px)' : 'blur(6px)',
-        WebkitBackdropFilter: isScrolled ? 'blur(14px)' : 'blur(6px)',
+        background: 'var(--dark-section)',
+        backdropFilter: isScrolled ? 'blur(14px)' : 'none',
+        WebkitBackdropFilter: isScrolled ? 'blur(14px)' : 'none',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
         boxShadow: isScrolled ? '0 4px 24px rgba(0,0,0,0.2)' : 'none',
       }}

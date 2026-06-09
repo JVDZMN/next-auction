@@ -141,24 +141,26 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
                 <h1 className="text-2xl font-bold">Cars for Auction</h1>
                 {data && !loading && <p className="text-sm text-muted-foreground mt-0.5">{data.total.toLocaleString('da-DK')} listings</p>}
 
-                {/* Segment tabs */}
-                <div className="flex gap-1 mt-3 p-1 rounded-lg w-fit" style={{ backgroundColor: 'var(--section-alt)' }}>
-                  {(['private', 'business'] as const).map(seg => {
-                    const isActive   = segment === seg
-                    const isDisabled = !!forcedSegment && forcedSegment !== seg
-                    return (
-                      <button type="button" key={seg} disabled={isDisabled}
-                        onClick={() => { if (!forcedSegment) { setSegment(seg); setPage(1) } }}
-                        className="flex items-center gap-1 px-2 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
-                        style={isActive
-                          ? { backgroundColor: 'var(--copper)', color: 'white' }
-                          : { color: 'var(--text-muted)', backgroundColor: 'transparent' }}
-                      >
-                        {seg === 'private' ? '🏠 Private Auktioner' : '🏢 Erhvervsauktioner'}
-                      </button>
-                    )
-                  })}
-                </div>
+                {/* Segment tabs — only visible when logged in */}
+                {role && (
+                  <div className="flex gap-1 mt-3 p-1 rounded-lg w-fit" style={{ backgroundColor: 'var(--section-alt)' }}>
+                    {(['private', 'business'] as const).map(seg => {
+                      const isActive   = segment === seg
+                      const isDisabled = !!forcedSegment && forcedSegment !== seg
+                      return (
+                        <button type="button" key={seg} disabled={isDisabled}
+                          onClick={() => { if (!forcedSegment) { setSegment(seg); setPage(1) } }}
+                          className="flex items-center gap-1 px-2 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-semibold transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                          style={isActive
+                            ? { backgroundColor: 'var(--copper)', color: 'white' }
+                            : { color: 'var(--text-muted)', backgroundColor: 'transparent' }}
+                        >
+                          {seg === 'private' ? '🏠 Private Auktioner' : '🏢 Erhvervsauktioner'}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">

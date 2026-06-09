@@ -26,7 +26,7 @@ export function FaqPreviewSection({ locale }: Props) {
     <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--page-bg)' }}>
       <div ref={sectionRef} className="mx-auto max-w-3xl px-6 sm:px-10">
 
-        <div className="mb-12 text-center fade-in-up">
+        <div className="mb-12 text-center reveal">
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="h-px w-10" style={{ backgroundColor: 'var(--copper)' }} />
             <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>
@@ -39,13 +39,13 @@ export function FaqPreviewSection({ locale }: Props) {
           </h2>
         </div>
 
-        <div className="fade-in-up delay-1 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <Accordion multiple className="flex flex-col divide-y" style={{ borderColor: 'var(--border)' }}>
-            {t.items.map(({ q, a }) => (
+            {t.items.map(({ q, a }, i) => (
               <AccordionItem
                 key={q}
                 value={q}
-                className="border-b-0 px-6"
+                className={`reveal delay-${i + 1} border-b-0 px-6`}
                 style={{ backgroundColor: 'var(--card-bg)' }}
               >
                 <AccordionTrigger
@@ -62,7 +62,7 @@ export function FaqPreviewSection({ locale }: Props) {
           </Accordion>
         </div>
 
-        <div className="mt-10 text-center">
+        <div className="mt-10 text-center reveal delay-5">
           <Link
             href={`/${locale}/faq`}
             className="text-sm font-bold hover:opacity-70 transition-opacity"

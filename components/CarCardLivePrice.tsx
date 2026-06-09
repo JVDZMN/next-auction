@@ -37,13 +37,13 @@ export function CarCardLivePrice({ carId, initialPrice, initialBidCount }: Props
         <p className="text-xs text-muted-foreground">Current bid</p>
         <p
           key={flashKey}
-          className={cn('text-lg font-bold text-copper', flashKey > 0 && 'price-flash')}
+          className={cn('text-lg font-black text-copper', flashKey > 0 && 'price-flash')}
         >
           {price.toLocaleString('da-DK')} kr
         </p>
       </div>
       <p className="text-xs text-muted-foreground">
-        {bidCount} {bidCount === 1 ? 'bid' : 'bids'}
+        {bidCount >= 5 ? '🔥 ' : ''}{bidCount} {bidCount === 1 ? 'bid' : 'bids'}
       </p>
     </div>
   )

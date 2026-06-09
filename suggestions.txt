@@ -1,0 +1,59 @@
+Based on my review of the `next-auction` codebase and database schema, here is an analysis of the platform's current state and recommendations for making it more functional and user-friendly for the Danish market. 
+
+### 1. Missing Core Features
+*   **Priority: HIGH | Effort: Medium | Impact: Improves buyer activation and engagement.**
+    *   **Suggestion:** **"Watchlist" / "Favorites" system with dedicated dashboard view.** The schema has a `Like` model, but it needs to be heavily promoted. Users should be able to see all "Liked" cars in one place, showing current price, remaining time, and their bidding status.
+    *   **Implementation hint:** Create a `/dashboard/watchlist` route. Fetch `Car` models joined through the `Like` model for the current user. Show visual indicators if the user is the highest bidder or has been outbid.
+*   **Priority: HIGH | Effort: Small | Impact: Clarifies the no-payment nature of the platform.**
+    *   **Suggestion:** **Explicit "Intent to Buy" / "Binding Offer" UI instead of "Pay Now".** Since money doesn't change hands, the UI at the end of a successful auction needs to clearly guide the buyer and seller on the next steps (contacting each other, arranging viewing/handover, signing slutseddel).
+    *   **Implementation hint:** Modify the post-auction state in the car detail view. Instead of payment flows, show a "Generate Draft Contract (Slutseddel)" button or a clear "Contact Seller to Finalize" call to action.
+
+### 2. Bidding Experience
+*   **Priority: HIGH | Effort: Medium | Impact: Prevents frustration and increases final sale prices.**
+    *   **Suggestion:** **Real-time "You've been outbid" push/toast notifications.** The system has `ProxyBid` and `Bid` models, and `Pusher` is set up. However, the immediate feedback loop when a user is actively looking at another tab or on their phone is crucial.
+    *   **Implementation hint:** Ensure the `Pusher` client triggers a high-visibility toast notification globally across the app when a user's `winnerBidId` is displaced by a new bid. Integrate with the Web Notifications API for background tabs.
+*   **Priority: MEDIUM | Effort: Small | Impact: Simplifies bidding.**
+    *   **Suggestion:** **Quick Bid buttons (e.g., "+1.000 kr", "+5.000 kr").** Instead of always typing an amount, offer quick buttons based on the `bidIncrement` defined on the `Car` model.
+    *   **Implementation hint:** In `BiddingSection.tsx`, calculate the next valid bids `(currentPrice + bidIncrement)`, `(currentPrice + bidIncrement * 5)`, etc., and render them as buttons that pre-fill the form or submit directly with a confirmation modal.
+
+### 3. Search & Discovery
+*   **Priority: HIGH | Effort: Medium | Impact: Helps users find specific cars in a crowded marketplace.**
+    *   **Suggestion:** **Faceted Search / Advanced Filters.** The schema contains detailed car data (`brand`, `model`, `fuel`, `year`, `km`). Users need a sidebar or modal to filter by these dimensions easily without page reloads.
+    *   **Implementation hint:** Update the `/cars` page to use URL query parameters for state (e.g., `?brand=BMW&minYear=2018`). Use React Server Components to fetch filtered results or a client-side SWR/React Query approach for instant filtering.
+*   **Priority: MEDIUM | Effort: Medium | Impact: Keeps buyers returning to the platform.**
+    *   **Suggestion:** **Saved Searches with Email/Push Alerts.** The schema has a `SavedSearch` model. This needs a robust UI where users can save their current filter state and opt-in to daily or instant alerts when matching cars are created.
+    *   **Implementation hint:** Add a "Save this search" button next to the filter results. Use the existing cron setup (`app/api/cron/...`) to match new `active` cars against `SavedSearch` criteria and trigger `sendEmail` from `lib/email/notifications.ts`.
+
+### 4. Trust & Safety
+*   **Priority: HIGH | Effort: Large | Impact: Crucial for C2C car sales where fraud risk is high.**
+    *   **Suggestion:** **Automated Tinglysning (Debt) & Restgæld Check.** Buyers need to know if there is outstanding debt on the car.
+    *   **Implementation hint:** Integrate with the Danish Motorregistret (DMR) API or a third-party service (like Bilbogen) using the car's `licensePlate` or `vin`. Display a clear "Gældfri" (Debt-free) or warning badge on the `CarCard`.
+*   **Priority: MEDIUM | Effort: Small | Impact: Builds trust in sellers.**
+    *   **Suggestion:** **Visible MitID Verification Badges.** The `User` model has `mitIdVerified`. This needs to be highly visible on the car details page and seller profile.
+    *   **Implementation hint:** Add a prominent "MitID Valideret" shield icon next to the seller's name in `CarCard` and `CarDetail` views.
+
+### 5. Communication
+*   **Priority: HIGH | Effort: Medium | Impact: Facilitates the actual handover after the auction ends.**
+    *   **Suggestion:** **Secure Post-Auction Messaging Room.** When an auction is `completed` and a `winnerBidId` exists, automatically create a dedicated message thread between the `ownerId` and the `bidderId` of the winning bid.
+    *   **Implementation hint:** Use the existing `Message` model. In the cron job that finalizes the auction, instantiate a welcome message in a new thread between the two users detailing the next steps.
+
+### 6. Seller Tools
+*   **Priority: MEDIUM | Effort: Small | Impact: Encourages sellers by showing interest.**
+    *   **Suggestion:** **Seller Dashboard with Analytics.** Sellers should easily see how many views, likes, and active bidders their car has.
+    *   **Implementation hint:** Enhance the `/dashboard/` view for sellers. Aggregate data from the `Car.views` field, count related `Like` records, and count unique `bidderId`s in the `Bid` relation.
+
+### 7. Mobile Experience
+*   **Priority: HIGH | Effort: Small | Impact: Essential for mobile usability.**
+    *   **Suggestion:** **Sticky Bidding Bar on Mobile.** On mobile devices, the "Place Bid" input and current price should be pinned to the bottom of the screen while scrolling through car details and images.
+    *   **Implementation hint:** Use CSS `position: sticky; bottom: 0;` on the mobile version of the `BiddingSection` component. Ensure it has a solid background and high z-index.
+*   **Priority: MEDIUM | Effort: Medium | Impact: Modernizes the feel of the app.**
+    *   **Suggestion:** **Swipeable Image Galleries.** The `CarImageGallery.tsx` must support native-feeling swipe gestures on mobile, rather than relying solely on arrow taps.
+    *   **Implementation hint:** Use a library like `embla-carousel-react` or `framer-motion` to implement smooth, physics-based swipeing for the car images.
+
+### 8. Performance & Reliability
+*   **Priority: HIGH | Effort: Medium | Impact: Ensures users don't miss bids on slow connections.**
+    *   **Suggestion:** **Optimistic UI Updates for Bidding.** When a user places a bid, the UI should immediately reflect their bid as the current highest (optimistically), while the API request is in flight.
+    *   **Implementation hint:** If using React Query or SWR, utilize their optimistic update features to mutate the local cache of the car's bids immediately. If the API returns an error (e.g., "Bid too low"), roll back the cache and show a toast error using the existing `bid-error.ts` definitions.
+*   **Priority: MEDIUM | Effort: Large | Impact: Improves load times and offline capabilities.**
+    *   **Suggestion:** **PWA (Progressive Web App) Setup.** A `serviceWorker` was not found in the search. Adding PWA capabilities allows for caching static assets and providing a basic offline fallback, making the app feel more native.
+    *   **Implementation hint:** Use `next-pwa` to generate a service worker. Cache the main shell and static images. Allow users to "Install" the app to their home screen.
