@@ -294,13 +294,27 @@
   .car-card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
 }
 
+.btn-copper-outline {
+  border-color: var(--copper);
+  color: var(--copper);
+}
+.sticky-bid-bar {
+  background-color: var(--dark-section);
+}
+.btn-copper {
+  background-color: var(--copper);
+}
+.copper-text {
+  color: var(--copper);
+}
+
 .text-outline {
-  -webkit-text-stroke: 2px var(--text-body);
+  -webkit-text-stroke: 1.5px rgba(44, 44, 44, 0.45);
   color: transparent;
   display: inline-block;
 }
 .text-outline-light {
-  -webkit-text-stroke: 2px var(--text-light);
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.5);
   color: transparent;
   display: inline-block;
 }

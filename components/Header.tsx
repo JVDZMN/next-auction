@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { useLocale, useDict } from '@/lib/i18n/context'
 import { useNotifications } from '@/lib/notification-context'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
@@ -11,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { UserMenu } from '@/components/header/UserMenu'
 import { MobileSheet } from '@/components/header/MobileSheet'
+import { NotificationBell } from '@/components/header/NotificationBell'
 
 const NAV_LINK = 'px-3 py-1.5 rounded text-sm font-medium transition-colors'
 const NAV_LINK_STYLE = { color: 'rgba(255,255,255,0.65)' }
@@ -21,15 +24,33 @@ export function Header() {
   const t             = useDict().nav
   const isAdmin       = session?.user?.role === 'ADMIN'
   const isBusiness    = session?.user?.role === 'BUSINESS_USER'
-  const { totalCount } = useNotifications()
+  const router = useRouter()
+  const { totalCount, outbidCarIds } = useNotifications()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const prevOutbidRef = useRef<string[] | null>(null)
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (prevOutbidRef.current === null) {
+      prevOutbidRef.current = outbidCarIds
+      return
+    }
+    const newIds = outbidCarIds.filter(id => !prevOutbidRef.current!.includes(id))
+    newIds.forEach(carId => {
+      toast.warning('Du er overbud!', {
+        description: 'Din bid er blevet overgået af en anden køber',
+        action: { label: 'Se auktion', onClick: () => router.push(`/${locale}/cars/${carId}`) },
+        duration: 8000,
+      })
+    })
+    prevOutbidRef.current = outbidCarIds
+  }, [outbidCarIds, locale, router])
 
   const mobileLinks: { label: string; href: string; count?: number }[] = session
     ? [
@@ -110,6 +131,7 @@ export function Header() {
         <div className="hidden lg:flex items-center gap-2">
           <LanguageSwitcher />
           <Separator orientation="vertical" className="h-5 bg-white/15" />
+          {session && <NotificationBell />}
 
           {status === 'loading' ? (
             <Skeleton className="h-8 w-24 rounded-md bg-white/10" />
@@ -148,6 +170,7 @@ export function Header() {
 
         {/* Mobile right */}
         <div className="flex lg:hidden items-center gap-1">
+          {session && <NotificationBell />}
           <MobileSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}

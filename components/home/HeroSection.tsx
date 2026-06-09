@@ -44,9 +44,10 @@ export function HeroSection({ locale, isSignedIn, role }: Props) {
 
           {/* Heading */}
           <h1
-            className="font-black leading-none mb-3 sm:mb-6"
+            className="font-black mb-3 sm:mb-6"
             style={{
               fontSize: 'clamp(1.4rem, 7vw, 7rem)',
+              lineHeight: '1.05',
               letterSpacing: '-0.02em',
               color: 'var(--text-body)',
             }}

@@ -1,12 +1,13 @@
 'use client'
 
-import { use, useCallback, useEffect, useState } from 'react'
+import { use, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useLocale } from '@/lib/i18n/context'
 import { useNotifications } from '@/lib/notification-context'
 import { LoadingPage, ErrorPage, PageLayout } from '@/components/PageLayout'
 import { BiddingSection } from '@/components/BiddingSection'
+import { AuctionCountdown } from '@/components/AuctionCountdown'
 import { CarHeader } from '@/components/car-detail/CarHeader'
 import { CarSpecs } from '@/components/car-detail/CarSpecs'
 import { OwnerActions } from '@/components/car-detail/OwnerActions'
@@ -53,6 +54,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [confirmAccept, setConfirmAccept] = useState(false)
   const [actionError,   setActionError]   = useState<string | null>(null)
+  const biddingRef = useRef<HTMLDivElement>(null)
 
   const fetchCar = useCallback(async () => {
     try {
@@ -249,6 +251,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
           </Card>
         )}
 
+        <div ref={biddingRef}>
         <Card>
           <CardContent className="pt-6 space-y-4">
             {actionError && <Alert variant="destructive"><AlertDescription>{actionError}</AlertDescription></Alert>}
@@ -308,7 +311,33 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
             )}
           </CardContent>
         </Card>
+        </div>
+
+        {car.status === 'active' && !isOwner && (
+          <div className="h-20 lg:hidden" aria-hidden />
+        )}
       </div>
+
+      {car.status === 'active' && !isOwner && (
+        <div className="sticky-bid-bar fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t">
+          <div className="flex items-center justify-between px-4 py-3 gap-3">
+            <div className="min-w-0">
+              <p className="text-xs text-white/50">Aktuel pris</p>
+              <p className="text-lg font-black text-white leading-tight">
+                {car.currentPrice.toLocaleString('da-DK')} kr
+              </p>
+            </div>
+            <AuctionCountdown endDate={car.auctionEndDate} showSeconds={false} />
+            <button
+              type="button"
+              onClick={() => biddingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              className="btn-copper shrink-0 rounded px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-85"
+            >
+              Byd nu
+            </button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
         <AlertDialogContent>

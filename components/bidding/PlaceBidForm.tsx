@@ -32,6 +32,24 @@ export function PlaceBidForm({ bidAmount, minNextBid, bidIncrement, isEnded, err
         )}
       </p>
 
+      {bidIncrement && bidIncrement > 0 && (
+        <div className="flex gap-2">
+          {[1, 3].map(mult => {
+            const amount = minNextBid + (mult - 1) * bidIncrement
+            return (
+              <button
+                key={mult}
+                type="button"
+                onClick={() => onChange(String(amount))}
+                className="btn-copper-outline flex-1 rounded border py-1.5 text-xs font-semibold transition-opacity hover:opacity-70"
+              >
+                +{(bidIncrement * mult).toLocaleString('da-DK')} kr
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <form onSubmit={onSubmit} className="space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="bidAmount">{labels.yourBidLabel}</Label>
