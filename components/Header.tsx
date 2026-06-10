@@ -10,7 +10,6 @@ import { useNotifications } from '@/lib/notification-context'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 import { UserMenu } from '@/components/header/UserMenu'
 import { MobileSheet } from '@/components/header/MobileSheet'
 import { NotificationBell } from '@/components/header/NotificationBell'
@@ -52,7 +51,7 @@ export function Header() {
       })
     })
     prevOutbidRef.current = outbidCarIds
-  }, [outbidCarIds, locale, router])
+  }, [outbidCarIds, locale, router, tn.outbidToastTitle, tn.outbidToastDesc, tn.outbidToastAction])
 
   const mobileLinks: { label: string; href: string; count?: number }[] = session
     ? [

@@ -16,5 +16,5 @@ export function useReveal(selector = '.reveal, .reveal-left, .reveal-right, .rev
     )
     document.querySelectorAll(selector).forEach(el => observer.observe(el))
     return () => observer.disconnect()
-  }, [])
+  }, [selector])
 }

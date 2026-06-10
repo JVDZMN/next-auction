@@ -33,14 +33,15 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!open) return
-    setLoading(true)
-    fetch('/api/notifications')
+    markAllOutbidRead()
+    markAllCarsWithNewBidsRead()
+    Promise.resolve()
+      .then(() => setLoading(true))
+      .then(() => fetch('/api/notifications'))
       .then(r => r.json())
       .then(d => setNotifs(d.notifications ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
-    markAllOutbidRead()
-    markAllCarsWithNewBidsRead()
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function notifUrl(n: Notif): string {
