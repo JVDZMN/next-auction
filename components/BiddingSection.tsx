@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 import { PriceDisplay } from '@/components/PriceDisplay'
 import { AuctionCountdown } from '@/components/AuctionCountdown'
-import { useDict } from '@/lib/i18n/context'
+import { useDict, useLocale } from '@/lib/i18n/context'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
@@ -17,6 +17,15 @@ import { PlaceBidForm } from '@/components/bidding/PlaceBidForm'
 import { ProxyBidForm } from '@/components/bidding/ProxyBidForm'
 import { BidHistoryTable } from '@/components/bidding/BidHistoryTable'
 import { AuctionStatusAlerts } from '@/components/bidding/AuctionStatusAlerts'
+
+function anonymizeName(name: string | null): string {
+  if (!name) return 'Bruger****'
+  const parts = name.trim().split(' ')
+  const first = parts[0]
+  if (parts.length > 1) return `${first} ${parts[1][0]}***`
+  if (first.length > 3) return `${first.substring(0, 3)}***`
+  return `${first}***`
+}
 
 interface BidEntry {
   id: string; amount: number; createdAt: string | Date
@@ -35,6 +44,7 @@ export function BiddingSection({
   reservePrice, bidIncrement, onBidPlaced, onPriceUpdate,
 }: BiddingSectionProps) {
   const { data: session } = useSession()
+  const locale = useLocale()
   const dict = useDict()
   const t = dict.bidding
 
@@ -77,11 +87,11 @@ export function BiddingSection({
     }
   }, [auctionEndDate, t.antiSnipe.title, t.antiSnipe.body])
 
-  const isAuctionActive  = status === 'active' && new Date(auctionEndDate) > new Date()
-  const isOwner          = Boolean(session?.user?.id && ownerId === session.user.id)
-  const isAdmin          = session?.user?.role === 'ADMIN'
-  const canSeeBidHistory = !!session
-  const minNextBid       = bidIncrement && bidIncrement > 0 ? livePrice + bidIncrement : livePrice + 1
+  const isAuctionActive = status === 'active' && new Date(auctionEndDate) > new Date()
+  const isOwner         = Boolean(session?.user?.id && ownerId === session.user.id)
+  const isAdmin         = session?.user?.role === 'ADMIN'
+  const canSeeNames     = isOwner || isAdmin
+  const minNextBid      = bidIncrement && bidIncrement > 0 ? livePrice + bidIncrement : livePrice + 1
 
   // useLayoutEffect (not useEffect) prevents a visible flash of the stale price
   // when the parent re-renders with a fresh prop after a bid is placed.
@@ -95,12 +105,12 @@ export function BiddingSection({
     finally { setIsLoading(false) }
   }, [carId])
 
-  useEffect(() => { if (canSeeBidHistory) fetchBids() }, [carId, canSeeBidHistory, fetchBids])
+  useEffect(() => { fetchBids() }, [carId, fetchBids])
 
-  const canSeeBidHistoryRef = useRef(canSeeBidHistory)
-  const onPriceUpdateRef    = useRef(onPriceUpdate)
-  useEffect(() => { canSeeBidHistoryRef.current = canSeeBidHistory }, [canSeeBidHistory])
-  useEffect(() => { onPriceUpdateRef.current    = onPriceUpdate    }, [onPriceUpdate])
+  const canSeeNamesRef   = useRef(canSeeNames)
+  const onPriceUpdateRef = useRef(onPriceUpdate)
+  useEffect(() => { canSeeNamesRef.current   = canSeeNames  }, [canSeeNames])
+  useEffect(() => { onPriceUpdateRef.current = onPriceUpdate }, [onPriceUpdate])
 
   // Pusher: live price + bid history updates
   useEffect(() => {
@@ -110,9 +120,8 @@ export function BiddingSection({
     channel.bind('bid-placed', (data: { currentPrice: number; bidderId: string; bidderName: string; bidId: string; timestamp: string }) => {
       setLivePrice(data.currentPrice)
       onPriceUpdateRef.current?.(data.currentPrice)
-      if (canSeeBidHistoryRef.current) {
-        setBids(prev => [{ id: data.bidId, amount: data.currentPrice, createdAt: data.timestamp, bidder: { name: data.bidderName, email: '' } }, ...prev])
-      }
+      const name = canSeeNamesRef.current ? data.bidderName : anonymizeName(data.bidderName)
+      setBids(prev => [{ id: data.bidId, amount: data.currentPrice, createdAt: data.timestamp, bidder: { name, email: '' } }, ...prev])
     })
     return () => {
       channel.unbind('bid-placed')
@@ -243,11 +252,17 @@ export function BiddingSection({
           labels={{ signInRequired: t.signInRequired, ownerCannotBid: t.ownerCannotBid, auctionEnded: t.auctionEnded, status: t.status }}
         />
 
-        {canSeeBidHistory && (
-          <BidHistoryTable
-            bids={bids} isLoading={isLoading}
-            labels={{ title: t.history.title, empty: t.history.empty, bidder: t.history.bidder, amount: t.history.amount, time: t.history.time, leading: t.history.leading }}
-          />
+        <BidHistoryTable
+          bids={bids} isLoading={isLoading}
+          labels={{ title: t.history.title, empty: t.history.empty, bidder: t.history.bidder, amount: t.history.amount, time: t.history.time, leading: t.history.leading }}
+        />
+
+        {!session && isAuctionActive && (
+          <p className="text-center text-sm text-muted-foreground">
+            <a href="#" className="underline underline-offset-2 hover:text-foreground transition-colors" onClick={e => { e.preventDefault(); window.location.href = `/${locale}/auth/signin` }}>
+              {t.signInRequired}
+            </a>
+          </p>
         )}
       </div>
     </>

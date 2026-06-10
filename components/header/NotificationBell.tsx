@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Bell } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useNotifications } from '@/lib/notification-context'
 import { useLocale, useDict } from '@/lib/i18n/context'
@@ -25,6 +26,7 @@ export function NotificationBell() {
   const [notifs, setNotifs] = useState<Notif[]>([])
   const [loading, setLoading] = useState(false)
   const locale = useLocale()
+  const router = useRouter()
   const dict = useDict()
   const tn = dict.notifications
   const tc = dict.common
@@ -40,6 +42,26 @@ export function NotificationBell() {
     markAllOutbidRead()
     markAllCarsWithNewBidsRead()
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function notifUrl(n: Notif): string {
+    if (n.type === 'message') return `/${locale}/dashboard?tab=messages`
+    if (n.type === 'auction_approved') return `/${locale}/dashboard`
+    if (n.carId) return `/${locale}/cars/${n.carId}`
+    return `/${locale}/dashboard`
+  }
+
+  async function handleNotifClick(n: Notif) {
+    setOpen(false)
+    if (!n.read) {
+      setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
+      fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: n.id }),
+      }).catch(() => {})
+    }
+    router.push(notifUrl(n))
+  }
 
   const liveItems: { label: string; href: string }[] = [
     ...(unreadMessages > 0 ? [{ label: tn.unreadMessages.replace('{count}', String(unreadMessages)), href: `/${locale}/dashboard?tab=messages` }] : []),
@@ -101,9 +123,11 @@ export function NotificationBell() {
             </div>
           ) : (
             notifs.map(n => (
-              <div
+              <button
                 key={n.id}
-                className={`px-4 py-3 border-b last:border-0 text-sm ${!n.read ? 'bg-muted/30' : ''}`}
+                type="button"
+                onClick={() => handleNotifClick(n)}
+                className={`w-full text-left px-4 py-3 border-b last:border-0 text-sm transition-colors hover:bg-muted/50 cursor-pointer ${!n.read ? 'bg-muted/30' : ''}`}
               >
                 <p className={!n.read ? 'font-medium' : 'text-muted-foreground'}>{n.message}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -111,7 +135,7 @@ export function NotificationBell() {
                     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
                   })}
                 </p>
-              </div>
+              </button>
             ))
           )}
         </div>
