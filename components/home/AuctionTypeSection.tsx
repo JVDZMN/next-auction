@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { cloudinaryBlurUrl } from '@/lib/cloudinary'
 import { useDict } from '@/lib/i18n/context'
+import { CornerAccent } from './CornerAccent'
 
 export interface AuctionCar {
   id: string
@@ -129,10 +130,11 @@ export function AuctionTypeSection({ locale, label, heading, subtext, cars, view
 
   return (
     <section
-      className="py-20 sm:py-28"
+      className="relative py-20 sm:py-28"
       style={{ backgroundColor: dark ? 'var(--dark-section)' : 'var(--page-bg)' }}
     >
-      <div className="mx-auto max-w-6xl px-6 sm:px-10">
+      {dark && <CornerAccent position="bottom-right" color="copper" />}
+      <div className="relative z-10 mx-auto max-w-6xl px-6 sm:px-10">
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p className="reveal mb-1.5 text-xs font-bold uppercase tracking-[0.25em]" style={{ color: 'var(--copper)' }}>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef } from 'react'
 import { useDict } from '@/lib/i18n/context'
+import { HeroDecoration } from './HeroDecoration'
 
 interface Props { locale: string; isSignedIn: boolean; role?: string }
 
@@ -27,7 +28,8 @@ export function HeroSection({ locale, isSignedIn, role }: Props) {
 
   return (
     <section style={{ backgroundColor: 'var(--page-bg)' }} className="relative overflow-hidden">
-      <div ref={sectionRef} className="mx-auto max-w-7xl px-4 sm:px-10 pt-20 pb-10 sm:pt-32 sm:pb-20 lg:pt-36 lg:pb-24">
+      <HeroDecoration />
+      <div ref={sectionRef} className="relative z-10 mx-auto max-w-7xl px-4 sm:px-10 pt-20 pb-10 sm:pt-32 sm:pb-20 lg:pt-36 lg:pb-24">
         <div className="grid grid-cols-2 gap-4 sm:gap-10 lg:gap-16 items-center">
 
         {/* Left — content */}
@@ -62,7 +64,7 @@ export function HeroSection({ locale, isSignedIn, role }: Props) {
               <>
                 <span className="hero-text-1 block">{t.headingPrivateLine1.split(' ')[0]}</span>
                 <span className="hero-text-2 block">
-                  <span className="text-outline">
+                  <span className="text-outline" style={{ color: 'rgba(44,44,44,0.25)' }}>
                     {t.headingPrivateLine1.split(' ')[1]}
                   </span>
                 </span>

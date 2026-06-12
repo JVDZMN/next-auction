@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { CornerAccent } from '@/components/home/CornerAccent'
 import type { CarsMapProps } from '@/components/CarsMap'
 import { FilterPanel, KM_MAX } from '@/components/cars/FilterPanel'
 import { CarGrid } from '@/components/cars/CarGrid'
@@ -132,7 +133,8 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
     + (filters.kmRange[0] > 0 || filters.kmRange[1] < KM_MAX ? 1 : 0)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background">
+      <CornerAccent position="top-left" color="silver" />
       <main className="max-w-400 mx-auto px-4 lg:px-6 pt-20 pb-6">
         <div className="flex gap-6">
           <div className="flex-1 min-w-0">

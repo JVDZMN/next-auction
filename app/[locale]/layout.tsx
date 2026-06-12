@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { notFound } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { SessionProvider } from '@/components/providers/SessionProvider'
 import { DictionaryProvider } from '@/lib/i18n/context'
 import { NotificationProvider } from '@/lib/notification-context'
@@ -46,11 +48,12 @@ export default async function LocaleLayout({
   if (!locales.includes(locale)) notFound()
 
   const dict = await getDictionary(locale)
+  const session = await getServerSession(authOptions)
 
   return (
     <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SessionProvider>
+        <SessionProvider session={session}>
           <DictionaryProvider locale={locale} dict={dict}>
             <NotificationProvider>
               <TooltipProvider>

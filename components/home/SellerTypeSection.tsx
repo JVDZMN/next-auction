@@ -25,8 +25,8 @@ export function SellerTypeSection({ locale }: Props) {
   }, [])
 
   return (
-    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--card-bg)' }}>
-      <div ref={sectionRef} className="mx-auto max-w-6xl px-6 sm:px-10">
+    <section className="relative py-20 sm:py-28" style={{ backgroundColor: 'var(--card-bg)' }}>
+      <div ref={sectionRef} className="relative z-10 mx-auto max-w-6xl px-6 sm:px-10">
 
         <div className="mb-14 text-center fade-in-up">
           <div className="flex items-center justify-center gap-3 mb-4">

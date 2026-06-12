@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getDictionary, toLocale } from '@/lib/i18n'
 import type { Metadata } from 'next'
+import { CornerAccent } from '@/components/home/CornerAccent'
 
 export async function generateMetadata({
   params,
@@ -28,6 +29,7 @@ export default async function PrivacyPage({
   return (
     <main style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh' }}>
       <div style={{ backgroundColor: 'var(--dark-section)' }} className="relative overflow-hidden py-20 sm:py-28">
+        <CornerAccent position="top-left" color="copper" />
         <div
           aria-hidden
           style={{

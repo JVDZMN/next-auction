@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
+import { CornerAccent } from '@/components/home/CornerAccent'
 
 export async function generateMetadata({
   params,
@@ -34,6 +35,7 @@ export default async function FaqPage({
   return (
     <main style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh' }}>
       <div style={{ backgroundColor: 'var(--dark-section)' }} className="relative overflow-hidden py-20 sm:py-28">
+        <CornerAccent position="top-right" color="copper" />
         <div
           aria-hidden
           style={{

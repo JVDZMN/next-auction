@@ -28,6 +28,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { CheckCircle2 } from 'lucide-react'
+import { CornerAccent } from '@/components/home/CornerAccent'
 
 interface BidEntry {
   id: string; amount: number; createdAt: string
@@ -166,6 +167,8 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
 
   return (
     <PageLayout>
+      <div className="relative">
+      <CornerAccent position="top-right" color="copper" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Breadcrumb items={[
         { label: 'Cars', href: `/${locale}/cars` },
@@ -369,6 +372,7 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </PageLayout>
   )
 }

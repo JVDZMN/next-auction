@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { useDict } from '@/lib/i18n/context'
+import { CornerAccent } from './CornerAccent'
 
 interface Props { locale: string }
 
@@ -22,8 +23,9 @@ export function FinalCtaSection({ locale }: Props) {
   }, [])
 
   return (
-    <section className="py-24 sm:py-32" style={{ backgroundColor: 'var(--dark-section)' }}>
-      <div ref={sectionRef} className="mx-auto max-w-2xl px-6 text-center">
+    <section className="relative py-24 sm:py-32" style={{ backgroundColor: 'var(--dark-section)' }}>
+      <CornerAccent position="bottom-left" color="silver" />
+      <div ref={sectionRef} className="relative z-10 mx-auto max-w-2xl px-6 text-center">
         <h2
           className="reveal mb-4 font-black text-white leading-tight"
           style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.02em' }}

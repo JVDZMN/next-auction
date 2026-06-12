@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { useDict } from '@/lib/i18n/context'
+import { CornerAccent } from './CornerAccent'
 
 interface Props { locale: string }
 
@@ -23,8 +24,9 @@ export function FaqPreviewSection({ locale }: Props) {
   }, [])
 
   return (
-    <section className="py-20 sm:py-28" style={{ backgroundColor: 'var(--page-bg)' }}>
-      <div ref={sectionRef} className="mx-auto max-w-3xl px-6 sm:px-10">
+    <section className="relative py-20 sm:py-28" style={{ backgroundColor: 'var(--page-bg)' }}>
+      <CornerAccent position="top-right" color="copper" />
+      <div ref={sectionRef} className="relative z-10 mx-auto max-w-3xl px-6 sm:px-10">
 
         <div className="mb-12 text-center reveal">
           <div className="flex items-center justify-center gap-3 mb-4">

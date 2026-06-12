@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessageSquare } from "lucide-react"
+import { CornerAccent } from "@/components/home/CornerAccent"
 
 interface SavedSearch {
   id: string; label: string | null; brand: string | null; maxPrice: number | null
@@ -103,6 +104,8 @@ function DashboardContent() {
 
   return (
     <PageLayout maxWidth="max-w-5xl">
+      <div className="relative">
+      <CornerAccent position="top-right" color="silver" />
       <ProfileCard
         name={user.name} email={user.email} image={user.image}
         role={user.role} createdAt={user.createdAt}
@@ -210,6 +213,7 @@ function DashboardContent() {
           </TabsContent>
         )}
       </Tabs>
+      </div>
     </PageLayout>
   )
 }
