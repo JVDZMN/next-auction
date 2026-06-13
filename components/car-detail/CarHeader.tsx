@@ -22,17 +22,18 @@ const statusVariant: Record<string, string> = {
 
 interface Props {
   brand: string; model: string; year: number; status: string
-  images: string[]; currentPrice: number; views: number
+  images: string[]; imageMetas?: Array<{ url: string; category: string }> | null
+  currentPrice: number; views: number
   ownerName: string | null; ownerVerified: boolean
   isOwner: boolean; isDraft: boolean
   onPublish: () => void
 }
 
-export function CarHeader({ brand, model, year, status, images, currentPrice, views, ownerName, ownerVerified, isOwner, isDraft, onPublish }: Props) {
+export function CarHeader({ brand, model, year, status, images, imageMetas, currentPrice, views, ownerName, ownerVerified, isOwner, isDraft, onPublish }: Props) {
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4 pb-0">
-        <CarImageGallery images={images} alt={`${year} ${brand} ${model}`} />
+        <CarImageGallery images={images} imageMetas={imageMetas} alt={`${year} ${brand} ${model}`} />
       </CardContent>
       <CardContent className="pt-4 pb-6">
         <div className="flex justify-between items-start gap-4 flex-wrap">

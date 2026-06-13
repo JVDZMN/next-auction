@@ -14,8 +14,10 @@ import { OwnerActions } from '@/components/car-detail/OwnerActions'
 import { PaymentSection } from '@/components/PaymentSection'
 import { DisputeSection } from '@/components/DisputeSection'
 import MessageSeller from '@/components/MessageSeller'
+import { CarQA } from '@/components/car-detail/CarQA'
 import { Breadcrumb } from '@/components/Breadcrumb'
 import type { Car } from '@/types/car'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -29,6 +31,14 @@ import {
 } from '@/components/ui/alert-dialog'
 import { CheckCircle2 } from 'lucide-react'
 import { CornerAccent } from '@/components/home/CornerAccent'
+
+function getVideoEmbedUrl(url: string): string | null {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
+  if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}`
+  const vim = url.match(/vimeo\.com\/(\d+)/)
+  if (vim) return `https://player.vimeo.com/video/${vim[1]}`
+  return null
+}
 
 interface BidEntry {
   id: string; amount: number; createdAt: string
@@ -180,7 +190,9 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
       <div className="space-y-6">
         <CarHeader
           brand={car.brand} model={car.model} year={car.year}
-          status={car.status} images={car.images} currentPrice={car.currentPrice}
+          status={car.status} images={car.images}
+          imageMetas={(car.imagesMeta as Array<{ url: string; category: string }> | null) ?? null}
+          currentPrice={car.currentPrice}
           views={car.views} ownerName={car.owner.name} ownerVerified={!!car.owner.sellerVerified}
           isOwner={isOwner} isDraft={car.isDraft}
           onPublish={handlePublish}
@@ -227,6 +239,23 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
           </Card>
         )}
 
+        {car.videoUrl && getVideoEmbedUrl(car.videoUrl) && (
+          <Card>
+            <CardHeader><CardTitle className="text-base">{td.cars.detail.videoTitle}</CardTitle></CardHeader>
+            <CardContent className="p-0 overflow-hidden rounded-b-xl">
+              <div className="relative aspect-video">
+                <iframe
+                  src={getVideoEmbedUrl(car.videoUrl)!}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={`${car.year} ${car.brand} ${car.model} video`}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {isOwner && bidLog.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="text-base">Bid Activity</CardTitle></CardHeader>
@@ -253,6 +282,17 @@ export default function CarDetailPage({ params }: { params: { id: string } | Pro
               </Table>
             </CardContent>
           </Card>
+        )}
+
+        <CarQA carId={car.id} ownerId={car.owner.id} />
+
+        {car.reservePrice === null && (
+          <div className="flex items-center gap-2">
+            <Badge className="text-xs font-bold border-0 text-white px-3 py-1" style={{ backgroundColor: 'var(--copper)' }}>
+              {td.cars.filter.noReserveBadge}
+            </Badge>
+            <span className="text-sm text-muted-foreground">{td.cars.detail.noReserveDesc}</span>
+          </div>
         )}
 
         <div ref={biddingRef}>

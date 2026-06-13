@@ -60,31 +60,35 @@ export async function placeBid({ userId, carId, amount, _db, _disableSideEffects
 
   if (!validation.valid) throw new BidError(validation.error, validation.httpStatus)
 
-  const carUpdate = await client.car.updateMany({
-    where: { id: carId, currentPrice: car.currentPrice },
-    data: { currentPrice: amount },
-  })
-
-  if (carUpdate.count !== 1) {
-    throw new BidError('Another bid was placed just before yours. Please try again.', 409)
-  }
-
-  const bid = await client.bid.create({
-    data: { carId, bidderId: userId, amount },
-    include: { bidder: { select: bidderSelect } },
-  })
-
-  // Anti-sniping: extend auction if placed within the snipe window
   const now = new Date()
   const snipeWindow = car.antiSnipingMinutes * 60 * 1000
-  await client.car.update({
-    where: { id: carId },
-    data: {
-      winnerBidId: bid.id,
-      ...(car.auctionEndDate.getTime() - now.getTime() < snipeWindow && {
-        auctionEndDate: new Date(now.getTime() + snipeWindow),
-      }),
-    },
+
+  const bid = await client.$transaction(async (tx) => {
+    const carUpdate = await tx.car.updateMany({
+      where: { id: carId, currentPrice: car.currentPrice },
+      data: { currentPrice: amount },
+    })
+
+    if (carUpdate.count !== 1) {
+      throw new BidError('Another bid was placed just before yours. Please try again.', 409)
+    }
+
+    const newBid = await tx.bid.create({
+      data: { carId, bidderId: userId, amount },
+      include: { bidder: { select: bidderSelect } },
+    })
+
+    await tx.car.update({
+      where: { id: carId },
+      data: {
+        winnerBidId: newBid.id,
+        ...(car.auctionEndDate.getTime() - now.getTime() < snipeWindow && {
+          auctionEndDate: new Date(now.getTime() + snipeWindow),
+        }),
+      },
+    })
+
+    return newBid
   })
 
   // ------------------------------------------------------------------

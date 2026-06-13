@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
+import type { ImageMeta } from '@/components/CarImageUpload'
 import { useRouter } from 'next/navigation'
 import { useAnimate } from 'framer-motion'
 import { CreateCarSchema } from '@/lib/zod'
@@ -17,7 +18,7 @@ const initialFormData = {
   firstRegistration: '', lastInspection: '', nextInspection: '',
   startingPrice: '', reservePrice: '', auctionEndDate: '', auctionStartDate: '',
   streetName: '', houseNumber: '', zipcode: '', city: '',
-  vin: '', inspectionReportUrl: '', bidIncrement: '',
+  vin: '', inspectionReportUrl: '', bidIncrement: '', videoUrl: '',
 }
 
 export function useCreateCarForm() {
@@ -31,6 +32,7 @@ export function useCreateCarForm() {
   const [dawaCoords, setDawaCoords] = useState<[number, number] | null>(null)
   const [isDraft, setIsDraft] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [imageMetas, setImageMetas] = useState<ImageMeta[]>([])
   const [_serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
   const [availableModels, setAvailableModels] = useState<string[]>([])
   const [availableSubModels, setAvailableSubModels] = useState<string[]>([])
@@ -134,6 +136,7 @@ export function useCreateCarForm() {
       const result = await createCar({
         ...formData,
         images: uploadedImages,
+        imagesMeta: imageMetas.filter(m => m.category),
         km: validation.data.km,
         year: validation.data.year,
         power: validation.data.power,
@@ -158,5 +161,5 @@ export function useCreateCarForm() {
     }
   }
 
-  return { formData, setFormData, error, setError, isSubmitting, uploadedImages, setUploadedImages, dawaCoords, setDawaCoords, setLatitude, setLongitude, availableModels, availableSubModels, brands, isDraft, setIsDraft, setServiceHistoryUrls, buttonRowRef, handleChange, handleLookupResult, handleSubmit }
+  return { formData, setFormData, error, setError, isSubmitting, uploadedImages, setUploadedImages, imageMetas, setImageMetas, dawaCoords, setDawaCoords, setLatitude, setLongitude, availableModels, availableSubModels, brands, isDraft, setIsDraft, setServiceHistoryUrls, buttonRowRef, handleChange, handleLookupResult, handleSubmit }
 }

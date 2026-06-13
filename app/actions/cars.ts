@@ -109,6 +109,8 @@ export async function createCar(input: unknown): Promise<CreateCarResult> {
       nextInspection:      data.nextInspection ? new Date(data.nextInspection) : null,
       inspectionReportUrl: data.inspectionReportUrl || null,
       serviceHistoryUrls:  data.serviceHistoryUrls || [],
+      videoUrl:            data.videoUrl || null,
+      ...(data.imagesMeta != null && { imagesMeta: data.imagesMeta }),
       bidIncrement:        data.bidIncrement != null ? Number(data.bidIncrement) : null,
       streetName:          data.streetName || null,
       houseNumber:         data.houseNumber || null,

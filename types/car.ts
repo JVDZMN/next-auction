@@ -29,6 +29,8 @@ export interface Car {
   zipcode: string | null
   city: string | null
   images: string[]
+  imagesMeta: Array<{ url: string; category: string }> | null
+  videoUrl: string | null
   startingPrice: number
   currentPrice: number
   reservePrice: number | null

@@ -244,6 +244,8 @@
       "synExpired": "Syn udløbet",
       "price": "Pris (kr)",
       "liked": "Kun gemte biler",
+      "noReserve": "Kun uden mindstepris",
+      "noReserveBadge": "INGEN MINDSTEPRIS",
       "sort": {
         "label": "Sorter efter",
         "newest": "Nyeste først",
@@ -259,6 +261,7 @@
       "noImage": "Ingen billeder"
     },
     "detail": {
+      "noReserveDesc": "Denne bil sælges til højestbydende uanset pris.",
       "listedBy": "Opslået af",
       "verifiedSeller": "Verificeret sælger",
       "views": "visninger",
@@ -300,7 +303,28 @@
       "acceptBanner": {
         "title": "Reservepris ikke nået",
         "body": "Det højeste bud var {price}. Du kan acceptere det og lukke auktionen som solgt."
+      },
+      "videoTitle": "Video",
+      "photoCategories": {
+        "label": "Fotokategori",
+        "exterior_front": "Forende",
+        "exterior_rear": "Bagend",
+        "exterior_side": "Side",
+        "interior": "Interiør",
+        "dashboard": "Instrumentbræt",
+        "engine": "Motorrum",
+        "trunk": "Bagagerum",
+        "other": "Andet"
       }
+    },
+    "qa": {
+      "title": "Spørgsmål & Svar",
+      "placeholder": "Stil et spørgsmål eller skriv en kommentar…",
+      "submit": "Send",
+      "signInPrompt": "Log ind for at stille spørgsmål eller skrive en kommentar.",
+      "noComments": "Ingen kommentarer endnu. Vær den første!",
+      "seller": "Sælger",
+      "reply": "Svar"
     }
   },
   "notifications": {
@@ -329,6 +353,8 @@
     "auctionEnded": "Auktionen er afsluttet",
     "reserveMet": "Reservepris nået",
     "reserveNotMet": "Reservepris ikke nået endnu",
+    "buyersPremium": "Købers tillæg ({pct}%)",
+    "buyersPremiumTotal": "Est. total inkl. tillæg",
     "legalDialog": {
       "title": "Bekræft dit bud",
       "body": "Dette bud er juridisk bindende i henhold til dansk Købelov. Ved at bekræfte forpligter du dig til at købe køretøjet til denne pris, hvis du vinder auktionen.\n\nNext Auction formidler alene kontakten mellem køber og sælger og er ikke part i handlen.",

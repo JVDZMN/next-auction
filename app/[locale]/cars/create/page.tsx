@@ -52,6 +52,8 @@ export default function CreateCarPage() {
     isSubmitting,
     uploadedImages,
     setUploadedImages,
+    imageMetas,
+    setImageMetas,
     dawaCoords,
     setDawaCoords,
     setLatitude,
@@ -120,7 +122,7 @@ export default function CreateCarPage() {
                 animate="show"
               >
                 <motion.div variants={sectionItem}>
-                  <CarImageUpload uploadedImages={uploadedImages} onChange={setUploadedImages} onError={setError} />
+                  <CarImageUpload uploadedImages={uploadedImages} imageMetas={imageMetas} onChange={setUploadedImages} onMetaChange={setImageMetas} onError={setError} />
                 </motion.div>
 
                 <motion.div variants={sectionItem}>

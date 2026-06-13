@@ -134,6 +134,8 @@ export async function PATCH(
         ...(data.vin !== undefined && { vin: data.vin }),
         ...(data.inspectionReportUrl !== undefined && { inspectionReportUrl: data.inspectionReportUrl }),
         ...(data.serviceHistoryUrls !== undefined && { serviceHistoryUrls: data.serviceHistoryUrls }),
+        ...(data.videoUrl !== undefined && { videoUrl: data.videoUrl || null }),
+        ...(data.imagesMeta != null && { imagesMeta: data.imagesMeta }),
         ...(data.bidIncrement !== undefined && { bidIncrement: data.bidIncrement !== null ? Number(data.bidIncrement) : null }),
         ...(data.isDraft !== undefined && { isDraft: data.isDraft }),
       },

@@ -18,7 +18,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { id: _id, createdAt: _c, updatedAt: _u, winnerBidId: _w, views: _v, ...rest } = car
+    const { id: _id, createdAt: _c, updatedAt: _u, winnerBidId: _w, views: _v, imagesMeta: _im, ...rest } = car
 
     const duplicate = await prisma.car.create({
       data: {

@@ -37,6 +37,7 @@ interface CarListing {
   currentPrice: number; images: string[]; fuel: string | null; km: number
   city: string | null; bodyType: string | null; condition: string
   auctionEndDate: string; _count: { bids: number }
+  reservePrice: number | null
   owner: { name: string | null; role?: string }
   latitude: number | null; longitude: number | null
 }
@@ -63,6 +64,7 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
     maxYear:   searchParams?.get('maxYear')   ?? '',
     synStatus: searchParams?.get('synStatus') ?? '',
     likedOnly: searchParams?.get('liked') === 'true',
+    noReserve: searchParams?.get('noReserve') === 'true',
     kmRange:   [Number(searchParams?.get('minKm') ?? 0), Number(searchParams?.get('maxKm') ?? KM_MAX)] as [number, number],
   })
   const [sortBy,   setSortBy]   = useState(searchParams?.get('sortBy') ?? 'newest')
@@ -81,7 +83,7 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
   )
 
   const buildParams = useCallback((overrides: Record<string, string | number> = {}) => {
-    const { brand, model, city, fuel, bodyType, minPrice, maxPrice, minYear, maxYear, synStatus, likedOnly, kmRange } = filters
+    const { brand, model, city, fuel, bodyType, minPrice, maxPrice, minYear, maxYear, synStatus, likedOnly, noReserve, kmRange } = filters
     const p: Record<string, string> = {}
     if (brand)                    p.brand     = brand
     if (model)                    p.model     = model
@@ -96,6 +98,7 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
     if (kmRange[1] < KM_MAX)      p.maxKm     = String(kmRange[1])
     if (synStatus)                p.synStatus = synStatus
     if (likedOnly)                p.liked     = 'true'
+    if (noReserve)                p.noReserve = 'true'
     if (sortBy !== 'newest')      p.sortBy    = sortBy
     p.segment = segment
     p.page    = String(page)
@@ -124,12 +127,12 @@ export function CarsClient({ initialData, role }: { initialData: CarsResponse; r
   const patchFilters = (patch: Partial<typeof filters>) => { setFilters(f => ({ ...f, ...patch })); setPage(1) }
 
   const clearFilters = () => {
-    setFilters({ brand: '', model: '', city: '', fuel: '', bodyType: '', minPrice: '', maxPrice: '', minYear: '', maxYear: '', synStatus: '', likedOnly: false, kmRange: [0, KM_MAX] })
+    setFilters({ brand: '', model: '', city: '', fuel: '', bodyType: '', minPrice: '', maxPrice: '', minYear: '', maxYear: '', synStatus: '', likedOnly: false, noReserve: false, kmRange: [0, KM_MAX] })
     setSortBy('newest'); setPage(1)
   }
 
   const activeFilterCount =
-    [filters.brand, filters.model, filters.city, filters.fuel, filters.bodyType, filters.minPrice, filters.maxPrice, filters.minYear, filters.maxYear, filters.synStatus, filters.likedOnly ? 'x' : ''].filter(Boolean).length
+    [filters.brand, filters.model, filters.city, filters.fuel, filters.bodyType, filters.minPrice, filters.maxPrice, filters.minYear, filters.maxYear, filters.synStatus, filters.likedOnly ? 'x' : '', filters.noReserve ? 'x' : ''].filter(Boolean).length
     + (filters.kmRange[0] > 0 || filters.kmRange[1] < KM_MAX ? 1 : 0)
 
   return (

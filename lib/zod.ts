@@ -48,6 +48,8 @@ export const CarCreateSchema = z.object({
   power:        z.union([z.string(), z.number()]),
   fuel:         z.string().min(1),
   images:       z.array(z.string()).optional(),
+  imagesMeta:   z.array(z.object({ url: z.string(), category: z.string() })).optional().nullable(),
+  videoUrl:     z.string().url().optional().nullable().or(z.literal('')),
   startingPrice:  z.union([z.string(), z.number()]),
   reservePrice:   z.union([z.string(), z.number()]).optional().nullable(),
   auctionEndDate: z.string(),

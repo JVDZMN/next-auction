@@ -4,15 +4,19 @@ import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 import { cloudinaryBlurUrl } from '@/lib/cloudinary'
 import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
+import { useDict } from '@/lib/i18n/context'
 
 interface Props {
   images: string[]
   alt: string
+  imageMetas?: Array<{ url: string; category: string }> | null
 }
 
-export function CarImageGallery({ images, alt }: Props) {
+export function CarImageGallery({ images, alt, imageMetas }: Props) {
   const [active,   setActive]   = useState(0)
   const [lightbox, setLightbox] = useState(false)
+  const td = useDict()
+  const tc = td.cars.detail.photoCategories
 
   const prev  = useCallback(() => setActive(i => (i - 1 + images.length) % images.length), [images.length])
   const next  = useCallback(() => setActive(i => (i + 1) % images.length), [images.length])
@@ -29,6 +33,12 @@ export function CarImageGallery({ images, alt }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [lightbox, prev, next, close])
 
+  const categoryLabel = (url: string): string | null => {
+    const meta = imageMetas?.find(m => m.url === url)
+    if (!meta?.category) return null
+    return (tc as Record<string, string>)[meta.category] ?? null
+  }
+
   if (images.length === 0) {
     return (
       <div className="aspect-video bg-muted flex items-center justify-center text-muted-foreground text-sm rounded-lg">
@@ -39,7 +49,6 @@ export function CarImageGallery({ images, alt }: Props) {
 
   return (
     <>
-      {/* Main gallery image */}
       <div
         className="relative aspect-video bg-stone-100 overflow-hidden rounded-lg cursor-zoom-in"
         onClick={() => setLightbox(true)}
@@ -62,6 +71,12 @@ export function CarImageGallery({ images, alt }: Props) {
           </>
         )}
 
+        {categoryLabel(images[active]) && (
+          <span className="absolute top-3 left-3 px-2 py-0.5 bg-black/50 text-white text-xs rounded pointer-events-none">
+            {categoryLabel(images[active])}
+          </span>
+        )}
+
         <span className="absolute bottom-3 right-3 px-2 py-0.5 bg-black/40 text-white text-xs rounded tabular-nums pointer-events-none">
           {active + 1} / {images.length}
         </span>
@@ -70,11 +85,11 @@ export function CarImageGallery({ images, alt }: Props) {
         </span>
       </div>
 
-      {/* Thumbnail strip */}
       {images.length > 1 && (
         <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
           {images.map((src, i) => (
             <button
+              type="button"
               key={i}
               onClick={() => setActive(i)}
               aria-label={`Image ${i + 1}`}
@@ -88,16 +103,13 @@ export function CarImageGallery({ images, alt }: Props) {
         </div>
       )}
 
-      {/* Fullscreen lightbox */}
       {lightbox && (
         <div
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
           onClick={close}
         >
-          {/* Image container — click inside doesn't close */}
           <div
-            className="relative"
-            style={{ width: 'calc(100vw - 96px)', height: 'calc(100vh - 96px)' }}
+            className="relative w-[calc(100vw-96px)] h-[calc(100vh-96px)]"
             onClick={e => e.stopPropagation()}
           >
             <Image
@@ -108,10 +120,15 @@ export function CarImageGallery({ images, alt }: Props) {
               sizes="100vw"
               priority
             />
+            {categoryLabel(images[active]) && (
+              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/50 text-white text-xs rounded pointer-events-none">
+                {categoryLabel(images[active])}
+              </span>
+            )}
           </div>
 
-          {/* Close button */}
           <button
+            type="button"
             aria-label="Close"
             onClick={close}
             className="absolute top-4 right-4 z-10 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors"
@@ -119,10 +136,10 @@ export function CarImageGallery({ images, alt }: Props) {
             <X className="h-5 w-5" />
           </button>
 
-          {/* Navigation arrows */}
           {images.length > 1 && (
             <>
               <button
+                type="button"
                 aria-label="Previous"
                 onClick={e => { e.stopPropagation(); prev() }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white bg-black/50 rounded-full p-3 hover:bg-black/80 transition-colors"
@@ -130,6 +147,7 @@ export function CarImageGallery({ images, alt }: Props) {
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <button
+                type="button"
                 aria-label="Next"
                 onClick={e => { e.stopPropagation(); next() }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white bg-black/50 rounded-full p-3 hover:bg-black/80 transition-colors"
@@ -139,7 +157,6 @@ export function CarImageGallery({ images, alt }: Props) {
             </>
           )}
 
-          {/* Counter */}
           <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm tabular-nums pointer-events-none">
             {active + 1} / {images.length}
           </span>
@@ -153,6 +170,7 @@ function NavButton({ dir, onClick }: { dir: 'prev' | 'next'; onClick: React.Mous
   const left = dir === 'prev'
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={left ? 'Previous' : 'Next'}
       className={`absolute ${left ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors`}

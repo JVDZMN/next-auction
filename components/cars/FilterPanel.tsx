@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+import { useDict } from '@/lib/i18n/context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -22,7 +23,7 @@ export const KM_MAX = 500_000
 interface Filters {
   brand: string; model: string; city: string; fuel: string; bodyType: string
   minPrice: string; maxPrice: string; minYear: string; maxYear: string
-  synStatus: string; likedOnly: boolean; kmRange: [number, number]
+  synStatus: string; likedOnly: boolean; noReserve: boolean; kmRange: [number, number]
 }
 
 interface Props {
@@ -34,16 +35,21 @@ interface Props {
 
 export function FilterPanel({ filters, brands, availableModels, onChange }: Props) {
   const { data: session } = useSession()
-  const { brand, model, city, fuel, bodyType, minPrice, maxPrice, minYear, maxYear, synStatus, likedOnly, kmRange } = filters
+  const tf = useDict().cars.filter
+  const { brand, model, city, fuel, bodyType, minPrice, maxPrice, minYear, maxYear, synStatus, likedOnly, noReserve, kmRange } = filters
 
   const set = (patch: Partial<Filters>) => onChange(patch)
 
   return (
     <div className="space-y-5 text-sm">
+      <div className="flex items-center gap-2">
+        <Checkbox id="noReserve" checked={noReserve} onCheckedChange={v => set({ noReserve: !!v })} />
+        <Label htmlFor="noReserve" className="font-normal cursor-pointer">{tf.noReserve}</Label>
+      </div>
       {session && (
         <div className="flex items-center gap-2">
           <Checkbox id="liked" checked={likedOnly} onCheckedChange={v => set({ likedOnly: !!v })} />
-          <Label htmlFor="liked" className="font-normal cursor-pointer">Liked cars only</Label>
+          <Label htmlFor="liked" className="font-normal cursor-pointer">{tf.liked}</Label>
         </div>
       )}
       <Separator />

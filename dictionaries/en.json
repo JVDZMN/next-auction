@@ -244,6 +244,8 @@
       "synExpired": "Syn expired",
       "price": "Price (kr)",
       "liked": "Liked cars only",
+      "noReserve": "No Reserve only",
+      "noReserveBadge": "NO RESERVE",
       "sort": {
         "label": "Sort by",
         "newest": "Newest first",
@@ -259,6 +261,7 @@
       "noImage": "No image"
     },
     "detail": {
+      "noReserveDesc": "This car will sell to the highest bidder regardless of price.",
       "listedBy": "Listed by",
       "verifiedSeller": "Verified Seller",
       "views": "views",
@@ -300,7 +303,28 @@
       "acceptBanner": {
         "title": "Reserve not met",
         "body": "The highest bid was {price}. You can accept it and close the auction as sold."
+      },
+      "videoTitle": "Video",
+      "photoCategories": {
+        "label": "Photo category",
+        "exterior_front": "Front",
+        "exterior_rear": "Rear",
+        "exterior_side": "Side",
+        "interior": "Interior",
+        "dashboard": "Dashboard",
+        "engine": "Engine bay",
+        "trunk": "Trunk",
+        "other": "Other"
       }
+    },
+    "qa": {
+      "title": "Q&A",
+      "placeholder": "Ask a question or leave a comment…",
+      "submit": "Post",
+      "signInPrompt": "Sign in to ask a question or leave a comment.",
+      "noComments": "No comments yet. Be the first to ask!",
+      "seller": "Seller",
+      "reply": "Reply"
     }
   },
   "notifications": {
@@ -329,6 +353,8 @@
     "auctionEnded": "Auction has ended",
     "reserveMet": "Reserve met",
     "reserveNotMet": "Reserve not yet met",
+    "buyersPremium": "Buyer's premium ({pct}%)",
+    "buyersPremiumTotal": "Est. total incl. premium",
     "legalDialog": {
       "title": "Confirm Your Bid",
       "body": "This bid is legally binding under Danish Købeloven. By confirming, you commit to purchasing the vehicle at this price if you win the auction.\n\nNext Auction solely facilitates contact between buyer and seller and is not a party to the transaction.",

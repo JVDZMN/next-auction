@@ -8,6 +8,7 @@ interface CarListing {
   currentPrice: number; images: string[]; fuel: string | null; km: number
   city: string | null; bodyType: string | null; condition: string
   auctionEndDate: string; _count: { bids: number }
+  reservePrice: number | null
   owner: { name: string | null; role?: string }
   latitude: number | null; longitude: number | null
 }

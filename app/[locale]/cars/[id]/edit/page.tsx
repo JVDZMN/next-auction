@@ -64,6 +64,7 @@ function carToFormData(car: Car) {
     city: car.city ?? '',
     vin: car.vin ?? '',
     inspectionReportUrl: car.inspectionReportUrl ?? '',
+    videoUrl: car.videoUrl ?? '',
     bidIncrement: car.bidIncrement != null ? String(car.bidIncrement) : '',
   }
 }
@@ -80,6 +81,7 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
   const [formData, setFormData] = useState(carToFormData({} as Car))
   const [isDraft, setIsDraft] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [imageMetas, setImageMetas] = useState<Array<{ url: string; category: string }>>([])
   const [serviceHistoryUrls, setServiceHistoryUrls] = useState<string[]>([])
   const [availableModels, setAvailableModels] = useState<string[]>([])
   const [availableSubModels, setAvailableSubModels] = useState<string[]>([])
@@ -94,6 +96,7 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
         setFormData(carToFormData(data))
         setIsDraft(data.isDraft)
         setUploadedImages(data.images ?? [])
+        setImageMetas((data.imagesMeta as Array<{ url: string; category: string }> | null) ?? [])
         setServiceHistoryUrls(data.serviceHistoryUrls ?? [])
         setAvailableModels(getModelsByBrand(data.brand))
         setAvailableSubModels(getSubModelsByBrandModel(data.brand, data.model))
@@ -130,6 +133,7 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
         body: JSON.stringify({
           ...formData,
           images: uploadedImages,
+          imagesMeta: imageMetas.filter(m => m.category),
           km: parseInt(formData.km),
           lastInspectionKm: formData.lastInspectionKm ? parseInt(formData.lastInspectionKm) : null,
           year: parseInt(formData.year),
@@ -192,7 +196,7 @@ export default function EditCarPage({ params }: { params: Promise<{ id: string }
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <CarImageUpload uploadedImages={uploadedImages} onChange={setUploadedImages} onError={setError} />
+                <CarImageUpload uploadedImages={uploadedImages} imageMetas={imageMetas} onChange={setUploadedImages} onMetaChange={setImageMetas} onError={setError} />
 
                 <CarAddressSection
                   formData={formData}

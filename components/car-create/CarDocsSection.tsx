@@ -13,6 +13,7 @@ interface Props {
     lastInspectionKm: string
     nextInspection: string
     inspectionReportUrl: string
+    videoUrl: string
     specs: string
   }
   onChange: ChangeHandler
@@ -67,6 +68,13 @@ export function CarDocsSection({ formData, onChange, onServiceHistoryChange }: P
           <MotionInput
             id="inspectionReportUrl" name="inspectionReportUrl" type="url"
             value={formData.inspectionReportUrl} onChange={onInput} placeholder="https://..."
+          />
+        </div>
+        <div>
+          <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-1">Video URL (YouTube / Vimeo, optional)</label>
+          <MotionInput
+            id="videoUrl" name="videoUrl" type="url"
+            value={formData.videoUrl} onChange={onInput} placeholder="https://youtube.com/watch?v=..."
           />
         </div>
       </div>

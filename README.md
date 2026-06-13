@@ -54,8 +54,8 @@ graph TD
 
     subgraph nextjs["Next.js 15"]
         direction TB
-        Pages["Pages\n/  /cars  /cars/[id]  /cars/create\n/dashboard  /admin  /auth"]
-        API["API Routes\n/api/cars · /api/bids · /api/messages\n/api/upload · /api/admin · /api/cron\n/api/auth · /api/mitid · /api/motorapi"]
+        Pages["Pages\n/  /cars  /cars/[id]  /cars/create\n/dashboard  /dealers  /admin  /auth\n/faq  /terms  /privacy"]
+        API["API Routes\n/api/cars · /api/bids · /api/messages\n/api/notifications · /api/saved-searches\n/api/proxy-bids · /api/upload · /api/pusher\n/api/admin · /api/cron · /api/auth\n/api/mitid · /api/motorapi · /api/cvr\n/api/user"]
     end
 
     subgraph data["Data Layer"]
@@ -69,6 +69,7 @@ graph TD
         Resend["Resend\nTransactional Email"]
         MotorDK["MotorAPI.dk\nVehicle Registry"]
         DAWA["DAWA API\nDanish Addresses"]
+        CVR["CVR API\nDanish Business Registry"]
         GoogleOAuth["Google OAuth"]
         MitID["MitID · Criipto\nIdentity Verification"]
         Sentry["Sentry\nError Tracking"]
@@ -87,6 +88,7 @@ graph TD
     API -- "store images" --> Cloudinary
     API -- "bid / outbid / alert emails" --> Resend
     API -- "plate & VIN lookup (proxied)" --> MotorDK
+    API -- "business lookup (proxied)" --> CVR
     API -- "sign in" --> GoogleOAuth
     API -- "identity verification" --> MitID
     API -- "unhandled errors" --> Sentry
@@ -104,20 +106,24 @@ graph TD
 | Email | Resend |
 | Image upload | Cloudinary |
 | Error tracking | Sentry |
-| Styling | Tailwind CSS |
+| Styling | Tailwind CSS + base-ui components |
+| i18n | Built-in — Danish (`da`) and English (`en`) via `[locale]` routing |
 | Testing | Vitest (unit) + Vitest + Docker (integration) |
 
 ## Features
 
 ### Listings & Search
-- **Browse & search** — Filter by brand, model, city, fuel type, body type, price range, year range; sort by newest / ending soon / price
+- **Browse & search** — Filter by brand, model, city, fuel type, body type, price range, year range, KM range, inspection status; sort by newest / ending soon / price
+- **Private vs business market** — Separate segments for private and business auctions; logged-in users can toggle between them
+- **Map view** — Toggle a Leaflet map overlay on the listings page showing cars as pins; works alongside the filter panel
 - **Liked cars filter** — Logged-in users can filter to show only their liked listings
 - **Pagination** — 12 per page, shareable URLs preserve all active filters
-- **Car cards** — Image, fuel/body type badges, km, city, time-left countdown (turns red under 24 h), bid count
+- **Car cards** — Image, fuel/body type badges, km, city, time-left countdown (turns red under 24 h), bid count, live price via Pusher
 
 ### Car Creation
 - **Vehicle lookup** — Enter a Danish license plate or VIN to auto-fill brand, model, specs, inspection dates, and more via [MotorAPI.dk](https://motorapi.dk)
 - **DAWA address autocomplete** — Type-ahead search for Danish addresses ([Danmarks Adresseregister](https://api.dataforsyningen.dk)); fills street, house number, zip, and city
+- **Location picker** — Interactive map pin for precise car location
 - **Extended vehicle fields** — Sub-model, variant, body type, category, gear type, engine size, seats, weight, license plate, use, first registration, last/next inspection, KM at last inspection
 - **Image upload** — Multi-image upload to Cloudinary
 - **Draft mode** — Save a listing as a draft before publishing
@@ -125,6 +131,8 @@ graph TD
 
 ### Bidding
 - **Live updates** — Pusher `bid-placed` event pushes new price to every open car page the instant a bid lands; no polling
+- **Quick-bid buttons** — Preset increment buttons on the car detail page for one-tap bidding
+- **Mobile sticky bid bar** — Fixed bottom bar on mobile with the current price and bid button always in reach
 - **Race condition protection** — Optimistic lock via `car.updateMany({ where: { currentPrice: snapshot } })`; if another bid landed first, `count === 0` and a 409 is returned immediately
 - **Rate limiting** — 5 bids / 10 s per user; 10 messages / 60 s per user (Upstash Redis sliding-window; in-memory fallback for local dev)
 - **Proxy bidding** — Set a maximum bid; system auto-bids up to that amount
@@ -132,20 +140,26 @@ graph TD
 - **Reserve price** — Owner sets a hidden minimum; auction closes as `reserve_not_met` if not reached
 - **Second-chance offer** — Owner can accept the highest bid after a `reserve_not_met` close
 - **Bid increment** — Optional minimum step between bids
+- **Bid history** — Full bid history visible to all users; bidder names are anonymized (e.g. "Bruger #3")
 
 ### Auction Lifecycle
 - **Status automation** — Cron endpoint (`/api/cron/auction-status`) runs on ended auctions and sets status automatically
 - **Owner controls** — Cancel, relist, or duplicate a listing from the detail page
 - **Winner flow** — Completed auctions record a winning bid and notify the winner
+- **Dispute resolution** — Buyers and sellers can open a dispute on a completed auction; admins resolve from the admin panel
 
 ### Users & Trust
 - **Email verification** — Credential signups receive a verification link; Google signups are auto-verified
 - **MitID verification** — Danish users can verify their identity via MitID (separate from login)
 - **Seller verification** — Admins can mark sellers as verified; badge shown on listings
 - **Like / watchlist** — Heart listings; optionally receive an email when an auction is closing soon
+- **GDPR data export** — Users can request and download all their personal data via `/api/user/gdpr`
+- **User ratings** — Buyers and sellers can rate each other after a completed transaction
+- **Business profiles** — Business users can edit a public dealer profile visible on the dealers page; CVR number looked up via the Danish business registry
 
 ### Notifications & Messaging
-- **Notifications** — Bell icon with unread count; pushes for new bids, outbids, and messages
+- **Notification bell** — Real-time bell icon with unread count; items are clickable and navigate to the relevant auction or message thread
+- **Outbid toast** — Instant Pusher-driven toast when another user outbids you, with a direct link to the auction
 - **Buyer ↔ seller chat** — Per-listing messaging with email fallback via Resend
 - **Saved search alerts** — Email notification when a new listing matches a saved search
 
@@ -153,6 +167,13 @@ graph TD
 - **Dashboard** — Platform stats (active listings, bids placed, users, revenue)
 - **Car management** — View listings in any status (active, completed, cancelled, reserve_not_met)
 - **Bid history** — Per-listing bid log in the admin panel
+- **Users & sellers** — User list, seller verification, dispute resolution
+- **Analytics** — Charts for platform activity over time
+
+### Internationalisation
+- **Danish and English** — All UI strings live in `lib/i18n/da.json` and `lib/i18n/en.json`; no hardcoded translated strings in components
+- **`[locale]` routing** — All pages live under `/da/...` or `/en/...`; locale is resolved from the URL segment and injected via `DictionaryProvider`
+- **Language switcher** — Header control switches locale while preserving the current path
 
 ### Developer
 - **Structured logging** — JSON logs on every bid attempt/rejection/success; unexpected errors captured to Sentry
@@ -285,52 +306,117 @@ SENTRY_DSN               # optional
 ```
 next-auction/
 ├── app/
+│   ├── [locale]/                  # All pages under /da/... or /en/...
+│   │   ├── page.tsx               # Home
+│   │   ├── layout.tsx             # Locale layout — injects session, dict, providers
+│   │   ├── cars/
+│   │   │   ├── page.tsx           # Browse — search, filters, map, pagination
+│   │   │   ├── CarsClient.tsx
+│   │   │   ├── create/            # Create listing form
+│   │   │   └── [id]/              # Car detail + bidding
+│   │   ├── dashboard/             # User dashboard (listings, bids, searches, messages, analytics)
+│   │   │   └── profile/           # Business profile editor
+│   │   ├── dealers/               # Dealer directory
+│   │   │   └── [dealerId]/        # Individual dealer page
+│   │   ├── admin/                 # Admin panel
+│   │   │   ├── dashboard/
+│   │   │   └── cars/
+│   │   ├── auth/                  # Sign in / sign up / verify-email
+│   │   ├── faq/
+│   │   ├── terms/
+│   │   ├── privacy/
+│   │   └── mitid-verified/
 │   ├── api/
-│   │   ├── auth/            # NextAuth + credentials register + email verify
-│   │   ├── bids/            # Place & list bids
-│   │   ├── cars/            # CRUD, search/pagination, like, status, accept-bid, relist, duplicate
-│   │   ├── motorapi/        # Vehicle lookup proxy (MotorAPI.dk)
-│   │   ├── messages/        # Chat + notifications
-│   │   ├── upload/          # Cloudinary image upload
-│   │   ├── admin/           # Admin stats & car management
-│   │   ├── mitid/           # MitID OIDC start + callback
-│   │   └── cron/            # Auction status updater
-│   ├── cars/
-│   │   ├── page.tsx         # Browse page — search, filters, pagination
-│   │   ├── create/          # Create listing form
-│   │   └── [id]/            # Car detail + bidding
-│   ├── dashboard/           # User dashboard
-│   ├── admin/               # Admin dashboard
-│   ├── auth/                # Sign in / sign up / verify-email pages
-│   ├── mitid-verified/      # MitID verification result page
+│   │   ├── auth/                  # NextAuth + credentials register + email verify
+│   │   ├── bids/                  # Place & list bids
+│   │   ├── cars/                  # CRUD, search/pagination, like, status, accept-bid, relist, duplicate, dispute, rating, view
+│   │   ├── motorapi/              # Vehicle lookup proxy (MotorAPI.dk)
+│   │   ├── cvr/                   # Danish business registry lookup proxy
+│   │   ├── messages/              # Buyer ↔ seller chat
+│   │   ├── notifications/         # In-app notification list + mark-read
+│   │   ├── saved-searches/        # CRUD for saved searches
+│   │   ├── proxy-bids/            # Proxy bid management
+│   │   ├── pusher/                # Pusher auth endpoint
+│   │   ├── upload/                # Cloudinary image upload
+│   │   ├── admin/                 # Admin stats & car management
+│   │   ├── user/                  # Dashboard data, profile, analytics, GDPR export
+│   │   ├── users/                 # User lookup (admin)
+│   │   ├── mitid/                 # MitID OIDC start + callback
+│   │   └── cron/                  # Auction status updater
 │   ├── error.tsx
 │   ├── global-error.tsx
-│   └── not-found.tsx
+│   ├── not-found.tsx
+│   ├── robots.ts
+│   └── sitemap.ts
 ├── components/
 │   ├── car-create/
 │   │   ├── VehicleLookupPanel.tsx   # MotorAPI license plate / VIN lookup
 │   │   ├── CarAddressSection.tsx    # DAWA autocomplete + manual address fields
+│   │   ├── CarLocationPicker.tsx    # Map pin for car location
 │   │   ├── CarVehicleSection.tsx    # Brand / model / sub-model / description
 │   │   ├── CarSpecsSection.tsx      # Year, KM, fuel, gear, body type, etc.
 │   │   ├── CarAuctionSection.tsx    # Prices, dates, bid increment
 │   │   └── CarDocsSection.tsx       # VIN, inspections, URLs, notes
+│   ├── car-detail/
+│   │   ├── CarHeader.tsx
+│   │   ├── CarSpecs.tsx
+│   │   └── OwnerActions.tsx
+│   ├── bidding/
+│   │   ├── PlaceBidForm.tsx         # Main bid form with quick-bid buttons
+│   │   ├── ProxyBidForm.tsx
+│   │   ├── BidHistoryTable.tsx      # Anonymized bid history (visible to all)
+│   │   ├── BidConfirmDialog.tsx
+│   │   └── AuctionStatusAlerts.tsx
+│   ├── dashboard/
+│   │   ├── ProfileCard.tsx
+│   │   ├── StatsGrid.tsx
+│   │   ├── MyAuctionsTab.tsx
+│   │   ├── MyBidsTab.tsx
+│   │   ├── SavedSearchesTab.tsx
+│   │   ├── MessagesTab.tsx
+│   │   └── AnalyticsTab.tsx
+│   ├── admin/
+│   │   ├── OverviewTab.tsx
+│   │   ├── CarsTab.tsx
+│   │   ├── UsersTab.tsx
+│   │   ├── SellersTab.tsx
+│   │   ├── BiddersTab.tsx
+│   │   ├── ChartsTab.tsx
+│   │   ├── DisputeResolution.tsx
+│   │   ├── AdminBidsTable.tsx
+│   │   └── AdminBidStats.tsx
+│   ├── header/
+│   │   ├── NotificationBell.tsx     # Real-time bell with unread count + clickable items
+│   │   ├── MobileSheet.tsx
+│   │   └── UserMenu.tsx
+│   ├── home/                        # Home page section components
+│   ├── cars/
+│   │   ├── CarGrid.tsx
+│   │   └── FilterPanel.tsx
 │   ├── Header.tsx
-│   ├── CarCard.tsx           # Listing card — image, badges, time left, bid count
-│   ├── DawaAddressInput.tsx  # DAWA type-ahead address input
-│   ├── CarImageUpload.tsx
-│   ├── LikeButton.tsx
+│   ├── CarCard.tsx                  # Listing card — image, badges, time left, live price
+│   ├── CarsMap.tsx                  # Leaflet map view of listings
 │   ├── BiddingSection.tsx
-│   ├── MessagesModal.tsx
-│   ├── MessageSeller.tsx
+│   ├── DawaAddressInput.tsx         # DAWA type-ahead address input
+│   ├── CarImageUpload.tsx
+│   ├── CarImageGallery.tsx
+│   ├── LikeButton.tsx
+│   ├── DisputeSection.tsx
+│   ├── PaymentSection.tsx
+│   ├── LanguageSwitcher.tsx
+│   ├── AuctionCountdown.tsx
 │   └── PageLayout.tsx
 ├── lib/
 │   ├── services/
 │   │   ├── bid-service.ts                    # placeBid — transaction, proxy bid, anti-sniping
 │   │   ├── bid-service.test.ts               # Unit tests (mocked)
 │   │   └── bid-service.integration.test.ts   # Integration tests (real Postgres)
+│   ├── i18n/
+│   │   ├── index.ts           # locales, getDictionary, toLocale
+│   │   └── context.tsx        # DictionaryProvider, useLocale, useDict
 │   ├── test/
-│   │   ├── db.ts            # Test DB client + ensureMigrated / resetDb / seed helpers
-│   │   └── setup.ts         # Dummy env vars for test runs
+│   │   ├── db.ts              # Test DB client + ensureMigrated / resetDb / seed helpers
+│   │   └── setup.ts           # Dummy env vars for test runs
 │   ├── bid-validation.ts
 │   ├── bid-error.ts
 │   ├── rate-limit.ts
@@ -338,12 +424,17 @@ next-auction/
 │   ├── email.ts
 │   ├── auth.ts
 │   ├── prisma.ts
-│   ├── env.ts               # Startup env-var validation
-│   ├── car-brands.ts        # getAllBrands / getModelsByBrand / getSubModelsByBrandModel
-│   ├── api.ts               # serverError helper
-│   └── zod.ts               # Input validation schemas
+│   ├── env.ts                 # Startup env-var validation
+│   ├── notification-context.tsx
+│   ├── car-brands.ts          # getAllBrands / getModelsByBrand / getSubModelsByBrandModel
+│   ├── car-filters.ts
+│   ├── pusher.ts / pusher-client.ts
+│   ├── cloudinary.ts
+│   ├── permissions.ts
+│   ├── api.ts                 # serverError helper
+│   └── zod.ts                 # Input validation schemas
 ├── data/
-│   └── car-brands.json      # Hierarchical brand → model → sub_model list (Denmark)
+│   └── car-brands.json        # Hierarchical brand → model → sub_model list (Denmark)
 ├── prisma/
 │   └── schema.prisma
 ├── types/
@@ -363,19 +454,30 @@ next-auction/
 | GET | `/api/cars` | — | List cars with filters + pagination |
 | POST | `/api/cars` | User | Create listing |
 | GET | `/api/cars/[id]` | — | Car detail |
+| PATCH | `/api/cars/[id]` | Owner/Admin | Update listing fields |
 | PATCH | `/api/cars/[id]/status` | Owner/Admin | Update auction status |
 | POST | `/api/cars/[id]/like` | User | Toggle like |
 | POST | `/api/cars/[id]/accept-bid` | Owner | Accept highest bid (reserve not met) |
 | POST | `/api/cars/[id]/relist` | Owner | Relist with new end date |
 | POST | `/api/cars/[id]/duplicate` | Owner | Duplicate as draft |
 | POST | `/api/cars/[id]/view` | — | Increment view count |
+| POST | `/api/cars/[id]/dispute` | User | Open a dispute on a completed auction |
+| POST | `/api/cars/[id]/rating` | User | Submit a rating after a transaction |
 | GET | `/api/motorapi` | User | Vehicle lookup by plate or VIN |
+| GET | `/api/cvr` | User | Danish business registry lookup by CVR number |
 | GET/POST | `/api/bids` | User | List / place bids |
+| GET/POST | `/api/proxy-bids` | User | Get / set proxy bid for a car |
 | GET/POST | `/api/messages` | User | Fetch / send messages |
-| GET/PATCH | `/api/messages/notifications` | User | Notifications list / mark read |
+| GET/PATCH | `/api/notifications` | User | Notification list / mark read |
+| GET/POST/DELETE | `/api/saved-searches` | User | Manage saved searches |
+| POST | `/api/pusher/auth` | User | Pusher channel auth |
 | POST | `/api/upload` | User | Upload images to Cloudinary |
 | GET | `/api/admin/stats` | Admin | Platform statistics |
 | GET | `/api/admin/cars/[id]` | Admin | Car detail with bid stats |
+| GET | `/api/user/dashboard` | User | Full dashboard data |
+| GET/PATCH | `/api/user/profile` | User | User profile read/update |
+| GET | `/api/user/analytics` | User | Personal bidding/listing analytics |
+| GET | `/api/user/gdpr` | User | GDPR data export |
 | GET | `/api/auth/verify-email` | — | Verify email token |
 | GET | `/api/mitid/start` | — | Start MitID OIDC flow |
 | GET | `/api/mitid/callback` | — | MitID OIDC callback |
@@ -392,6 +494,9 @@ next-auction/
 | `bodyType` | string | Body type contains (case-insensitive) |
 | `minPrice` / `maxPrice` | number | Current price range |
 | `minYear` / `maxYear` | number | Year range |
+| `minKm` / `maxKm` | number | Odometer range |
+| `synStatus` | string | Inspection status: `valid` (next inspection in future) · `expired` |
+| `segment` | string | Market segment: `private` (default) · `business` |
 | `liked` | `true` | Only cars liked by the authenticated user |
 | `sortBy` | string | `newest` (default) · `endingSoon` · `priceAsc` · `priceDesc` |
 | `page` | number | Page number (default 1) |
@@ -438,6 +543,8 @@ User ──< Car ──< Bid
               ──< Message
               ──< Like
               ──< ProxyBid
+              ──< Dispute
+              ──< Rating
 User ──< Notification
 User ──< SavedSearch
 User ── VerificationToken

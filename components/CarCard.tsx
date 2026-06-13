@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { LikeButton } from '@/components/LikeButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { useLocale } from '@/lib/i18n/context'
+import { useLocale, useDict } from '@/lib/i18n/context'
 import { cloudinaryBlurUrl, cloudinaryCardUrl } from '@/lib/cloudinary'
 import { CarCardLivePrice } from '@/components/CarCardLivePrice'
 
@@ -25,6 +25,7 @@ type CarCardProps = {
   currentPrice: number
   auctionEndDate: string | Date
   bidCount: number
+  reservePrice?: number | null
   isLiked?: boolean
   priority?: boolean
   owner: { name: string | null }
@@ -42,10 +43,12 @@ function getTimeRemaining(endDate: string | Date): { label: string; urgent: bool
   return { label: `${mins}m`, urgent: true }
 }
 
-export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, isLiked = false, priority = false, ownerRole }: CarCardProps) {
+export function CarCard({ id, year, brand, model, subModel, images, condition, fuel, km, city, bodyType, currentPrice, auctionEndDate, bidCount, reservePrice, isLiked = false, priority = false, ownerRole }: CarCardProps) {
   const locale = useLocale()
   const router = useRouter()
+  const tf = useDict().cars.filter
   const { label, urgent } = getTimeRemaining(auctionEndDate)
+  const isNoReserve = reservePrice === null || reservePrice === undefined
 
   return (
     <div className="group relative block car-card-hover">
@@ -95,6 +98,13 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
             </svg>
             {label}
           </Badge>
+
+          {/* No Reserve badge */}
+          {isNoReserve && (
+            <Badge className="absolute top-8 left-2 z-10 text-[10px] font-bold border-0 text-white" style={{ backgroundColor: 'var(--copper)' }}>
+              {tf.noReserveBadge}
+            </Badge>
+          )}
 
           {/* Fuel / body type badges */}
           {(fuel || bodyType) && (

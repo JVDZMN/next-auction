@@ -1,15 +1,36 @@
 'use client'
 
 import { useState } from 'react'
+import { useDict } from '@/lib/i18n/context'
+
+export interface ImageMeta {
+  url: string
+  category: string
+}
+
+const CATEGORIES = [
+  'exterior_front',
+  'exterior_rear',
+  'exterior_side',
+  'interior',
+  'dashboard',
+  'engine',
+  'trunk',
+  'other',
+] as const
 
 interface CarImageUploadProps {
   uploadedImages: string[]
+  imageMetas: ImageMeta[]
   onChange: (images: string[]) => void
+  onMetaChange: (metas: ImageMeta[]) => void
   onError: (error: string) => void
 }
 
-export function CarImageUpload({ uploadedImages, onChange, onError }: CarImageUploadProps) {
+export function CarImageUpload({ uploadedImages, imageMetas, onChange, onMetaChange, onError }: CarImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
+  const td = useDict()
+  const tc = td.cars.detail.photoCategories
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -22,22 +43,15 @@ export function CarImageUpload({ uploadedImages, onChange, onError }: CarImageUp
       const uploadPromises = Array.from(files).map(async (file) => {
         const formData = new FormData()
         formData.append('file', file)
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to upload image')
-        }
-
+        const response = await fetch('/api/upload', { method: 'POST', body: formData })
+        if (!response.ok) throw new Error('Failed to upload image')
         const data = await response.json()
-        return data.url
+        return data.url as string
       })
 
       const urls = await Promise.all(uploadPromises)
       onChange([...uploadedImages, ...urls])
+      onMetaChange([...imageMetas, ...urls.map(url => ({ url, category: '' }))])
     } catch {
       onError('Failed to upload images. Please try again.')
     } finally {
@@ -47,6 +61,11 @@ export function CarImageUpload({ uploadedImages, onChange, onError }: CarImageUp
 
   const removeImage = (index: number) => {
     onChange(uploadedImages.filter((_, i) => i !== index))
+    onMetaChange(imageMetas.filter((_, i) => i !== index))
+  }
+
+  const setCategory = (index: number, category: string) => {
+    onMetaChange(imageMetas.map((m, i) => i === index ? { ...m, category } : m))
   }
 
   return (
@@ -69,22 +88,35 @@ export function CarImageUpload({ uploadedImages, onChange, onError }: CarImageUp
           <p className="text-sm text-blue-600">Uploading images...</p>
         )}
         {uploadedImages.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {uploadedImages.map((url, index) => (
-              <div key={index} className="relative group h-24">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`Car ${index + 1}`}
-                  className="w-full h-full object-cover rounded border"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              <div key={index} className="relative group">
+                <div className="relative h-24 rounded border overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`Car ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-sm leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+                <select
+                  value={imageMetas[index]?.category ?? ''}
+                  onChange={e => setCategory(index, e.target.value)}
+                  aria-label={`${tc.label} ${index + 1}`}
+                  className="mt-1 w-full text-xs rounded border border-gray-200 bg-background px-1.5 py-1 text-gray-600 focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  ×
-                </button>
+                  <option value="">{tc.label}</option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{tc[cat]}</option>
+                  ))}
+                </select>
               </div>
             ))}
           </div>

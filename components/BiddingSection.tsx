@@ -39,6 +39,8 @@ export interface BiddingSectionProps {
   onBidPlaced?: () => void; onPriceUpdate?: (price: number) => void
 }
 
+const BUYERS_PREMIUM_PCT = 5
+
 export function BiddingSection({
   carId, currentPrice, auctionEndDate, status, ownerId, ownerRole,
   reservePrice, bidIncrement, onBidPlaced, onPriceUpdate,
@@ -216,6 +218,12 @@ export function BiddingSection({
             <p className="text-xs text-muted-foreground mt-2 pl-4">
               {bids.length} {bids.length === 1 ? dict.cars.card.bid : dict.cars.card.bids}
             </p>
+          )}
+          {isAuctionActive && !isOwner && (
+            <div className="mt-3 pl-4 space-y-0.5 text-xs text-muted-foreground">
+              <p>{t.buyersPremium.replace('{pct}', String(BUYERS_PREMIUM_PCT))}: {Math.round(livePrice * BUYERS_PREMIUM_PCT / 100).toLocaleString('da-DK')} kr</p>
+              <p className="font-medium text-foreground">{t.buyersPremiumTotal}: {Math.round(livePrice * (1 + BUYERS_PREMIUM_PCT / 100)).toLocaleString('da-DK')} kr</p>
+            </div>
           )}
           {reservePrice != null && isAuctionActive && (
             <div className="mt-3 pl-4">
