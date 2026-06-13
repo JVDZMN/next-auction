@@ -65,7 +65,7 @@ vi.mock('@/lib/prisma', () => {
     bidderSelect: { id: true, name: true, email: true },
     prisma: {
       ...tx,
-      $transaction: vi.fn().mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx)),
+      $transaction: vi.fn().mockImplementation((cb: (arg: unknown) => unknown) => cb(tx)),
     },
   }
 })
