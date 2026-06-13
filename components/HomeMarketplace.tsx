@@ -11,7 +11,7 @@ import type { AuctionRow, SortMode } from '@/lib/auction-queries'
 
 interface Props {
   isSignedIn: boolean
-  featured: AuctionRow | null
+  featured: AuctionRow[]
   bySort: Record<SortMode, AuctionRow[]>
   carsHref: string
   locale: string
@@ -26,8 +26,8 @@ export function HomeMarketplace({ locale, isSignedIn, featured, bySort, carsHref
       {/* 1. Quick-filter strip (sticky below header) */}
       <TopFilterBar />
 
-      {/* 2. Featured auction hero card */}
-      {featured && <FeaturedAuctionCard car={featured} />}
+      {/* 2. Featured auction carousel */}
+      {featured.length > 0 && <FeaturedAuctionCard cars={featured} />}
 
       {/* 3. Auction grid with sort tabs */}
       <AuctionGrid bySort={bySort} locale={locale} carsHref={carsHref} />

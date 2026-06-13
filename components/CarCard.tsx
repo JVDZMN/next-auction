@@ -78,15 +78,6 @@ export function CarCard({ id, year, brand, model, subModel, images, condition, f
           <div className="card-overlay-top absolute top-0 left-0 right-0 h-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
           <div className="card-overlay-bottom absolute bottom-0 left-0 right-0 h-14 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-          {/* Segment badge */}
-          {ownerRole && (
-            <Badge
-              className="absolute bottom-2 right-2 z-10 text-[10px] font-bold text-white border-0"
-              style={{ backgroundColor: ownerRole === 'BUSINESS_USER' ? 'var(--dark-section)' : 'var(--copper)' }}
-            >
-              {ownerRole === 'BUSINESS_USER' ? 'Erhverv' : 'Privat'}
-            </Badge>
-          )}
 
           {/* Time badge */}
           <Badge

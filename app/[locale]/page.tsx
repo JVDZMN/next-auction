@@ -4,7 +4,7 @@ import { toLocale } from '@/lib/i18n'
 import { HomeMarketplace } from '@/components/HomeMarketplace'
 import {
   getMarketFilter,
-  getFeaturedAuction,
+  getFeaturedAuctions,
   getAuctionGrid,
   type SortMode,
 } from '@/lib/auction-queries'
@@ -23,7 +23,7 @@ export default async function HomePage({
   const market  = getMarketFilter(role)
 
   const [featured, ...gridResults] = await Promise.all([
-    getFeaturedAuction(market),
+    getFeaturedAuctions(market, 10),
     ...SORT_MODES.map(sort => getAuctionGrid(market, sort, 12)),
   ])
 

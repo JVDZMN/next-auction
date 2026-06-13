@@ -93,8 +93,8 @@ function serialize(car: {
   }
 }
 
-export async function getFeaturedAuction(market: Market): Promise<AuctionRow | null> {
-  const car = await prisma.car.findFirst({
+export async function getFeaturedAuctions(market: Market, take = 10): Promise<AuctionRow[]> {
+  const cars = await prisma.car.findMany({
     where: {
       ...activeBase(),
       owner: { role: market },
@@ -104,9 +104,9 @@ export async function getFeaturedAuction(market: Market): Promise<AuctionRow | n
       { currentPrice: 'desc' },
       { auctionEndDate: 'asc' },
     ],
+    take,
   })
-  if (!car) return null
-  return serialize(car)
+  return cars.map(serialize)
 }
 
 export async function getAuctionGrid(
