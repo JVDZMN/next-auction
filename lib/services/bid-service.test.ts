@@ -53,24 +53,22 @@ vi.mock('@/lib/logger', () => ({
     error: vi.fn(),
   },
 }))
-vi.mock('@/lib/prisma', () => ({
-  bidderSelect: { id: true, name: true, email: true },
-  prisma: {
-    car: {
-      findUnique: mockCarFindUnique,
-      updateMany: mockCarUpdateMany,
-      update:     mockCarUpdate,
-    },
-    bid: {
-      create:   mockBidCreate,
-      findMany: mockBidFindMany,
-      count:    mockBidCount,
-    },
+vi.mock('@/lib/prisma', () => {
+  const tx = {
+    car:          { findUnique: mockCarFindUnique, updateMany: mockCarUpdateMany, update: mockCarUpdate },
+    bid:          { create: mockBidCreate, findMany: mockBidFindMany, count: mockBidCount },
     proxyBid:     { findFirst: mockProxyBidFindFirst },
     user:         { findUnique: mockUserFindUnique, findMany: mockUserFindMany },
     notification: { createMany: mockNotificationCreateMany },
-  },
-}))
+  }
+  return {
+    bidderSelect: { id: true, name: true, email: true },
+    prisma: {
+      ...tx,
+      $transaction: vi.fn().mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx)),
+    },
+  }
+})
 
 // Import the service AFTER mocks are in place
 import { placeBid } from './bid-service'
