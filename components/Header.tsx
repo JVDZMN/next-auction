@@ -61,6 +61,7 @@ export function Header() {
               { label: t.dealers,        href: `/${locale}/dealers` },
             ]
           : [{ label: t.browseCars, href: `/${locale}/cars` }]),
+        { label: t.howItWorks, href: `/${locale}/sadan-virker-det` },
         {
           label: isAdmin ? t.admin : (isBusiness ? t.myBusiness : t.myAccount),
           href:  isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`,
@@ -68,9 +69,10 @@ export function Header() {
         { label: t.createListing, href: `/${locale}/cars/create` },
       ]
     : [
-        { label: t.browseCars, href: `/${locale}/cars` },
-        { label: t.signIn,     href: `/${locale}/auth/signin` },
-        { label: t.signUp,     href: `/${locale}/auth/signup` },
+        { label: t.browseCars,  href: `/${locale}/cars` },
+        { label: t.howItWorks,  href: `/${locale}/sadan-virker-det` },
+        { label: t.signIn,      href: `/${locale}/auth/signin` },
+        { label: t.signUp,      href: `/${locale}/auth/signup` },
       ]
 
   return (
@@ -106,6 +108,12 @@ export function Header() {
               {t.dealers}
             </Link>
           )}
+          <Link href={`/${locale}/sadan-virker-det`} className={NAV_LINK} style={NAV_LINK_STYLE}
+            onMouseEnter={e => ((e.target as HTMLElement).style.color = 'white')}
+            onMouseLeave={e => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.65)')}
+          >
+            {t.howItWorks}
+          </Link>
           {session && (
             <Link
               href={isAdmin ? `/${locale}/admin/dashboard` : `/${locale}/dashboard`}

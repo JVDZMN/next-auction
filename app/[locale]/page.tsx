@@ -1,41 +1,15 @@
-import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { toLocale } from '@/lib/i18n'
-import { HomeClient } from '@/components/HomeClient'
+import { HomeMarketplace } from '@/components/HomeMarketplace'
+import {
+  getMarketFilter,
+  getFeaturedAuction,
+  getAuctionGrid,
+  type SortMode,
+} from '@/lib/auction-queries'
 
-const CAR_SELECT = {
-  id: true, year: true, brand: true, model: true, subModel: true,
-  images: true, currentPrice: true, auctionEndDate: true,
-  _count: { select: { bids: true } },
-} as const
-
-const activeBase = () => ({
-  status: 'active' as const,
-  isDraft: false,
-  auctionEndDate: { gte: new Date() },
-})
-
-async function fetchSegment(ownerRole: 'PRIVATE_USER' | 'BUSINESS_USER') {
-  const rows = await prisma.car.findMany({
-    where: { ...activeBase(), owner: { role: ownerRole } },
-    select: CAR_SELECT,
-    orderBy: { bids: { _count: 'desc' } },
-    take: 3,
-  })
-  return rows.map(c => ({
-    id:             c.id,
-    year:           c.year,
-    brand:          c.brand,
-    model:          c.model,
-    subModel:       c.subModel ?? null,
-    images:         c.images,
-    currentPrice:   c.currentPrice,
-    auctionEndDate: c.auctionEndDate.toISOString(),
-    bidCount:       c._count.bids,
-    ownerRole,
-  }))
-}
+const SORT_MODES: SortMode[] = ['endingSoon', 'newest', 'noReserve', 'lowMileage']
 
 export default async function HomePage({
   params,
@@ -43,23 +17,32 @@ export default async function HomePage({
   params: Promise<{ locale: string }>
 }) {
   const { locale: rawLocale } = await params
-  const locale   = toLocale(rawLocale)
-  const session  = await getServerSession(authOptions)
-  const role     = session?.user?.role as string | undefined
+  const locale  = toLocale(rawLocale)
+  const session = await getServerSession(authOptions)
+  const role    = session?.user?.role as string | undefined
+  const market  = getMarketFilter(role)
 
-  // Fetch only what the user can see
-  const [privateCars, businessCars] = await Promise.all([
-    role === 'BUSINESS_USER' ? [] : fetchSegment('PRIVATE_USER'),
-    role === 'PRIVATE_USER'  ? [] : fetchSegment('BUSINESS_USER'),
+  const [featured, ...gridResults] = await Promise.all([
+    getFeaturedAuction(market),
+    ...SORT_MODES.map(sort => getAuctionGrid(market, sort, 12)),
   ])
 
+  const bySort = Object.fromEntries(
+    SORT_MODES.map((sort, i) => [sort, gridResults[i]])
+  ) as Record<SortMode, typeof gridResults[number]>
+
+  const carsHref =
+    role === 'BUSINESS_USER'
+      ? `/${locale}/cars?segment=business`
+      : `/${locale}/cars?segment=private`
+
   return (
-    <HomeClient
+    <HomeMarketplace
       locale={locale}
       isSignedIn={!!session}
-      role={role}
-      privateCars={privateCars}
-      businessCars={businessCars}
+      featured={featured}
+      bySort={bySort}
+      carsHref={carsHref}
     />
   )
 }

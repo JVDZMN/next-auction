@@ -32,7 +32,8 @@
     "adminDashboard": "Admin Dashboard",
     "signUp": "Sign up",
     "mitIdVerified": "MitID Verified",
-    "verifyMitId": "Verify with MitID"
+    "verifyMitId": "Verify with MitID",
+    "howItWorks": "How it works"
   },
   "home": {
     "hero": {
@@ -215,7 +216,38 @@
       "viewAll": "View all →",
       "viewAllMobile": "View all auctions →"
     },
-    "welcomeImageAlt": "Featured vehicle"
+    "welcomeImageAlt": "Featured vehicle",
+    "marketplace": {
+      "tagline": "Bid. Win. Drive.",
+      "sortEndingSoon": "Ending soon",
+      "sortNewest": "Newest",
+      "sortNoReserve": "No reserve",
+      "sortLowMileage": "Lowest mileage",
+      "featuredLabel": "Featured auction",
+      "seeAll": "See all auctions →",
+      "learnMore": "How it works →",
+      "learnMorePage": "How it works",
+      "emptyHeading": "No active auctions",
+      "emptyBody": "Check back soon for new listings.",
+      "emptyCta": "Create account",
+      "currentBid": "Current bid",
+      "endsIn": "Ends in",
+      "ended": "Ended",
+      "bids": "bids",
+      "bid": "bid",
+      "noReserve": "No reserve",
+      "filters": {
+        "yearFrom": "Year from",
+        "yearTo": "To",
+        "transmission": "Transmission",
+        "allTransmissions": "All",
+        "bodyStyle": "Body style",
+        "allBodyStyles": "All",
+        "location": "City",
+        "allLocations": "All cities",
+        "reset": "Reset"
+      }
+    }
   },
   "cars": {
     "filter": {

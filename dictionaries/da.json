@@ -32,7 +32,8 @@
     "adminDashboard": "Admin Dashboard",
     "signUp": "Opret konto",
     "mitIdVerified": "MitID verificeret",
-    "verifyMitId": "Verificer med MitID"
+    "verifyMitId": "Verificer med MitID",
+    "howItWorks": "Sådan virker det"
   },
   "home": {
     "hero": {
@@ -215,7 +216,38 @@
       "viewAll": "Se alle →",
       "viewAllMobile": "Se alle auktioner →"
     },
-    "welcomeImageAlt": "Udvalgt køretøj"
+    "welcomeImageAlt": "Udvalgt køretøj",
+    "marketplace": {
+      "tagline": "Byd. Vind. Kør.",
+      "sortEndingSoon": "Slutter snart",
+      "sortNewest": "Nyeste",
+      "sortNoReserve": "Uden mindstepris",
+      "sortLowMileage": "Lavest km",
+      "featuredLabel": "Fremhævet auktion",
+      "seeAll": "Se alle auktioner →",
+      "learnMore": "Sådan fungerer det →",
+      "learnMorePage": "Sådan virker det",
+      "emptyHeading": "Ingen aktive auktioner",
+      "emptyBody": "Kig tilbage snart for nye opslag.",
+      "emptyCta": "Opret konto",
+      "currentBid": "Aktuelt bud",
+      "endsIn": "Slutter om",
+      "ended": "Afsluttet",
+      "bids": "bud",
+      "bid": "bud",
+      "noReserve": "Uden mindstepris",
+      "filters": {
+        "yearFrom": "Årgang fra",
+        "yearTo": "Til",
+        "transmission": "Gearkasse",
+        "allTransmissions": "Alle",
+        "bodyStyle": "Karosseri",
+        "allBodyStyles": "Alle",
+        "location": "By",
+        "allLocations": "Alle byer",
+        "reset": "Nulstil"
+      }
+    }
   },
   "cars": {
     "filter": {
